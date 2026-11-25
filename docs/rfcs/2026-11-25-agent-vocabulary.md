@@ -11,621 +11,578 @@ issue: https://github.com/writfold-dev/writfold/issues/143
 milestone: null
 supersedes: []
 superseded_by: []
-blocked_on:
-  - "Owner grooming: choose the initial schema and adapter guarantee scope in #143"
+blocked_on: []
 ---
 
 # RFC: Composable tools, gates, skills and agent profiles
 
+Groomed on 25 November 2026. The first draft, its
+[calculus](2026-11-25-agent-vocabulary/calculus.md) and the two enforcement
+drafts ([evidence-governed execution](https://github.com/writfold-dev/writfold/pull/158)
+and KB research contracts) were reviewed together. The review found that
+they describe one calculus, and that most of it is the gate calculus
+Writfold already ships and has proved. This RFC is now the first slice of
+that one design. The [grooming review](2026-11-25-agent-vocabulary/grooming.md)
+lists each claim of the drafts with agree, disagree, generalize or tweak.
+
 ## Summary
 
-Let users define tools, gates, skills, plans and agent profiles in their
-`.writfold/` configuration. Use TOML for the machine-readable contract and
-multiline text for instructions that cannot usefully be structured. A skill
-describes reusable knowledge or a procedure; an agent profile describes the
-worker configuration that can use it. Their relationship is many-to-many.
-Plans remain the single definition of steps, and gates remain the single
-definition of evidence obligations.
+A user defines **tools**, **skills** and **agent profiles** as TOML files
+under `.writfold/`. A skill is a reusable method. An agent profile is a
+worker configuration: instructions, an ordered list of skills and the tools
+it may use. Plans stay the only place that lists steps and the gates they
+owe. Gates stay the only judges of evidence.
 
-Writfold resolves these definitions, checks their composition and records
-invocations against existing runs and steps. External harnesses execute
-models and tools. Tool implementations and provisioning remain replaceable:
-Gripsack is one way to supply an environment, with no required dependency.
-The [formal appendix](2026-11-25-agent-vocabulary/calculus.md) defines the
-proposed algebra, operational calculus, assumptions and counterexamples.
-The mathematics is a specification to prove against implementation, not a
-claim that new proofs or runtime guarantees already exist.
+Three things are built:
 
-## Proof obligations first
+1. `writfold kb agent inspect <id>` resolves a profile and its skills and
+   tools, and refuses a composition that does not hold together.
+2. `writfold kb agent prepare <id>` records an **invocation** in the
+   current run at the current step and writes a package for an external
+   harness. Writfold starts no model.
+3. The worker's report comes back as a **delivery candidate**
+   (`deliver prepare --invocation <id>`). A new built-in check,
+   `invocation.bound`, passes only while the candidate is bound to an
+   invocation of this run and step that was prepared under the profile as
+   it is now. A plan step owes the report as `deliver:<mode>`, exactly as
+   it owes any other delivery.
 
-Proposed pure kernels live under `crates/writfold-core/src/agent/`. Split
-them by responsibility, reuse existing gate, policy, packet and plan
-decisions, and respect the repository's module size budgets. Names below
-are proposals, not claims that modules exist.
+Nothing else is new. Which report decides, how a draft is withdrawn, what a
+statement about it means, when a step may advance and what a receiver
+accepts are all existing, proved behaviour.
 
-| Kernel boundary | Signature sketch | Named obligations |
+Not built by this RFC: schemas and effects for tools, harness bindings,
+budgets, delegation, an adapter for a particular harness, and any strict or
+authenticated boundary. Each has an owner in [Rollout](#rollout).
+
+## Proof obligations
+
+Two new kernels in `crates/writfold-core`. Each takes facts the caller has
+already gathered, as every shipped kernel does: small enums, booleans and
+slices, explicit `while` loops, no maps, traits or closures
+([aeneas.md](../writfold/aeneas.md#writing-kernels-for-translation)).
+
+### `writfold_core::compose`
+
+- `covers(required: &[Vec<u8>], granted: &[Vec<u8>]) -> Option<usize>`:
+  the first required tool that is not granted.
+- `closure(refs: &[RefFact], required: &[Vec<u8>], granted: &[Vec<u8>])
+  -> Result<(), Refusal>`. `RefFact` is what the caller found for one
+  reference (agent to skill, agent to tool, skill to tool, skill to plan
+  template), in the order the files list them: `Found`, `Missing`,
+  `WrongKind` or `Twice` (defined in both the KB root and the repository).
+  `Refusal` is `Reference(usize)` or `Tool(usize)`.
+
+`proofs/Writfold/Compose.lean` proves:
+
+- `covers_spec`: the result is the least index of a required tool that is
+  not among the granted ones, and `None` when there is none.
+- `covers_none_iff`: `None` exactly when every required tool is granted.
+- `closure_spec`: the refusal is the first reference that is not `Found`;
+  when every reference is found, the first tool a skill needs that the
+  profile does not list.
+- `closure_ok_iff`: admitted exactly when every reference resolves to one
+  definition of the expected kind and every tool a listed skill needs is in
+  the profile's `tools`.
+- `more_skills_never_admit`: adding a skill to a profile never turns a
+  refused closure into an admitted one. A skill can add needs. It cannot
+  add a grant.
+
+### `writfold_core::invoke`
+
+- `prepare_check(facts: &Prepare) -> Result<(), PrepareRefusal>`, in this
+  fixed order: the run is open; the step named is the current step; the
+  closure is admitted; every plan template a listed skill names is in the
+  run at the current step or an ancestor; the input file was read; when
+  the profile asks for the handover packet, the packet is complete
+  (`packet::complete`).
+- `bound(named: &Named) -> gate::Outcome`: what `invocation.bound` records
+  for one candidate. `Named` holds: the candidate names an invocation; its
+  record reads and is intact; it is of this run; its step is the step the
+  candidate is judged for; its agent is the mode's agent; its closure
+  digest is the present one; every live candidate naming it holds the same
+  bytes.
+
+`proofs/Writfold/Invoke.lean` proves:
+
+- `prepare_check_spec`: the refusal, in the fixed order.
+- `prepare_ok_iff`: admitted exactly when all six hold.
+- `bound_spec`: `Unknown` when a named record cannot be read; else `Pass`
+  when every fact holds; else `Fail`.
+- `bound_pass_iff`: a pass exactly when the candidate names an intact
+  invocation of this run, step and agent, under the present closure, and
+  no other live candidate holds other bytes for it.
+- `bound_unread_unknown`: an unreadable record is never a pass and never a
+  failure.
+- `conflict_never_passes`: two different reports for one invocation never
+  pass, whichever is newer.
+
+Reused as they stand, not proved again: the on-read re-check
+(`delivery::rechecked`, `rechecked_spec`), readiness (`ready_iff`,
+`empty_never_ready`), the step's decision (`fact_met_iff_ready`,
+`advance_facts_ok_iff`), which candidate decides (`deciding_spec`), the
+splice key (`splice_idempotent`), pins (`pin_all_spec`) and the packet
+(`complete_iff`).
+
+### Mutants
+
+Each names the spec theorem whose proof unfolds the mutated function.
+
+| Mutant | Change | Breaks |
 |---|---|---|
-| Composition | `compose(ResolvedDefs, UseSite) -> Result<Composition, Refusal>` | `compose_typed`, `obligations_preserved`, `splice_idempotent` |
-| Admission | `admit(Composition, Grants, Support, SnapshotFacts) -> Admission` | `admit_iff`, `capability_non_amplification`, `unsupported_refused` |
-| Budgets | `reserve(Ledger, Bound)` / `settle(Ledger, Reservation, Usage)` | `reservation_conservation`, `retry_charged`, `overflow_refused` |
-| Applicability | `applicable(Binding, CurrentFacts) -> SameChangedUnknown` | `evidence_bound`, `unknown_not_met`, `judgment_not_mechanical_pass` |
-| Record transition | `transition(State, Event, Facts) -> Result<State, Refusal>` | `record_idempotent`, `conflict_not_success`, `record_does_not_advance` |
+| `covers-ignores-last` | the loop stops one short | `covers_spec` |
+| `closure-wrong-kind-found` | `WrongKind` counts as found | `closure_spec` |
+| `closure-skips-tools` | `covers` is not consulted | `closure_spec` |
+| `prepare-skips-packet` | an incomplete packet is admitted | `prepare_check_spec` |
+| `prepare-skips-plan` | a skill's missing plan is admitted | `prepare_check_spec` |
+| `bound-ignores-closure` | a report under another closure passes | `bound_spec` |
+| `bound-ignores-step` | a report prepared at another step passes | `bound_spec` |
+| `bound-ignores-single` | conflicting reports pass | `bound_spec` |
+| `bound-unread-passes` | an unreadable record passes | `bound_spec` |
 
-Prove the decision kernels over their shipped Rust extraction through
-Charon/Aeneas before wiring verbs. Run the proofs gate, axiom audit and
-mutants; refresh the applicable tauten claims. The appendix gives laws,
-premises, mutation targets and the difference between abstract semantics
-and finite implementation representations. In particular, do not prove a
-second Lean-only implementation and describe the Rust as covered.
+### Protocol model
 
-Extend existing `RunGraph`/`KbWrite` only where their real protocol changes.
-Model the new external-attempt boundary in a proposed
-`spec/AgentInvocation.tla`: prepare, reservation, dispatch observation,
-result publication, crash recovery and conflicting writers. Do not create
-another run state machine. TLC safety checks, fairness-qualified liveness
-and expected counterexamples for two independent clones are specified in
-the appendix; no claim of distributed exactly-once execution is made.
+`spec/Invocation.tla`, a small module of its own: two clones, prepare,
+deliver, check, advance and merge, with the worker as a source of zero, one
+or two different reports at any time. Its invariants and mutants are in the
+[calculus](2026-11-25-agent-vocabulary/calculus.md#6-protocol-model).
+`KbWrite` and `RunGraph` are not changed: prepare and deliver are ordinary
+publications under the write lock.
 
-Tested and unproved: TOML/JSON parsing, source spans, schema loading,
-canonical encoders and digest computation, file containment, Git IO,
-adapter translation, runtime capability observations and output rendering.
-Tests must include malformed, partial, conflicting and missing inputs.
-The digest model assumes collision resistance; a digest is not a signature.
-A proof about an admitted capability set does not prove a host actually
-confined a process to that set.
+### Tested, not proved
 
-## Motivation and current baseline
+- Parsing the three new file kinds and their diagnostics.
+- Resolving references and classifying each as a `RefFact`.
+- The closure digest and the package bytes.
+- Reading invocation records and finding the candidates that name one.
+- The write plans, the lock and the re-check under it.
+- Rendering.
+- That `deliver prepare` writes no plan record. No pure function can break
+  this, so a test and the TLC invariant `DeliveryDoesNotAdvance` keep it.
 
-The owner requested structured agent definitions, their relationship to
-skills, user-supplied specialist tools and explicit composition laws.
-The follow-up clarified that users keep these definitions in `.writfold/`.
+A proof about `bound` says the candidate is tied to a recorded invocation.
+It does not say a model ran, read its instructions or told the truth.
 
-At baseline `2b9c9db0ea47b62011c83c8c582e146cefa83151`:
+## Motivation
 
-- [Plans](../guide/run-graph.md) already have a finite ordered spine,
-  includes, idempotent splicing, bounded loops and recorded step identity.
-- [Gates](../guide/gates.md) already bind evidence to subjects and
-  definitions, with distinct satisfied, attested, waived, failed and
-  unknown outcomes.
-- [Skills](../guide/skills.md) are external Markdown instructions.
-  Writfold does not parse `SKILL.md`. A skill can ask the harness to splice
-  a Writfold plan, including when the harness runs it in a subagent.
-- Writfold records what work reached; it does not schedule a model.
-  Required steps, strict handoff checks and receiver trust remain
-  independent of the agent's chosen profile.
+The owner asked for structured agent definitions, their relation to skills,
+user-supplied tools and explicit composition laws, authored under
+`.writfold/`. A second request asked that an agent should not be able to
+skip a required skill or claim a result without evidence that the work was
+set up as required.
 
-The missing concept is a portable, inspectable worker contract and a typed
-way to connect it to that existing machinery. A separate process alone
-does not turn a skill into an agent definition. Nor does putting prose in
-TOML make it enforceable.
+Today a skill is Markdown that a harness loads, and Writfold does not read
+it ([skills](../guide/skills.md)). A plan step can owe gates, but no record
+says which worker configuration produced a report, or whether the skill
+text that was required is the text the worker was given.
 
-## Vocabulary and boundaries
+The drafts answered with a large new surface. This RFC keeps the smallest
+part that closes the gap: a definition that can be resolved, a record of
+what was handed to a worker, and one check that ties a report to that
+record.
 
-| Building block | Owns | Composes by |
+## Mission note
+
+The mission's "Gates, runs and progress" section (12 November 2026) lists
+"a Writfold skill format" and "profile composition" under "Not now". The
+owner's request of 25 November 2026 is a later decision on the same
+subject. When this RFC is accepted, the acceptance commit adds a dated line
+to [mission.md](../writfold/mission.md) saying that skill and agent
+manifests are now in scope and that "authority levels", "a governed
+profile" and "signing" stay out. Until that line exists, this RFC grants no
+exception by itself.
+
+A skill manifest binds the text a harness already loads. It does not
+replace `SKILL.md`, and Writfold still does not parse it.
+
+## Vocabulary
+
+| Building block | Owns | Lives in |
 |---|---|---|
-| Tool | Input/output contract and declared effects of one operation | A binding implements it; an agent requests access |
-| Binding | Mapping of a tool contract to a host implementation | Native tool, approved executable or protocol adapter; explicit support facts |
-| Gate | Judgment of whether particular evidence meets an obligation | Referenced by plan steps and existing operator policy |
-| Skill | Reusable instructions/resources, optional IO contract, required tool contracts and optional plan reference | Loaded into a compatible agent or used inline |
-| Plan | Ordered steps, includes, bounded loops and gate references | Existing `writfold-plan/1` composition |
-| Agent profile | Instructions, skills, requested tools, IO contract, context policy, model configuration and limits | Resolved for a concrete task; may recommend a default plan |
-| Invocation | One resolved use of a profile and input at a run/step | Captures bindings and results; a retry gets a distinct identity |
-| Evidence | Check result, observation or attributable judgment about a subject | Accepted only under existing gate policy and applicability rules |
+| Tool | a name and a description of one operation | `.writfold/tools/<id>.toml` |
+| Skill | reusable instructions, the tools it needs, at most one plan template | `.writfold/skills/<id>.toml` |
+| Agent profile | instructions, an ordered list of skills, the tools it may use, model and limit hints | `.writfold/agents/<id>.toml` |
+| Plan | ordered steps and the gates each owes (unchanged) | `.writfold/plans/` |
+| Gate, delivery mode | what evidence meets an obligation (unchanged) | `.writfold/gates/`, `.writfold/deliveries/` |
+| Invocation | one use of a profile at a step of a run | `runs/<run>/invocations/<id>.json` |
+| Report | what the worker returned: a delivery candidate (unchanged kind) | `runs/<run>/deliveries/<id>/` |
 
-Only the first six are reusable configuration concepts. Invocation and
-evidence are execution records. "Agent" in user-facing configuration means
-the profile; a live worker is an external harness acting on an invocation.
-
-Create a skill when the reusable thing is a method or knowledge. Create an
-agent profile when the reusable thing is its combination of instructions,
-context boundary, tool access, model settings, limits and result contract.
-A procedure useful in both the main conversation and a separate reviewer
-stays one skill. A flow-specific profile can be small and local; a new
-profile is unnecessary if only the task input changes.
-
-### Composition visual
+Write a skill when the reusable thing is a method. Write an agent profile
+when the reusable thing is a worker: its instructions, its skills and its
+tools. A method used both by the main session and by a reviewer is one
+skill. A new profile is not needed when only the task input changes.
 
 ```mermaid
 flowchart TD
-    Agent["Agent profile"] -->|uses| Skill["Skill"]
-    Agent -->|requests| Tool["Tool contract"]
-    Tool -->|implemented by| Binding["Host binding"]
-    Skill -->|references| Plan["Plan"]
+    Agent["Agent profile"] -->|lists, in order| Skill["Skill"]
+    Agent -->|may use| Tool["Tool"]
+    Skill -->|needs| Tool
+    Skill -->|names| Plan["Plan template"]
     Plan -->|orders| Step["Step"]
-    Step -->|owes| Gate["Gate"]
-    Invocation["Invocation"] -->|resolves| Agent
-    Invocation -->|attached to| Step
-    Invocation -->|produces| Evidence["Evidence"]
-    Gate -->|judges| Evidence
+    Step -->|owes deliver:mode| Mode["Delivery mode"]
+    Mode -->|lists| Check["invocation.bound and other checks"]
+    Inv["Invocation"] -->|prepared from| Agent
+    Inv -->|at| Step
+    Report["Report (candidate)"] -->|names| Inv
+    Check -->|judges| Report
 ```
 
-An agent's `default_plan` is a reference, not another copy of `steps` or
-`gates`. Tools do not contain plans; a gate may run an existing checker, but
-invoking a tool does not by itself meet a gate. A skill's instructions may
-explain a step, but the plan owns ordering and required obligations.
+Three rules keep one source for each fact:
 
-## User configuration and discovery
+- A profile and a skill have no key that names a gate, an `accept` list or
+  a step. Obligations come from plans and modes only, so choosing a
+  profile cannot remove one.
+- A skill names at most one plan template. A profile names none.
+- A skill does not list skills, and a profile does not extend a profile.
+  References are two levels deep and cannot form a cycle.
 
-Proposed project layout; supporting context, model and binding files are
-configuration dependencies, not new workflow engines:
+## Behaviour
 
-| Path under `.writfold/` | Purpose |
-|---|---|
-| `tools/<id>.toml` | User-authored tool contracts |
-| `gates/<id>.toml` | Existing gate definitions |
-| `skills/<id>.toml` | New typed skill manifests with inline instructions or a text reference |
-| `plans/<name>.toml` | Existing plan templates and `required.toml` |
-| `agents/<id>.toml` | New agent profiles |
-| `context/<id>.toml` | Selection policy over existing packet/context facilities |
-| `models/<id>.toml` | Shared model configuration; no credentials |
-| `bindings/<adapter>.toml` | Reviewed portable implementation mappings |
-| `schemas/`, `instructions/` | Referenced IO schemas and optional longer text |
-| `local/` | Git-ignored machine bindings, environment locations and secret handles |
-
-All user-facing definitions belong to `.writfold/`, as requested. Machine
-state can also live there without committing credentials or absolute
-machine paths. An invocation retains a redacted description/digest of the
-effective binding, never secret values. Runtime credentials come from the
-host's existing credential mechanism.
-
-Follow the existing repository-versus-KB lookup rule: a duplicated identity
-in both locations is an error, not silent shadowing. Use nominal IDs for
-each kind and distinguish an ID from its captured revision/digest. The
-proposed new-ID grammar allows lowercase ASCII words separated by `-` or
-`.`; existing gate/plan ID rules are unchanged. File stems equal IDs.
-A reference resolves to exactly one definition of the expected kind.
-
-Unknown keys, duplicate definitions, unresolved references, wrong kinds
-and inconsistent revisions are errors. A schema version is explicit.
-References in new manifests are relative to the owning `.writfold/` root;
-paths must remain inside that root. Instruction content can be inline or
-a referenced file, exactly one of the two. No dynamic shell interpolation,
-automatic package fetching or execution happens while reading a definition.
-
-The new namespaces proposed here are `writfold-tool/1`,
-`writfold-skill/1` and `writfold-agent-profile/1`. They do not restore the
-archived `writfold.agent/1` runtime. Existing gate and plan loaders keep their
-current language. Any extension to those grammars, including inline gate
-instructions, needs an explicit schema/version decision; do not quietly
-reinterpret `instructions`, which currently names a file for gates.
-
-### TOML examples
-
-These examples illustrate the proposed contract. They parse as TOML, but
-are not runnable fixtures: referenced schemas, context/model definitions
-and tool implementations must be supplied by the later fixture issue.
-
-A tool describes one operation. The host binding must actually implement
-its schema and declared effects:
+### The files
 
 ```toml
 # .writfold/tools/repo.read.toml
 schema = "writfold-tool/1"
 id = "repo.read"
-version = 1
-description = "Read a path from the captured subject repository."
-input_schema = "schemas/repo-read-input.json"
-output_schema = "schemas/repo-read-output.json"
-effects = ["repository.read"]
-
-[scope]
-repository = "subject"
-paths = ["**"]
+description = "Read a path from the subject repository."
 ```
-
-The first implementation should support a small, explicit effect/scope
-grammar and exact schema identity, not arbitrary schema implication or
-general code effects. A contract naming `repository.read` cannot turn an
-unrestricted shell into a read-only implementation. Declarations are
-requirements; support and enforcement need evidence from the chosen adapter
-and host.
-
-A skill references the plan once:
 
 ```toml
 # .writfold/skills/verify-pr-claims.toml
 schema = "writfold-skill/1"
 id = "verify-pr-claims"
-version = 1
+description = "Compare a PR description's claims with the diff and the checks."
+tools = ["repo.read", "repo.diff"]
 plan = "claims-review"
-required_tools = ["repo.read", "repo.diff", "evidence.read"]
-input_schema = "schemas/review-request.json"
-output_schema = "schemas/review-report.json"
 instructions = """
-Compare each claim in the proposed PR description with the captured diff
-and the cited check evidence. Give each claim a supported, contradicted
-or unknown judgment, with the evidence and its limits.
-Do not describe a model judgment as a mechanical test result.
+Compare each claim in the proposed PR description with the diff and the
+cited check evidence. Give each claim a supported, contradicted or unknown
+judgment, with the evidence and its limits.
 """
+# Or, in place of instructions, the file a harness already loads:
+# instructions_file = ".claude/skills/verify-pr-claims/SKILL.md"
 ```
-
-An agent selects this skill and the environment in which it is used:
 
 ```toml
 # .writfold/agents/pr-claims-reviewer.toml
 schema = "writfold-agent-profile/1"
 id = "pr-claims-reviewer"
-version = 1
+description = "Reviews the claims made about one change."
 skills = ["verify-pr-claims"]
-tools = ["repo.read", "repo.diff", "evidence.read"]
-default_plan = "claims-review"
-input_schema = "schemas/review-request.json"
-output_schema = "schemas/review-report.json"
+tools = ["repo.read", "repo.diff"]
+packet = "required"            # or "none" (the default)
+model = "reviewer"             # a hint: recorded and exported, not judged
 instructions = """
-Review only the supplied change and its evidence. Preserve uncertainty.
-Return the review report required by the output schema.
+Review only the supplied change and its evidence. Keep uncertainty.
 """
-# Alternative to instructions, mutually exclusive:
-# instructions_file = "instructions/pr-claims-reviewer.md"
 
-[context]
-policy = "review-context"
-inherit_conversation = false
-
-[model]
-profile = "reviewer"
-
-[limits]
+[limits]                       # hints: recorded and exported, not judged
 max_turns = 8
-max_tool_calls = 24
-max_output_tokens = 4000
 ```
 
-A single profile may list several skills. Loading one whose required tools
-are not available is refused; loading a skill never expands the profile's
-tool grant. For an initial exact-identity implementation, a skill's IO
-schemas must match the task/profile schemas or have an explicitly selected,
-typed adapter. A knowledge-only skill can omit its IO and plan fields.
+Rules, each a diagnostic at its line and column like every other file
+`kb lint` reads:
 
-The following use existing plan/gate syntax:
+- `id` is the file's stem and follows the gate id grammar. A tool id may
+  hold one `.`, as `repo.read` does. Agent and skill ids hold none, because
+  `name.name` already means a built-in check or a checklist item.
+- Exactly one of `instructions` and `instructions_file`. The file path is
+  relative to the repository that holds the definition and must stay inside
+  it. It may be outside `.writfold/`, so a manifest can bind the
+  `SKILL.md` a harness loads instead of copying it.
+- Unknown keys, a duplicate id in the KB root and the repository, an
+  unresolved reference and a reference of the wrong kind are errors.
+- Reading a definition runs nothing and fetches nothing.
+
+`writfold-agent-profile/1` is a new name. The archived `writfold.agent/1`
+runtime is not restored and its name is not reused.
+
+The plan and the mode use today's syntax, with one new check name and one
+new mode key:
 
 ```toml
 # .writfold/plans/claims-review.toml
 schema = "writfold-plan/1"
 name = "claims-review"
-description = "Review the claims made about a change."
-steps = ["check: claim-review"]
+steps = ["check: deliver:claims-report"]
 ```
 
 ```toml
-# .writfold/gates/claim-review.toml
-schema = "writfold-gate/1"
-id = "claim-review"
-version = 1
-class = "attested"
-scope = ["**", "!runs/**"]
-accept = ["attested"]
-instructions = "claim-review.md"
-description = "An attributable review of the change's claims."
+# .writfold/deliveries/claims-report.toml
+schema = "writfold-delivery-mode/1"
+mode = "claims-report"
+description = "the claims reviewer's report, delivered to the run"
+checks = ["invocation.bound", "claims.cited-fresh"]
+agent = "pr-claims-reviewer"       # required with invocation.bound
+attest = ["report.read"]
+waivable = []
 ```
 
-The gate instruction file uses today's gate-relative convention. It defines
-what an attestation covers. Recording a report does not automatically write
-that attestation, grant the reporter authority, or advance the step.
-Mechanical validation of the report's JSON proves its shape only. Any
-model judgment remains attributed as such.
+### The verbs
 
-A larger flow can reference the same plan:
-
-```toml
-# .writfold/plans/review-change.toml
-schema = "writfold-plan/1"
-name = "review-change"
-steps = [
-  "implement: quality unit",
-  "review: use=claims-review",
-  "deliver: deliver:pr",
-]
+```text
+$ writfold kb agent inspect pr-claims-reviewer
+agent pr-claims-reviewer [ok] closure=3f9c1a2b77d0 skills=1 tools=2 @.writfold/agents/pr-claims-reviewer.toml:1
+  skill: verify-pr-claims plan=claims-review tools=repo.read,repo.diff @.writfold/skills/verify-pr-claims.toml:1
+  tool: repo.read @.writfold/tools/repo.read.toml:1
+  tool: repo.diff @.writfold/tools/repo.diff.toml:1
 ```
 
-This last example assumes the existing `quality`/`unit` gates and `pr`
-delivery mode are defined. Required research/reflection policy still applies.
-The same `verify-pr-claims` skill can be used inline or through the specialist;
-the step identity and its gate obligations are unchanged.
+`inspect` is read-only. Exit 0 for an admitted closure, 3 for a refused
+one, with the first fault:
 
-## Behaviour and proposed command surface
+```text
+refused: skill verify-pr-claims needs tool repo.diff, which agent pr-claims-reviewer does not list (tools @.writfold/agents/pr-claims-reviewer.toml:5)
+```
 
-Command names and diagnostic identifiers below are proposals for grooming,
-not existing CLI capabilities.
+```text
+$ writfold kb agent prepare pr-claims-reviewer --input review-request.json --out /tmp/inv
+invocation 20261125T101500Z-3fa9c1 [prepared] pr-claims-reviewer closure=3f9c1a2b77d0 at review-change#1/review/check @runs/run-…/invocations/20261125T101500Z-3fa9c1.json:1
+  package: /tmp/inv (instructions.md, input, packet.md, invocation.json)
+  next: run the worker on /tmp/inv, then: writfold kb deliver prepare --mode claims-report --from REPORT --invocation 20261125T101500Z-3fa9c1
+```
 
-1. `writfold kb agent inspect pr-claims-reviewer --json` resolves and
-   displays the full closure, origins, digests, required/granted tools,
-   model/context configuration and unsupported requirements. Read-only.
-2. The caller uses existing `plan set`/`plan use` when a plan needs to be
-   adopted. Merely loading a profile does not replace or silently splice a
-   plan. An adapter that offers automatic skill splicing must use the same
-   explicit idempotent operation and expose its result.
-3. `writfold kb agent prepare pr-claims-reviewer --skill verify-pr-claims
-   --run RUN --step STEP --input review-request.json --out DIRECTORY`
-   validates the input, resolves/snapshots the closure, binds the invocation
-   to the existing current step and writes its intent atomically. It emits
-   the external harness package; it does not launch a model.
-4. The external harness executes only if it can satisfy the declared
-   requirements and grants. Launch/usage observations may be attached to
-   the same invocation. An outcome whose execution cannot be established
-   remains unknown, not implicitly unrun.
-5. `writfold kb agent record INVOCATION --report report.json` validates
-   schema, identity, completeness and provenance, retains evidence and
-   records the outcome. The ordinary gate and `plan advance` paths decide
-   what that outcome permits. An exact repeated submission is a no-op;
-   conflicting submissions are surfaced.
+`prepare` judges `prepare_check` under the write lock, publishes the
+invocation record, then writes the package. A refusal writes nothing.
+`--retry-of <id>` links a new invocation to an earlier one. Two calls with
+the same inputs are two invocations: Writfold cannot know whether a worker
+ran on the first.
 
-Use existing exit-code conventions: 0 for a complete inspection or accepted
-record operation, 2 for partial/unknown inspection, 3 for refusal, 1 for bad
-CLI usage. Exit 0 from record means the record was admitted, not that a
-review passed or a plan completed. JSON separates operation status from
-the reported outcome and evidence standing.
+The package is the whole interface to a harness:
 
-Example refusal:
-`agent.capability-unavailable: verify-pr-claims requires repo.diff;
-the effective binding does not provide it; no invocation prepared`.
-Other distinct diagnostics cover unresolved references, ambiguous IDs,
-schema mismatch, stale prepare inputs, unsupported limits, exhausted budget,
-partial context, conflicting output and unknown launch outcome.
+| File | Content |
+|---|---|
+| `invocation.json` | the invocation record |
+| `instructions.md` | the profile's instructions, then each skill's, in listed order |
+| `input` | the bytes of `--input` |
+| `packet.md` | the handover packet, when the profile says `packet = "required"` |
 
-New intent/results use Git records within the existing `runs/<run>/`
-namespace (candidate directory: `invocations/`), with captured definition
-and artifact references. SQLite, if used for lookup, is derived. Reuse the
-existing publication/lock/recheck and retained-evidence machinery. A report
-may be retained even when stale or late, but it cannot silently complete a
-different or already-advanced step.
+The worker's report comes back through the existing verb, with one new
+flag:
+
+```text
+$ writfold kb deliver prepare --mode claims-report --from report.md --invocation 20261125T101500Z-3fa9c1
+$ writfold kb deliver check
+delivery 20261125T102210Z-77aa01 [blocked] claims-report candidate=9d2e0c5a1b44 …
+  check: invocation.bound [satisfied] mechanical pass for 9d2e0c5a1b44 (invocation 20261125T101500Z-3fa9c1, closure 3f9c1a2b77d0) @runs/run-…/checks/invocation.bound-….json:1
+  check: claims.cited-fresh [satisfied] observed pass for 9d2e0c5a1b44 (4 citation tokens)
+  attest: report.read [open]
+  next: writfold kb deliver attest --check report.read --statement TEXT --by WHO
+```
+
+What `invocation.bound` says when it does not pass:
+
+| Case | Line |
+|---|---|
+| no `--invocation` | `failed: this candidate names no invocation; prepare one: writfold kb agent prepare pr-claims-reviewer …` |
+| another run or step | `failed: invocation … was prepared at review-change#1/implement, not at this step` |
+| another agent | `failed: invocation … is of agent summarizer; this mode takes pr-claims-reviewer` |
+| the closure moved | `failed: skill verify-pr-claims changed since invocation … was prepared; prepare again` |
+| two reports | `failed: candidate … holds other bytes for invocation …; withdraw one: writfold kb deliver withdraw ID --reason TEXT --by WHO` |
+| record unreadable | `unknown: invocation … does not read` |
+
+A passed `invocation.bound` receipt is re-judged on every read, as
+`claims.cited-fresh` is: when the closure has moved since, or a second
+report has appeared, it reads `stale`. A done step bound to that candidate
+then shows `!stale` and the current step does not move back.
+
+The harness, or a person, may add what it observed as a statement the mode
+asks for:
+
+```sh
+writfold kb deliver attest --check context.submitted \
+  --statement "sent instructions.md sha256:… as the system prompt" \
+  --by adapter:claude-code@2.1
+```
+
+That is an attestation. It is shown as attested, never as satisfied, and
+`--by` is recorded as given.
+
+### What an existing setup can notice
+
+Nothing changes for a KB without the new files. New: three file kinds that
+`kb lint` reads, the verbs `agent inspect` and `agent prepare`, the flag
+`deliver prepare --invocation`, the check name `invocation.bound`, the mode
+key `agent`, the directory `runs/<run>/invocations/`, and an `invocation`
+key in `delivery.json` when the flag was given. A mode that lists
+`invocation.bound` without `agent` is refused when it is loaded.
 
 ## Design
 
-### Authority and capability composition
+### The closure digest
 
-For a selected skill closure, its required tool/effect set must be included
-in the effective authority. Authority is the intersection of what the
-profile requests, what the host grants and what the run policy grants,
-plus the parent invocation's authority if delegated. Root invocations have
-no parent restriction; they still require host and run grants. A skill
-cannot grant permissions; an imported profile cannot grant host authority.
+The closure of a profile is the profile, its skills in listed order, and
+the tools they name. Its digest is computed as a gate's definition digest
+is: over the keys that change behaviour, not over comments or layout.
+Instruction text counts byte for byte. Skills keep their listed order.
+Tools are sorted by id, since their order means nothing. `description`
+does not count.
 
-```mermaid
-flowchart TD
-    Profile["Profile request"] --> Effective["Effective authority: intersection"]
-    Host["Host grant"] --> Effective
-    Run["Run grant"] --> Effective
-    Parent["Parent ceiling, if delegated"] --> Effective
-    Effective --> Admission{"Requirements supported?"}
-    Admission -->|yes| Prepared["Prepared invocation"]
-    Admission -->|no| Refused["Explicit refusal"]
+The closure digest plays the part a gate's definition digest plays, and
+the candidate's bytes play the part of the content digest. So an
+invocation report is judged for being "about the present" by the same
+comparison as every receipt (`gate::about`).
+
+### The invocation record
+
+```json
+{
+  "schema": "writfold-invocation/1",
+  "id": "20261125T101500Z-3fa9c1",
+  "seq": 1,
+  "run": "run-20261125T100000Z-1c2d3e",
+  "step": "review-change#1/review/check",
+  "agent": "pr-claims-reviewer",
+  "closure": "sha256:3f9c1a2b77d0…",
+  "definitions": [
+    {"kind": "agent", "id": "pr-claims-reviewer", "path": ".writfold/agents/pr-claims-reviewer.toml", "digest": "sha256:…"},
+    {"kind": "skill", "id": "verify-pr-claims", "path": ".writfold/skills/verify-pr-claims.toml", "digest": "sha256:…"}
+  ],
+  "input": {"name": "review-request.json", "bytes": 412, "digest": "sha256:…"},
+  "packet": {"asked": true, "complete": true, "digest": "sha256:…"},
+  "package": "sha256:…",
+  "retry_of": null,
+  "by": "agent:claude-opus-5-5@3f9c…",
+  "recorded": "2026-11-25T10:15:00Z"
+}
 ```
 
-A runtime can be capable of launching an invocation yet incapable of
-enforcing a required limit. Required unsupported restrictions cause refusal,
-not a reassuring label. Optional observations can be displayed as reported.
-The profile states which requirements are mandatory; the initial examples
-treat their listed tools/context/limits as mandatory. A deliberate weaker
-profile is a different captured configuration, not a silent fallback.
+One create-new file. `seq` orders invocations as it orders receipts;
+`recorded` is shown, never compared. The record holds paths and digests,
+not copies: Git holds the bytes. The package is written outside the KB and
+is not committed.
 
-Keep provenance for "declared", "adapter reports enforcement" and
-"enforcement verified by the operator's trusted runner". None becomes a
-cryptographic guarantee merely because it is written into TOML. A trusted
-receiver uses its own required gates and trust policy (#57/#64).
+### State is derived
 
-### Context, configuration and identity
+An invocation has no stored phase. Readers derive it:
 
-Reuse bounded packets (#109/#123) and Witan-related context work
-(#137–#141). Capture the actual packet, source pins, omissions, required
-rows and completeness flags, not just the name of the selection policy.
-Missing mandatory context blocks admission. Optional missing context is
-visible. An instruction asking a model to forget ambient context is not an
-isolated-context implementation.
+| Word | When |
+|---|---|
+| `prepared` | its record exists and no live candidate names it |
+| `delivered` | exactly one payload is held by the live candidates naming it |
+| `conflicting` | the live candidates naming it hold more than one payload |
+| `retried` | a later invocation names it as `retry_of` |
 
-Capture all behavior-affecting inputs: profile and skill text, plan/gate
-references where applicable, tool schemas and bindings, model provider and
-resolved model identity/settings, adapter/runtime version, context bytes,
-task input, effective permissions and limits. Provider aliases can move;
-record an unresolved version as such and refuse any requirement for a
-stronger pin that the provider cannot supply. A fallback or changed tool
-implementation produces a new configuration identity.
+Writfold never says a worker ran, finished or failed. A prepared
+invocation with no report is unknown, and stays so.
 
-Separate source snapshots from normalized configuration identity.
-Formatting changes outside prompt material may change source digests
-without changing semantic configuration. Instruction strings and ordered
-prompt parts retain their order and exact decoded content. Canonicalize only
-fields whose semantics are unordered; never sort a prompt or plan.
-Identical configuration means comparable inputs, not deterministic output.
+### Pins
 
-Each actual invocation has a fresh identity even with identical inputs;
-a retry references its predecessor. Records identify run, step path and
-iteration, invocation, configuration digest, input/context/subject pins,
-artifact digests and reporter provenance. Clocks are descriptive, not a
-replacement for existing event ordering or unique invocation identity.
+The definitions a run's modes name join the run's policy pins. A profile
+edited in the middle of a run then reads `policy moved`, as an edited gate
+does, and `plan repin` is the existing way to adopt it.
 
-### Limits, retries and delegation
+### Crash points
 
-Model limits are separate from plan-loop limits. A bounded loop does not
-bound tokens, cost or tool calls within a round. Account for retries and
-children against an explicitly chosen budget scope. Before a concurrent
-child starts, reserve its enforceable upper bound; settle measured usage
-after completion. Unknown usage keeps the reservation until reconciled.
-A deadline or token limit needs enforcement by the runner; merely recording
-usage afterwards is observation.
-
-The first implementation can keep a single local admission authority and
-omit delegation. Independent clones cannot jointly enforce a shared global
-budget without an external authority. Refuse that guarantee when requested.
-Use integer units, explicit bounds, checked arithmetic and an explicit
-distinction between hard caps and estimates. This RFC does not promise an
-exact monetary cap from a provider's approximate billing metadata.
-
-### Gate and evidence composition
-
-A plan step owes its own obligations plus applicable required policy and
-the included plan's obligations, at their actual step instances. Agent
-selection cannot remove them. Repeating a skill load at the same applicable
-splice is idempotent under existing rules; intentional new rounds have new
-identities and new obligations.
-
-A gate has both an evidence requirement and its accepted standings. If two
-requirements apply to the same obligation, combine acceptance by
-intersection. An empty intersection is a configuration conflict. Preserve
-whether evidence is mechanical, observed, attested or waived; do not
-translate a reviewer's "pass" into a mechanical pass. Unknown, stale,
-missing, malformed and untrusted evidence never acquire a passing standing.
-
-Use existing applicability and order rules: a later failure cannot be
-ignored by choosing an older passing result, and a report for an older
-candidate/subject cannot decide a newer one. Historical completion remains
-historical when current evidence becomes stale. Agent profiles do not
-replace operator handoff policy or authorize their own waivers.
-
-### Adapters and provisioning
-
-An adapter translates a resolved profile to the target harness and records
-the actual mapping. Keep Writfold's model independent of that harness's
-file layout. A Claude Code export is one useful first adapter: it must check
-actual feature support and preserve typed requirements or refuse, including
-cases where a target ignores unknown fields or treats tool settings as
-approval hints.
-
-Tool contract, implementation binding and environment provisioning are
-separate. Users can supply a local executable, their own service/native
-integration or a future protocol adapter, subject to the binding contract.
-A Gripsack environment can provision the executable and supply its version
-receipt; an already-installed binary or another environment manager can do
-the same. No Gripsack key is required in a portable tool or agent profile.
-Do not ship every transport in the first slice.
+- Before the invocation record is published: nothing exists.
+- After it, before the package is complete: the record exists and reads
+  `prepared`. Run `prepare` again; the first invocation stays in history.
+- `deliver prepare` and `deliver check` are unchanged.
 
 ## Compatibility and reversibility
 
-This is pre-alpha design work. Prefer a clean schema over compatibility
-shims for archived agent formats (#105/#107); never reuse an old schema name
-with different semantics. A KB without profiles keeps its existing
-plan/gate/skill workflow, with no model service or Gripsack requirement.
-An older binary must not be described as enforcing definitions it ignores.
-
-Removing an unused profile reverses configuration adoption. Definitions
-used by an invocation remain available through captured snapshots; deletion
-does not erase history. Live-format migrations, if needed, are explicit
-and preserve recorded claims and evidence distinctions. This draft changes
-no current behavior or website capability claims.
+Pre-alpha: no reader for the archived agent format and no migration
+([#105](https://github.com/writfold-dev/writfold/issues/105),
+[#107](https://github.com/writfold-dev/writfold/issues/107)). An older
+binary does not know `invocation.bound` and refuses a mode that lists it,
+which is the right answer. Deleting a profile does not delete history: the
+invocation records name digests, and Git holds the files. Removing the
+feature is removing the three directories and the modes that name
+`invocation.bound`.
 
 ## Alternatives
 
-| Alternative | Assessment |
+| Alternative | Why it lost |
 |---|---|
-| Continue with external agent Markdown only | Useful baseline, but cannot validate cross-definition composition or capture a portable resolved contract |
-| Put worker configuration and all steps into a skill | Conflates reusable method with context/authority/model choices and duplicates plans |
-| Copy a harness's agent schema | Useful export target; insufficient as Writfold's authority, evidence and identity model |
-| Build an agent scheduler into Writfold | Adds process/network ownership outside the current mission; unnecessary to record and judge external work |
-| Introduce a general workflow DAG or an agent programming language | Existing spine/includes/loops cover the first case; branching, arbitrary recursion and agent inheritance are deferred |
-| Require Gripsack for tool installation | Couples a portable contract to one user's provisioning choice; an optional binding is sufficient |
+| A separate result record with its own verb (`agent record`), phases and conflict rules, as first drafted | It rebuilds what delivery candidates already do and have proved: kept bytes, `seq`, the newest deciding, withdrawal, checks, attestations, a step bound to a candidate and `!stale` |
+| A new gate class whose receipts are worker reports | A report would read `satisfied`. A worker's word must not read as a passed check |
+| Ten directories (`context/`, `models/`, `bindings/`, `schemas/`, `instructions/`, `local/`) | Most hold declarations nothing judges. A git-ignored `local/` that changes a decision is state a fresh clone lacks |
+| Tool contracts with JSON schemas, effect atoms and path scopes | Nothing checks them without a validator dependency and a decidable scope inclusion; a declared effect does not confine a shell |
+| A kernel that merges obligation maps from skills, profiles and plans | No decision needs it: plans and modes are the only source of obligations |
+| Budgets with reservations in this slice | Writfold records usage and cannot stop a model; the algebra has gaps the review lists. Deferred to [#159](https://github.com/writfold-dev/writfold/issues/159) |
+| Keep external Markdown only | It cannot say which skill text a report was produced under |
 
 ## Evidence and tests
 
-The source talk motivates specialization; its private benchmark claims do
-not establish Writfold quality or cost improvements. Evaluate that
-separately. The first worked scenario is a PR claims reviewer alongside
-existing deterministic delivery checks such as Vale: each retains its own
-authority and evidence class.
+- Parser and diagnostic fixtures for each file kind: both instruction
+  keys, neither, an escaping path, a duplicate id, a wrong-kind reference,
+  an unknown key.
+- `fixtures/kb/agent-review/`: the reviewer example above with a fake
+  worker (a shell script that reads the package and writes a report). It
+  runs the whole flow and each line of the `invocation.bound` table.
+- A test that `deliver prepare --invocation` writes no plan record.
+- The proofs gate with the mutants above; `tlc` on `spec/Invocation.tla`
+  with its mutants; quality and unit.
 
-Required future validation:
+No model is called and no benchmark is run. The example shows the
+mechanism, not a quality or cost benefit.
 
-- Parser/diagnostic fixtures for inline text, referenced instructions,
-  duplicates, cycles, missing files, wrong kinds, ambiguous discovery,
-  schema mismatch and unknown fields. No partial successful composition.
-- Algebra/property fixtures for sequencing, repeated skill loading,
-  nested scopes, incompatible obligations, empty policy, overflow and
-  required-steps preservation; a mutant must remove each critical guard.
-- Adapter conformance fixtures for missing tools, ignored settings,
-  unsupported isolation/limits, runtime drift and substituted models.
-  Static export tests alone do not establish runtime confinement.
-- Invocation fault tests for source movement between read and publish,
-  lost launch acknowledgement, partial artifacts, duplicate/conflicting
-  results, late result arrival, retry costs, parallel reservations and
-  cross-clone merge conflicts.
-- Proofs, quality and unit gates for implementation. Plan/gate integration
-  tests must show that importing a valid report does not auto-advance.
+## Rollout
 
-The documentation-only RFC needs TOML syntax, diagram syntax, relative-link
-and registry checks, not a paid model run. Reuse #112 for a future controlled
-comparison of inline and specialist execution: same task/skill, declared
-context and tool variants, pinned configurations, independent quality
-criteria, latency/cost/completeness and honest unknowns. No new evaluation
-pilot is authorized by filing these issues.
+Milestone names are for the main session to set. The order is fixed.
 
-## Rollout and linked work
-
-All new work is grouped under `agent-vocabulary`. The tracking issue
-[#143](https://github.com/writfold-dev/writfold/issues/143) groups the following
-proposed work. Dependencies describe implementation order; schema and formal
-design can be groomed together.
-
-| Issue | Deliverable | Depends on |
+| Step | Issue | Ships |
 |---|---|---|
-| [#144](https://github.com/writfold-dev/writfold/issues/144) | Typed `.writfold/` configuration and discovery | Schema decisions with #145 |
-| [#145](https://github.com/writfold-dev/writfold/issues/145) | Algebra, calculus, Lean proof ledger and TLA+ protocol | Selected representation from #144 |
-| [#146](https://github.com/writfold-dev/writfold/issues/146) | Tool contracts, bindings and optional provisioning | #144, #145 |
-| [#147](https://github.com/writfold-dev/writfold/issues/147) | Skill/agent composition through existing plans and gates | #144–#146 |
-| [#148](https://github.com/writfold-dev/writfold/issues/148) | Captured configuration, authority, context and budgets | #144–#147 |
-| [#149](https://github.com/writfold-dev/writfold/issues/149) | Invocation outcomes and retained evidence | #144–#148 |
-| [#150](https://github.com/writfold-dev/writfold/issues/150) | One harness adapter and conformance checks | #144–#149 |
-| [#151](https://github.com/writfold-dev/writfold/issues/151) | Complete reviewer example, visuals and evaluation protocol | #144–#150; reuse #112 |
+| 0 | [#143](https://github.com/writfold-dev/writfold/issues/143) | this RFC accepted; the mission line |
+| 1 | [#145](https://github.com/writfold-dev/writfold/issues/145) | `spec/Invocation.tla` with its mutants, before any verb |
+| 2 | [#144](https://github.com/writfold-dev/writfold/issues/144) | the three file kinds, `kb lint`, `compose` proved, `agent inspect` |
+| 3 | [#147](https://github.com/writfold-dev/writfold/issues/147) | a skill's plan must be in the run: the plan fact of `prepare_check` |
+| 4 | [#148](https://github.com/writfold-dev/writfold/issues/148) | `agent prepare`, the record and the package |
+| 5 | [#149](https://github.com/writfold-dev/writfold/issues/149) | `--invocation`, `invocation.bound`, the re-check on read |
+| 6 | [#151](https://github.com/writfold-dev/writfold/issues/151) | the fixture, the guide page, `kb init --example agent` |
 
-Milestones and assignees are intentionally unset until owner grooming;
-this request does not start implementation.
+Later, each in its own issue: requirements judged at prepare
+([#154](https://github.com/writfold-dev/writfold/issues/154)); KB research
+contracts ([#155](https://github.com/writfold-dev/writfold/issues/155),
+[#156](https://github.com/writfold-dev/writfold/issues/156),
+[#157](https://github.com/writfold-dev/writfold/issues/157)); tool
+schemas, effects and bindings
+([#146](https://github.com/writfold-dev/writfold/issues/146)); one harness
+adapter ([#150](https://github.com/writfold-dev/writfold/issues/150));
+budgets and delegation
+([#159](https://github.com/writfold-dev/writfold/issues/159)); signed
+observations ([#64](https://github.com/writfold-dev/writfold/issues/64)).
 
-1. Settle the minimal schema, effect vocabulary and trust/adapter boundary.
-2. Formalize the selected decisions, extract/prove the pure kernels, then
-   add read-only discovery and diagnostics.
-3. Add portable contracts and one supported host binding; exercise
-   composition with existing plans/gates before adding external attempts.
-4. Add snapshot preparation, retained results and the crash-tested
-   invocation protocol. Keep any delegation/global-budget extension gated
-   behind its own supported guarantees.
-5. Add one adapter and the complete reviewer example; document unsupported
-   features and the optional provisioning recipe.
-6. Groom a controlled evaluation separately; change product messaging only
-   after capabilities have actually been exercised.
+## Unresolved questions
 
-This extends, rather than restarts, #109/#123 (packets), #110 (replanning),
-#111 (attempt comparison), #112 (evaluation planning), #116 (checker inputs),
-#121/#128 (retained evidence), #57/#64 (handoff/trust), and #137–#141
-(context work). Existing issues are neither retagged nor implicitly reopened.
+None blocks acceptance. Each has a default that the rollout uses unless
+the owner says otherwise.
 
-## Unresolved questions for grooming
-
-- Owner: confirm the smallest initial set of effect/scope primitives and
-  whether the first binding is an executable wrapper or native harness
-  mapping. Avoid pretending arbitrary host tools have known effects.
-- Owner: choose the first adapter guarantees that must be enforced. A
-  supported projection can be useful before a runtime supports every
-  optional feature, but required restrictions cannot disappear.
-- Decide the first result envelope and budget scope with #111/#121/#128.
-  Keep usage observation useful even where a hard cap cannot be promised.
-- Decide whether inline gate text warrants a separately versioned gate
-  schema change. New skill/profile prose does not require that migration.
-- Specify the initial restricted JSON Schema vocabulary and offline
-  reference policy; exact identity is sufficient before subtyping.
-- Choose whether default-plan adoption is always explicit or offered as
-  a visible adapter action through existing `plan use`. No hidden rewrite.
+- Owner: the mission line in step 0. Default: add it as written under
+  [Mission note](#mission-note).
+- Owner: should a report be a delivery candidate, or do you want a
+  separate noun for it in the CLI? Default: a delivery candidate. The
+  cost of the default is one interaction: the delivery guard's lenient
+  rule ("every live candidate ready") counts an unready report.
+- Owner: tool files hold a name and a description only. Default: yes, and
+  schemas, effects and bindings wait for #146.
 
 ## Sources
 
-Read as design inputs on 25 November 2026; target runtime behavior must be
-checked again against the version used by an adapter:
+Read as design inputs on 25 November 2026:
 
 - [Why Domain-specific Agents Are the Future](https://www.youtube.com/watch?v=wIPr9GmLRaQ).
-- [Claude Code subagents](https://code.claude.com/docs/en/sub-agents):
-  worker configuration and preloaded skills.
-- [Claude Code skills](https://code.claude.com/docs/en/skills):
-  reusable instructions and selection of a forked agent.
-- [Standard Agent Spec](https://standardagentspec.org/) and
-  [packaging](https://standardagentspec.org/0.2.0/distribution/packaging/):
-  related portability work; not adopted as Writfold's execution semantics.
-- [Writfold mission](../writfold/mission.md), [run graph](../guide/run-graph.md),
-  [gates](../guide/gates.md), [skills](../guide/skills.md) and
-  [Aeneas assurance boundary](../writfold/aeneas.md).
+- [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) and
+  [skills](https://code.claude.com/docs/en/skills).
+- [Standard Agent Spec](https://standardagentspec.org/): related
+  portability work, not adopted.
+- [Mission](../writfold/mission.md), [run graph](../guide/run-graph.md),
+  [gates](../guide/gates.md), [delivery modes](../guide/delivery-modes.md),
+  [skills](../guide/skills.md) and
+  [the Aeneas boundary](../writfold/aeneas.md).
 
 ## Decision log
 
-- 2026-11-25: Owner requested the RFC, composition visuals, algebra/calculus
-  and linked tagged issues for later grooming, then clarified that users
-  author the configuration in `.writfold/`. The specific grooming instruction
-  takes precedence over standing default auto-acceptance and milestone
-  assignment. No runtime implementation, proof completion, model evaluation
-  or merge is claimed by this proposal.
-
+- 2026-11-25: Owner requested the RFC, composition visuals, an algebra and
+  calculus, and linked issues, then said that users author the
+  configuration in `.writfold/`.
+- 2026-11-25: Groomed with the enforcement drafts at the owner's request.
+  Outcomes: one calculus for both sets, stated over the shipped kernels;
+  a report is a delivery candidate; one new check, `invocation.bound`;
+  two new kernels with eleven theorems and nine mutants; tools reduced to
+  names; ten directories reduced to three; budgets split to #159; the
+  stored phase machine, typed tool composition, the obligation-merge
+  kernel, `default_plan`, `agent record` and `.writfold/local/` removed.
+  The full list is in the
+  [grooming review](2026-11-25-agent-vocabulary/grooming.md). Status left
+  `draft` for the main session to accept.

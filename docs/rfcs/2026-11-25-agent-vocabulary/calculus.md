@@ -1,449 +1,483 @@
-# Agent vocabulary: algebra and operational calculus
+# One calculus for agent work under gates
 
-Companion to the [RFC](../2026-11-25-agent-vocabulary.md) and
-[tracking issue #143](https://github.com/writfold-dev/writfold/issues/143).
-This is a proposed mathematical specification. None of the new theorems or
-protocol models below is claimed to be implemented or proved.
+Companion to three draft RFCs:
+[agent vocabulary](../2026-11-25-agent-vocabulary.md) (#143),
+[evidence-governed execution](../2026-11-25-evidence-governed-execution.md)
+(#153) and [KB research contracts](../2026-11-25-kb-research-contracts.md)
+(#155, #156). The last two are in
+[PR #158](https://github.com/writfold-dev/writfold/pull/158), whose branch
+carries this file too.
 
-## 1. Domains, judgments and trust assumptions
+The first drafts held two algebras: one over tools, obligations,
+capabilities and budgets, and one over receipts, issuers, phases and
+coverage. The [grooming review](grooming.md) found they are one algebra,
+and that most of it is already shipped and proved. This file states that
+one calculus, names the theorem behind each law, and says what is new.
 
-Let `Γ` be a finite registry of typed, resolved definitions. References use
-nominal pairs `(kind, id)` and resolve to one captured revision. A digest
-identifies captured content under a collision-resistance assumption;
-identity is not authenticity. Let `σ` contain the subject, source pins,
-current run/step, operator policy and completeness facts.
+Nothing new below is proved yet. Every theorem marked **shipped** is in
+`proofs/Writfold/` today. Every theorem marked **new** is an obligation of
+the issue named beside it.
 
-| Symbol | Meaning |
+## 1. The five layers
+
+Every decision Writfold makes has the same shape. The caller reads files
+and Git and turns what it found into small facts. A kernel folds the
+facts. Nothing is stored that can be derived.
+
+| Layer | Question | Shipped kernels | New |
+|---|---|---|---|
+| L0 fact | Are these the same bytes? Does this pin hold? Could this be read? | `bytes::same`, `gate::about`, `pin`, `inventory`, `observe` | none |
+| L1 standing | What does the evidence for one obligation say now? | `gate::judge`, `gate::standing`, `checklist`, `bind`, `ground`, `delivery::standing` | `invoke::bound` |
+| L2 policy | Does that standing meet the obligation? | `policy::met` | none |
+| L3 requirement | Is a named requirement met, unmet or unknown? | `guard::require`, `guard::all_met` | none |
+| L4 admission | May this operation proceed? | `plan::advance`, `guard::decide`, `delivery::guard`, `handoff::checked` | `compose::closure`, `invoke::prepare_check` |
+
+The vocabulary draft's "composition, admission, applicability, record
+transition" and the enforcement draft's "evidence applicability, obligation
+evaluation, admission, obligation composition" are these layers under
+other names.
+
+## 2. Objects
+
+- A **definition** is a file under `.writfold/`: a gate, a mode, a plan
+  template, and now a tool, a skill or an agent profile.
+- A **closure** is a profile with its skills, in listed order, and the
+  tools they name. Its digest `cl` covers the keys that change behaviour
+  and every instruction byte.
+- An **invocation** `ι = (run, step, agent, cl, input, seq)` is a record
+  written by `agent prepare`. The step is a path with its round, as the
+  run graph names it.
+- A **candidate** `c = (mode, bytes, seq, ι?)` is a delivery candidate.
+  With `ι` it is a worker's report.
+- An **obligation** is a gate or a mode named by a plan step, a guard
+  rule, a receiver's required set, or (later) a profile's `needs`. It has
+  a class and an `accept` policy. There is no other obligation type.
+
+The enforcement draft's obligation tuple `(k, p, b, K, I, φ)` maps onto
+these without remainder:
+
+| Draft coordinate | Here |
 |---|---|
-| `t : I → O ! E` | Tool contract: input/output schemas and upper bound on declared effects |
-| `s : I ⇝ O [R, P]` | Skill: expected input/output, required capabilities, optional plan |
-| `a` | Agent profile: ordered instructions/skills, requested authority, context/model/limits |
-| `P` | Existing finite plan expression after bounded include/loop expansion |
-| `Ω` | Map of instantiated obligation identities to requirements |
-| `C` | Capability predicate over concrete actions |
-| `B, U, r` | Budget limit, spent usage and one reservation, in integer units |
-| `D` | Resolved configuration, with all behavior-affecting dependencies |
-| `ι` | Fresh invocation identity with run/step/round and predecessor references |
-| `e` | Retained evidence, with binding, origin and reported outcome |
-| `H` | Append-only event/artifact history |
+| key `k` | the step path and the gate or mode id |
+| predicate `p` | a built-in name: a gate class, a `require` entry, a `checks` entry |
+| bindings `b` | the definition digest, the content digest and the pins |
+| evidence kinds `K`, issuer roles `I` | the class and `accept` |
+| phase `φ` | which verb asks. It is not data |
 
-A concrete action includes operation, resource identity and scope-relevant
-arguments. Capability predicates denote subsets of the action universe.
-The first implementation needs only a finite, restricted representation:
-tool IDs, effect atoms, fixed roots and supported path predicates.
-Intersection is conjunction of predicates, so it need not solve arbitrary
-glob inclusion. A static coverage check must be sound on its supported
-grammar; an unprovable inclusion is refused as unsupported, not assumed.
-Tool calls outside the effective predicate are refused by the runner.
+## 3. Laws
 
-The judgment `Γ; σ ⊢ a[s] : I ⇝ O ! C ▷ Ω` means the composition has a
-well-formed expected contract, authority ceiling and obligations. It does
-not say the model terminates, returns `O`, uses only `C`, tells the truth,
-or meets `Ω`. Those require output checks, runtime enforcement and
-applicable evidence respectively. The pure kernel consumes validated
-facts; parsers, file IO and a dishonest runner are outside that theorem.
+### 3.1 Binding
 
-## 2. Composition algebra
+A record is about the present exactly when its recorded definition digest
+and content digest equal the present ones, byte for byte, and it is filed
+in this run, names this subject and is intact.
 
-### 2.1 Typed operations and instruction composition
+- Shipped: `about_spec`, `bound_spec`, `state_other_subject`,
+  `judge_other_bytes`, `judge_empty_content`, `unretained_not_bound`.
+- For an invocation report: definition ↦ the closure digest; content ↦ the
+  candidate's bytes; run and step ↦ the invocation's. New:
+  `bound_pass_iff` (#149).
 
-Initial schema compatibility is nominal equality of captured schema
-identity. If `t₁ : I → M ! E₁` and `t₂ : M → O ! E₂`, their typed
-sequential operation has contract:
+Three identities are kept apart, where the draft had one `configId` over
+everything: the closure (stable across tasks), the input (one task) and
+the invocation id (one attempt). Equal closures mean comparable workers,
+not equal output.
 
-$$
-t_2 \circ t_1 : I \to O \;!\; (E_1 \cup E_2).
-$$
+Further bindings are pins. Evidence holds while every pin holds; one pin
+that moved, aged or cannot be read is enough to stop it
+(`unheld_never_holds`, `current_under_refines`). A scope membership basis,
+a context epoch or another repository are pins, not new coordinates.
 
-This is a compatibility rule, not a new general tool-pipeline executor.
-If the intermediate types differ, composition requires an explicit typed
-conversion; there is no prompt-based coercion. Runtime validation is still
-necessary because an implementation may violate its declared contract.
+### 3.2 One record decides
 
-An agent's ordered skill instruction sequence concatenates with ordinary
-associativity and the empty sequence as identity. It is not commutative:
-changing prompt order can change behavior. Requirement-set union is
-commutative, but that does not make full skill loading commutative.
-A knowledge-only skill has no procedural output requirement or plan;
-it still contributes its actual instruction bytes and any required tools.
+For each obligation one record decides: the newest, by `seq`, that is
+bound and about the present. There is no "some passing record exists".
 
-### 2.2 Plans
+- Shipped: `state_spec`, `state_satisfied_iff`, `newest_is_max`,
+  `deciding_spec`, `item_spec`.
 
-Use the existing spine, include and bounded-loop constructs:
+The enforcement draft's receipt rule was existential:
 
 $$
-P ::= \epsilon \mid \operatorname{step}(k,\Omega)
-      \mid P;P
-      \mid \operatorname{include}(k,T)
-      \mid \operatorname{loop}(k,T,n,\Omega),\quad 1 \le n < \infty.
+\frac{e\in E\quad \ldots\quad Check_p(e,B)}{E\vdash_B o}
 $$
 
-Here `k` is a step instance path, not just a display name. This grammar
-describes the existing model; it does not authorize a second parser or new
-unbounded recursion. Include cycles and excessive depth are refused before
-publication. Loop expansion uses actual round identities and current gate
-semantics.
+With receipts `[pass, fail]`, oldest first, both about the present, that
+rule derives `o`. The shipped kernel says `failed`. The existential rule is
+withdrawn. Read `E ⊢ o` as: `deciding(E, o)` exists and passes.
 
-For the denoted ordered spine, modulo consistent renaming of fresh
-instance paths:
+### 3.3 A class is never promoted
 
-$$
-(P;Q);R \equiv P;(Q;R),\qquad \epsilon;P \equiv P \equiv P;\epsilon.
-$$
+A statement is never a passed check. A waiver is never evidence. A report
+is never a mechanical result.
 
-In general `P;Q ≠ Q;P`. Equality here concerns the abstract ordered work
-and obligations, not identical Git event bytes or identical model output.
-No parallel-plan operator is proposed.
+- Shipped: `standing_satisfied_iff`, `satisfied_only_by_current_pass`,
+  `statement_never_passes`, `standing_never_satisfied` (checklists),
+  `posted_never_satisfied`, `waiver_never_grounds`, `kept_never_promotes`.
+- For an invocation: `invocation.bound` judges the binding of the bytes,
+  which Writfold can check from its own records. What the report says
+  reaches no standing. What a harness says it sent is a statement
+  (`deliver attest`), shown as attested.
 
-If `K` is an existing splice identity at the current step or applicable
-ancestor, and the captured template digest is unchanged:
+So the drafts' `judgment_not_mechanical_pass` and `judgment_not_promoted`
+need no new theorem.
 
-$$
-\operatorname{use}(K,\operatorname{use}(K,H))
- = \operatorname{use}(K,H).
-$$
+### 3.4 Policy narrows, and narrowing is a meet
 
-This is the current `plan use` rule, not global deduplication by skill name.
-A different step, explicit `--again` or new loop round is a different use.
-A changed definition is never silently treated as the same captured use.
-
-### 2.3 Obligations
-
-An obligation identity contains the actual step/round, gate identity and
-captured definition, subject selector and applicable policy identity.
-Its value includes the required evidence predicate and accepted standings.
-
-Define partial combination `Ω₁ ⊎? Ω₂`:
-
-1. Disjoint keys are retained.
-2. For a common key, structural identities and subject requirements must
-   agree; combine independent evidence requirements with conjunction.
-3. Intersect accepted-standing sets.
-4. A contradictory requirement or empty accepted-standing intersection is
-   a conflict. Do not replace either side or admit a "good" prefix.
-
-For compatible maps, combination is associative, commutative and
-idempotent, with the empty map as identity. These laws apply to the
-normalized obligation map, not to plan ordering or prompt text.
-
-For `Ω′ = Ω ⊎? Δ` and a fixed evidence environment `σ`:
+`Accept` is three booleans: satisfied, attested, waived. Order policies by
+`a ≤ b` when every word `a` takes, `b` takes. Then
+`a ∧ b` (field by field) is the meet, `(true, true, true)` is the top, and
 
 $$
-\operatorname{Met}(\Omega',H,\sigma)
-\Longrightarrow \operatorname{Met}(\Omega,H,\sigma).
+met(s, a \wedge b) \iff met(s,a) \wedge met(s,b).
 $$
 
-Adding requirements cannot make a previously unmet obligation met.
-Removing evidence, changing a subject or changing policy can invalidate
-a judgment; no temporal monotonicity of freshness is claimed.
+The law holds exactly, with no "up to semantic equality", for two reasons.
+`Accept` is a canonical representation, so `∧` is associative, commutative
+and idempotent on the nose. And by 3.2 one standing `s` decides, so both
+sides ask about the same word. Under the withdrawn existential rule the
+law fails: `e₁` could meet `a` and `e₂` meet `b` while nothing meets
+`a ∧ b`.
 
-The empty-map identity does not mean every product operation with no
-requirements succeeds. A structural plan step may owe zero gates under
-existing rules, while a delivery mode with no checks is blocked by
-`empty_never_ready`. Admission and completion retain those separate
-well-formedness conditions; never infer readiness from vacuous conjunction.
+- Shipped: `met_spec`, `met_default`, `met_narrows`,
+  `waiver_rejected_never_met`, `accept_only_narrows`. A list that leaves a
+  class no standing is refused when the definition loads
+  (`value.unmeetable`), which is the drafts' "empty intersection is a
+  conflict".
 
-### 2.4 Authority and specialization
+This one operator replaces the vocabulary draft's `Ω₁ ⊎? Ω₂` and the
+enforcement draft's `⊓`. No kernel computes `a ∧ b` today, and none is
+added: plans and modes are the only source of obligations, so two
+policies never meet on one key. The two places that already combine
+policies are instances of the law. A mode's `waivable` narrows a check's
+policy. The strict receiver takes `(true, false, false)` whatever a gate's
+`accept` says. A later source of obligations must combine by `∧`, and then
+proves `narrow_met_iff` with the display above as its statement.
 
-Let `Q` be profile-requested authority, `G_h` the host grant, `G_r` the
-run/operator grant and `G_p` the parent ceiling. At a root, set `G_p = ⊤`:
+It follows that adding an obligation or narrowing a policy never makes an
+unmet set met. Nothing follows about time: evidence can stop holding.
 
-$$
-C_{\mathrm{eff}} = Q \cap G_h \cap G_r \cap G_p.
-$$
+### 3.5 Unknown and empty
 
-A closed tool list defaults to no unlisted tools. Unspecified optional
-parent restriction at a root is distinct from an absent required host or
-run grant. Admission needs a sound coverage judgment for each declared
-mandatory requirement `R` of the loaded skills/task:
+A fact is met, unmet or unknown. Unknown never admits. An empty set of
+obligations never reads as met where something asks "is everything met?".
 
-$$
-R \subseteq C_{\mathrm{eff}}.
-$$
+- Shipped: `unknown_never_passes`, `decide_pass_iff`, `outcome_pass_iff`,
+  `gates_fact_met_iff`, `gates_unmet_when_incomplete`,
+  `unplanned_clean_empty`, `empty_never_ready`, `empty_never_complete`,
+  `incomplete_evidence_never_accepted`, `truncated_never_complete`,
+  `complete_iff` (packet), `omitted_counted`.
+- New: `bound_unread_unknown` (#149), `absent_universe_never_covered`
+  (#156).
 
-Here a requirement includes its explicitly declared mandatory resource
-envelope; the system does not infer needs from prose. Dynamic requests
-remain checked against `C_eff`. A narrowed scope may be usable when it
-covers the task's declared requirement; it cannot satisfy a larger required
-envelope merely because the tool has the same name.
+Several rules combine by `guard::combine`, where a denial beats a question
+and a question beats a pass. It is associative and commutative with `Pass`
+as identity (`combineOf_assoc`, `combineOf_comm`, `combineOf_pass_left`).
 
-Consequences:
+### 3.6 Tools: coverage, and the rule for more grant sources
 
-- `C_eff ⊆ G_h`, `C_eff ⊆ G_r` and `C_eff ⊆ G_p`.
-- Shrinking any grant cannot enlarge `C_eff`.
-- Loading a skill can add requirements and cause refusal; it cannot add a
-  grant.
-- Delegation cannot amplify authority.
+Let `R` be the tools the listed skills need and `Q` the tools the profile
+lists. The closure is admitted only when `R ⊆ Q`.
 
-Define a partial specialization order for otherwise compatible profiles:
-`a′ ⪯ a` when `Q′ ⊆ Q`, `Ω ⊆ Ω′` under compatible obligation extension,
-and `B′ ≤ B` componentwise. This orders authority/obligation/limit
-constraints only. It does not establish that a different model or
-instruction text is more accurate, cheaper, or behaviorally substitutable.
+- New: `covers_none_iff`, `closure_ok_iff`, `more_skills_never_admit`
+  (#144).
 
-### 2.5 Budget algebra
-
-Use vectors in `ℕᵏ` with componentwise `+` and `≤`. Coordinates have named
-units, for example tool calls or output tokens. Omitted limits, unknown
-usage and a zero limit are distinct states. Never add incomparable monetary
-or token quantities without an explicit accounting rule.
-
-For one budget authority with limit `B`, spent `U` and live reservations
-`Rsv`, admission maintains:
+The vocabulary draft defined an effective authority
+`C = Q ∩ G_h ∩ G_r ∩ G_p` over host, run and parent grants. The slice has
+one source, `Q`. When more arrive (#159, #150), the rule is the
+intersection, and it needs no set to be built:
 
 $$
-U + \sum_{r \in Rsv} r \le B.
+R \subseteq A \cap B \iff R \subseteq A \wedge R \subseteq B.
 $$
 
-`reserve(r)` succeeds only if adding `r` preserves the inequality.
-`settle(r,c)` removes `r` and adds actual usage `c` to `U`, with verified
-`0 ≤ c ≤ r`. Retries and child work get their own reservations; each
-underlying charge is accounted once. A parent that includes child costs
-must not also charge those same costs a second time.
+So admission runs `covers` once per source, and "a child never exceeds its
+parent" is one more call. Writfold cannot observe what a host grants. An
+adapter's word about it is a statement (3.3).
 
-Unknown usage retains its reservation. Release requires evidence that the
-unused reservation has no remaining liability; a timeout alone does not
-prove the remote worker stopped. If reported usage exceeds its bound,
-record a breach and refuse further admission. Do not discard the report
-to maintain a fictional invariant. Conservation holds for admitted,
-non-breached histories under the runner's bound-enforcement assumption.
+Capability predicates over paths, effects and scopes are out of the
+calculus until a use needs them: inclusion of one glob in another is not a
+fold over facts.
 
-Checked integer arithmetic must refuse overflow rather than wrap or
-silently saturate. A hard cap needs pre-action enforcement, not only an
-after-the-fact ledger. Concurrent children require atomic reservations.
-Two disconnected clones do not share this invariant unless they share an
-external admission authority; this is an explicit unsupported guarantee
-for the first implementation.
+### 3.7 Order: plans, splices, instructions
 
-### 2.6 Configuration identity
+A plan is an ordered spine. Sequencing is associative with the empty plan
+as identity, and not commutative. A splice is idempotent on its key
+(parent, template, digest, ordinal).
 
-Let `N(D)` normalize only semantically unordered fields, and `encode` be a
-versioned deterministic encoding with kind/domain separators:
+- Shipped: `current_spec`, `splice_spec`, `splice_keeps_existing`,
+  `splice_idempotent`, `splice_check_depth`. The draft's ledger row named
+  `splice_idempotent` is this theorem, not a new one.
+- The fold that places steps is tested, not proved
+  ([#17](https://github.com/writfold-dev/writfold/issues/17) was declined).
+  No new theorem may rest on it.
 
-$$
-\operatorname{configId}(D) =
-H(\text{"writfold-agent-config/1"} \parallel \operatorname{encode}(N(D))).
-$$
+Instruction text concatenates in listed order. That is a free monoid:
+associative, with the empty text as identity, never commutative. The
+consequence is one rule for the closure digest: keep the listed order.
+It is tested with the digest, not proved.
 
-`D` includes the captured instructions and loaded skills, tool contracts
-and implementations, plan/gate references relevant to the use, IO schemas,
-context packet with completeness/source pins, task input, effective grants,
-model/settings, runtime/adapter version and limits. Secret values are not
-copied; unresolved secret-dependent behavior limits reproducibility.
+The draft's typed tool composition `t₂ ∘ t₁ : I → O ! E₁ ∪ E₂` is
+withdrawn. No verb composes tools.
 
-Keep source-byte digests separately. Parsed TOML formatting may be
-irrelevant; instruction text is not. A renderer that supplies raw source
-to the model makes those bytes behavior-affecting. Preserve prompt and plan
-order. Explicit missing/unknown inputs cannot hash as an empty known value.
+### 3.8 Use sites, and why a postcondition must be judged again
 
-Define `invocationId` independently, using a fresh collision-checked nonce
-bound to run/step/round. Identical `configId` across two invocations is
-allowed. A result retry on the same invocation and identical payload is
-idempotent; a new model execution is a new invocation even with identical
-configuration. No theorem equates same configuration with same output.
+The same obligations are consulted at four sites. Each is a verb, with its
+own admission kernel over the same L1 to L3 answers.
 
-## 3. Evidence judgment
+| Site | Verb | Kernel | Refusal on unknown |
+|---|---|---|---|
+| before a worker is set up | `agent prepare` | `invoke::prepare_check` (new) | yes |
+| before a tool call | `hook pre-tool-use` | `guard::decide`, `delivery::guard` | yes (`unknown_never_passes`) |
+| before a step is done | `plan advance` | `plan::advance` | yes (`advance_undefined_refused`) |
+| before a candidate is accepted elsewhere | `handoff check` | `handoff::checked` | yes |
 
-Use existing gate selectors to choose deciding evidence, including sequence,
-candidate supersession and withdrawal rules. There is no existential
-"some passing receipt exists" shortcut.
-
-For obligation `o`, evidence `e` and current facts `σ` define:
+The enforcement draft gave a sequencing rule for skills:
 
 $$
-\begin{aligned}
-\operatorname{Applicable}(e,o,\sigma) \iff {}&
-\operatorname{WellFormed}(e)
-\land \operatorname{CompleteRequiredArtifacts}(e)\\
-&\land \operatorname{BindingMatches}(e,o,\sigma)
-\land \operatorname{Fresh}(e,\sigma)\\
-&\land \operatorname{ProvenanceAccepted}(e,o,\sigma).
-\end{aligned}
+\{P\}\ S_1\ \{Q\},\quad \{Q\}\ S_2\ \{R\}\ \Longrightarrow\ \{P\}\ S_1;S_2\ \{R\}.
 $$
 
-Then `Met(o,H,σ)` requires the existing deciding evidence to be applicable,
-its evidence predicate satisfied and its standing included in `o.accept`.
-Missing, malformed, stale, conflicting, partial or unverifiable inputs
-produce an unmet/unknown result with their reason. They do not acquire a
-pass from a default value.
+As written it is false here. `Q` is judged when `S₁`'s step is done, at
+time `t₁`. `S₂` starts at `t₂ ≥ t₁`, and evidence has no monotonic
+freshness: the subject can move in between. The shipped behaviour says so:
+a done step can read `!stale` and the current step does not move back
+(`stale_never_current`). The rule that holds is:
 
-`BindingMatches` checks the relevant run/step/round, subject/candidate,
-definition/configuration and input/artifact identities. A historical result
-may be correctly recorded while inapplicable now. The record operation
-returns that distinction instead of deleting history or advancing a new step.
+> `S₁; S₂` gives `R` when `Q` is judged again at `S₂`'s admission.
 
-A schema checker can mechanically establish "this report is valid JSON of
-the required shape." It cannot mechanically establish "this model's claims
-are true." An attributable model judgment may meet an attested requirement
-when receiver policy permits that origin. Its evidence class remains
-attested; it cannot self-issue a waiver or choose its receiver's trust policy.
+That is what a `needs` list at prepare does (#154), and what a guard rule
+does before a command. No kernel consumes triples, so there is no theorem
+to prove. The frame rule is withdrawn with the effect system it needs.
 
-## 4. Small-step invocation calculus
+### 3.9 Coverage of a generated universe
 
-A configuration is `⟨Γ,σ,H,L,A⟩`, with ledger `L` and a finite map `A`
-from invocation identities to captured configurations and phases. A
-transition is `X —event→ X′`. External execution is an event source, not a
-new Writfold scheduler.
-
-Phases are `new`, `prepared`, `running-reported`, `returned`, `validated`,
-`recorded`, `refused` and `unknown`. A returned/recorded report has a
-separate outcome: completed, failed, partial, cancelled or unknown.
-"Validated" describes envelope integrity, not gate success.
-
-```mermaid
-flowchart TD
-    New["New request"] -->|admit and publish intent| Prepared["Prepared"]
-    New -->|reject| Refused["Refused"]
-    Prepared -->|external dispatch observation| Running["Running reported"]
-    Running -->|result envelope| Returned["Returned"]
-    Prepared -->|result without launch acknowledgement| Returned
-    Running -->|lost acknowledgement or crash| Unknown["Outcome unknown"]
-    Prepared -->|launch may have happened| Unknown
-    Unknown -->|reconcile with evidence| Returned
-    Returned -->|validate binding and artifacts| Validated["Validated"]
-    Validated -->|publish under write recheck| Recorded["Recorded outcome"]
-```
-
-### ADMIT / PREPARE
-
-If references/types are well formed, the existing use site is valid, mandatory
-context is present, capability coverage and runtime support hold, sources
-match their captured snapshot at publication, and reservation succeeds:
+Let a manifest `M` list `n` members, and let `U(M)` be the unordered pairs
+of distinct members, named by record id and not by version:
+`|U(M)| = n(n−1)/2`. Each unit is a checklist item. Then
 
 $$
-\frac{\operatorname{Admissible}(\Gamma,\sigma,D,L)
-      \quad \iota\notin\operatorname{dom}(A)}
-     {\langle H,L,A\rangle \xrightarrow{\operatorname{prepare}(\iota,D)}
-      \langle H+\operatorname{intent}(\iota,D),L',A[\iota\mapsto prepared]\rangle}.
+Covered \iff present(M) \wedge (n > 0 \vee allow\_empty) \wedge
+\forall u \in U(M):\ covered(item(newest\ row\ of\ u)).
 $$
 
-`L′` includes the reservation when a hard aggregate budget is requested.
-Required-step/policy checks use the existing authority, not a profile's
-self-description. IO rechecks the decision under the write lock and
-publishes the complete snapshot/intent atomically through existing
-mechanisms. If any premise fails, refuse without a partial invocation,
-reservation or exported runnable package. Diagnostic audit output is not a
-successful intent.
+The drafts wrote `∃ r ∈ E: Eligible(r, u)`. By 3.2 the newest row of a
+unit decides, so a later "does not hold" row is not outvoted by an earlier
+one.
 
-### DISPATCH / CALL / RETURN
+- Shipped: `item_spec`, `item_covered_iff`, `rollup_covered_iff`,
+  `other_never_answers`, `item_under_narrows`, `complete_within_iff`,
+  `truncated_never_complete`.
+- New (#156): `pairs_spec`, `pairs_len`, `over_cap_refused`,
+  `generated_covered_iff`, `absent_universe_never_covered`,
+  `empty_universe_needs_allow`, `of_delivery_grounded_iff`.
 
-Only an external harness can dispatch. A reported launch changes the
-observation phase; its provenance determines what a receiver can rely on.
-Before each real tool action a supporting runner checks the input schema,
-`action ∈ C_eff` and the relevant remaining enforceable bounds. The
-capability theorem is conditional on that check actually guarding all
-effectful actions, including aliases, shell escapes and delegated actions.
+`present(M)` is the guard the shipped roll-up lacks: over zero items "every
+required item is covered" is true, so an absent manifest would read as a
+finished review.
 
-A return attaches the report to the exact `ι` and captured configuration.
-Lack of a launch acknowledgement does not forbid accepting a verifiable
-report, nor does it prove no launch occurred. Neither a returned result
-nor a reported stop implies a passed gate.
+Four judgments stay separate and are never folded into one word: the scope
+(a mechanical gate), the coverage (a checklist, which stands as attested),
+the assessment (what each report says, which reaches no standing) and the
+disposition of findings (an attested gate).
 
-### VALIDATE / RECORD
+### 3.10 Specialization
 
-Validation checks the envelope, binding, expected output schema for its
-outcome, required artifact digests and origin. A failure/partial report can
-be structurally valid and retained as such. Invalid reports are surfaced
-without being promoted to deciding evidence.
+For two profiles, write `a′ ⪯ a` when `a′` lists no tool `a` lacks and
+owes every obligation `a` owes. On the pairs
+(tools, obligations) this is a partial order. On profiles it is a
+preorder: two profiles with different instructions and the same pair are
+equivalent under it and not equal. It says nothing about which worker is
+better.
 
-Publication rechecks the invocation identity and relevant current write
-facts. Retention of a valid historical result does not require it to remain
-applicable to the live subject; its standing explicitly records that
-difference. For a fixed `ι`:
+The enforcement draft's `O₂ ⪯ O₁` ("every evidence set that satisfies
+`O₂` satisfies `O₁`") is the semantic form of the obligation half. By 3.4
+the syntactic form implies it.
+
+No decision consumes this order until delegation exists (#159). It is a
+definition, not a kernel.
+
+## 4. Invocation rules
+
+State is derived from records. An invocation has no stored phase.
+
+| Word | Derived as |
+|---|---|
+| `prepared` | the record exists; no live candidate names it |
+| `delivered` | the live candidates naming it hold one payload |
+| `conflicting` | they hold more than one |
+| `retried` | a later invocation names it in `retry_of` |
+
+The draft's eight phases (`new`, `prepared`, `running-reported`,
+`returned`, `validated`, `recorded`, `refused`, `unknown`) are withdrawn.
+"Running", "returned" and a worker's own "failed" are things Writfold
+cannot see. An invocation with no report is unknown and stays so.
+
+Write `H` for the run's records and `→` for one publication under the
+write lock.
+
+**PREPARE.** When `prepare_check` admits, publish the invocation, then
+write the package outside the KB.
 
 $$
-\operatorname{record}(e,\operatorname{record}(e,H))
- = \operatorname{record}(e,H).
+\frac{prepare\_check(facts(H, a, step)) = Ok \quad \iota \notin H}
+     {H \to H + \iota}
 $$
 
-A different result for the same declared result slot is a conflict,
-not last-writer-wins success. Later reconciliation uses an explicit linked
-event and keeps both observations. Recording never emits a plan-advance
-event. `advance` remains the existing independently checked operation.
+A refusal publishes nothing. Two prepares with equal inputs give two
+invocations.
 
-### UNKNOWN / RETRY / CANCEL
+**DELIVER.** `deliver prepare --invocation ι` publishes a candidate naming
+`ι`. It writes no plan record and judges nothing.
 
-A crash between external launch and durable acknowledgement admits two
-worlds: launched and not launched. Record `unknown` and reconcile; do not
-automatically rerun a potentially effectful task. A permitted retry creates
-a new invocation linked to the old one and consumes a new reservation.
-Releasing the old reservation needs evidence about the old worker.
+**CHECK.** `deliver check` records `bound(named(H, c))` for
+`invocation.bound`, beside the mode's other checks. On every later read
+the receipt is judged again: when the closure moved or a second payload
+appeared, a pass reads stale (`rechecked_spec`).
 
-A cancellation request is not an observed cancellation. Preserve
-unconfirmed execution/usage as unknown. Late results can be retained after
-a step moves, but cannot close a replacement step. Reconciliation adds
-evidence; it does not rewrite an earlier uncertain observation into an
-event that was known at the time.
+**ATTEST.** A harness or a person may state what it observed
+(`deliver attest`). The statement is bound to the candidate's bytes and
+goes stale when they change.
 
-## 5. Proof ledger and falsifying mutations
+**ADVANCE.** Unchanged: the step is done only when its `deliver:<mode>`
+candidate is ready (`fact_met_iff_ready`, `advance_facts_ok_iff`). The
+done record binds the candidate.
 
-Every theorem is over the actual finite representation and extracted
-decision function. Representation lemmas connect it to the abstract sets,
-maps and judgments above. Completeness claims are restricted to the
-supported grammar; conservative refusal is allowed outside it.
+**RETRY.** A new invocation with `retry_of`. Its report is a newer
+candidate, so it decides (`deciding_spec`).
 
-| Proposed Lean theorem | Required claim | Mutant/counterexample |
-|---|---|---|
-| `compose_typed` | Every admitted reference has the expected kind and compatible schema | Accept a missing reference or mismatched output schema |
-| `obligations_preserved` | Composition retains every compatible required obligation and acceptance restriction | Drop the last required gate; union acceptance sets |
-| `splice_idempotent` | Repeated eligible use at one digest adds no second instance | Allocate a fresh splice for an accidental reload |
-| `capability_non_amplification` | Effective authority is below every applicable grant | Union host and requested authority |
-| `unsupported_refused` | An unsupported mandatory guarantee cannot be admitted | Convert unsupported isolation to an ignored warning |
-| `admit_iff` | Admit exactly when all supported-representation predicates hold | Ignore partial context or a moved prepare input |
-| `reservation_conservation` | Reserve/settle preserve the inequality under bounded-usage premises | Give two children the same unreserved remainder |
-| `retry_charged` | A new execution cannot reuse another invocation's charge/reservation | Deduplicate executions by configuration digest |
-| `overflow_refused` | Arithmetic overflow cannot yield an admissible budget | Wrap the usage sum to zero |
-| `evidence_bound` | Deciding evidence matches the required binding and freshness facts | Accept another round's or older candidate's report |
-| `unknown_not_met` | Unknown/incomplete evidence cannot satisfy a required gate | Parse absent usage/report as successful zero/empty |
-| `judgment_not_mechanical_pass` | A model judgment preserves its evidence class | Turn JSON validity into mechanical claim correctness |
-| `record_idempotent` | Exact duplicate publication does not add a second result or charge | Append again on a retry of the same submission |
-| `conflict_not_success` | Conflicting payloads for a result slot cannot become an unqualified success | Pick whichever filename sorts last |
-| `record_does_not_advance` | Result admission changes no step completion fact | Auto-complete the current step on valid JSON |
+**WITHDRAW.** A conflict is resolved by withdrawing one candidate, with a
+reason and a name. Both files stay.
 
-Reuse an existing proved lemma if its exact premises cover the new path;
-link the new result to that lemma rather than copy its logic. Do not
-silently expand the assurance claim of the currently tested-only plan
-fold. If proving composition needs that fold, coordinate with #17.
+**MERGE.** Two clones merge in Git. Records are create-new files, so a
+merge adds and never rewrites. A merge can turn `delivered` into
+`conflicting`; a step already done on one of the reports then reads
+`!stale` and stays done.
 
-## 6. Protocol model and evidence plan
+What the rules do not say: that a worker ran, that it read
+`instructions.md`, that its report is true, or that an effect happened
+once. A re-run after an unknown outcome can repeat an effect outside
+Writfold.
 
-The proposed `AgentInvocation` model composes with `KbWrite` and
-`RunGraph` at their actual publication points. Include a bounded number of
-writers, invocations, resources, payload choices and external dispatch
-outcomes. Model crash/restart before and after snapshot write, intent
-publication, external launch, launch acknowledgement, artifact write,
-result publication and budget settlement.
+## 5. Proof ledger
 
-Check these invariants:
+### 5.1 The drafts' obligations, resolved
 
-- `NoRunnableWithoutIntent`: no successful export/dispatch authorization
-  exists without the captured admitted intent.
-- `NoPartialPublishedEvidence`: an accepted required artifact set is
-  published completely or not admitted.
-- `NoAdmissionOnStaleRead`: a racing write causes re-evaluation/refusal
-  before admission.
-- `SingleResultOrConflict`: duplicate identical results coalesce;
-  conflicting results are visible.
-- `NoBudgetOvercommit`: reservations under one authority obey the budget;
-  bounded-runner usage is an explicit model premise.
-- `UnknownDoesNotComplete` and `ResultDoesNotAdvance`.
-- `AuthorityDoesNotGrow` across delegation, if delegation is implemented.
-- `HistoricalBindingsStable`: later profile/subject edits cannot rewrite
-  captured invocation identities.
+| Draft obligation | Resolution |
+|---|---|
+| `compose_typed` | new, narrowed: `closure_spec`, `closure_ok_iff` (#144). Schema compatibility is out of scope |
+| `obligations_preserved`, `obligations_not_weakened` | by construction (a profile and a skill cannot name a gate or `accept`), with shipped `advance_facts_ok_iff`, `done_only_when_met`, `met_narrows` |
+| `splice_idempotent` | shipped under that name |
+| `capability_non_amplification` | new, narrowed: `covers_none_iff`, `more_skills_never_admit` (#144); the intersection rule of 3.6 for #159 |
+| `unsupported_refused` | deferred with the adapter (#150): the slice has no support facts |
+| `admit_iff` | new: `prepare_ok_iff` (#148) |
+| `admission_requires_evidence` | shipped at three sites (`advance_facts_ok_iff`, `decide_pass_iff`, `guard_allow_iff`, `strict_accepted_iff`); new at the fourth: `prepare_ok_iff` (#148) |
+| `reservation_conservation`, `retry_charged`, `overflow_refused` | deferred, with corrections (#159) |
+| `evidence_bound`, `evidence_bound_to_use` | shipped (3.1); new for reports: `bound_pass_iff` (#149) |
+| `context_submission_bound` | split: the binding is `bound_pass_iff`; "submitted" is a statement (3.3) |
+| `unknown_not_met`, `unknown_not_success` | shipped (3.5); new: `bound_unread_unknown` (#149) |
+| `incomplete_never_complete` | shipped (3.5) |
+| `coverage_requires_universe` | shipped `rollup_covered_iff`; new `absent_universe_never_covered` (#156) |
+| `dependencies_preserved` | shipped pins and grounding (`unheld_never_holds`, `moved_iff`). References are leaves, so there is no graph and no acyclicity to prove |
+| `judgment_not_mechanical_pass`, `judgment_not_promoted` | shipped (3.3) |
+| `record_idempotent` | restated: delivering the same bytes again changes no judgment. Follows from `bound_pass_iff` (the `single` fact compares bytes) |
+| `conflict_not_success` | new: `conflict_never_passes` (#149) |
+| `record_does_not_advance` | not a kernel property. A test and the TLC invariant `DeliveryDoesNotAdvance` |
+| `governed_action_requires_bound_run` | shipped: `run_current_met_iff`, `decide_pass_iff`, `unknown_never_passes` |
+| Scope eligibility, scope freshness | shipped: `complete_within_iff`, `truncated_never_complete`, `judge_other_bytes` |
+| Unit generation, coverage | new (#156), listed in 3.9 |
+| Report eligibility | shipped `bind`; new `of_delivery_grounded_iff` (#156) |
+| Finding disposition | shipped: an attested gate with `accept` (`waiver_rejected_never_met`) |
 
-Mutation models remove each associated recheck/guard. Also retain expected
-counterexamples: two disconnected clones cannot enforce one shared budget;
-retrying after an ambiguous launch can duplicate an external effect;
-recording a stop request does not prove the worker stopped. Those are
-boundaries to expose, not failed tests to hide by reducing the state space.
+The three drafts named 31 distinct obligations. Eleven need no new
+theorem. Nine are shipped for today's evidence and need one new theorem
+for the new kind of record. Five are new. One is restated. Four are
+deferred. One is not a property of a pure function.
 
-Liveness is conditional: under eventual IO success, availability of
-required observations, and fair scheduling by the external harness, a
-valid submitted result can reach a recorded outcome. No assumption makes
-a model finish or guarantees a remote service will acknowledge. A
-permanently unknown attempt is a permitted honest result.
+### 5.2 New theorems, by slice
 
-TLC checks bounded protocol instances. Lean covers the selected pure
-decisions over their stated domains. Integration/fault tests check the
-implementation's IO correspondence. None by itself proves semantic review
-quality, provider determinism or arbitrary executable confinement.
+| Slice | Kernel | Theorems | Mutants |
+|---|---|---|---|
+| #144 | `compose::covers`, `compose::closure` | `covers_spec`, `covers_none_iff`, `closure_spec`, `closure_ok_iff`, `more_skills_never_admit` | `covers-ignores-last`, `closure-wrong-kind-found`, `closure-skips-tools` |
+| #147, #148 | `invoke::prepare_check` | `prepare_check_spec`, `prepare_ok_iff` | `prepare-skips-packet`, `prepare-skips-plan` |
+| #149 | `invoke::bound` | `bound_spec`, `bound_pass_iff`, `bound_unread_unknown`, `conflict_never_passes` | `bound-ignores-closure`, `bound-ignores-step`, `bound-ignores-single`, `bound-unread-passes` |
+| #154 | `invoke::prepare_check` gains the `needs` fact | `prepare_check_spec` and `prepare_ok_iff` restated, `needs_unknown_refused` | `prepare-skips-needs` |
+| #156 | `units::pairs`, `units::generated`, `ground::of_delivery` | `pairs_spec`, `pairs_len`, `over_cap_refused`, `generated_covered_iff`, `absent_universe_never_covered`, `empty_universe_needs_allow`, `of_delivery_grounded_iff` | `pairs-drops-last`, `pairs-keeps-diagonal`, `generated-absent-covered`, `generated-empty-covered`, `delivery-unready-grounds` |
+
+Each mutant names the spec theorem whose proof unfolds the mutated
+function. The corollaries follow from it. Each slice passes the proofs
+gate (drift, `lake build`, axiom audit, mutants) and refreshes
+`proofs/claims.json` before its verb is wired.
+
+Kernel shape, for every row: owned data, no nested borrows, no derives
+reached, no casts, explicit `while` loops with one early return per
+function, facts as small enums and booleans. A function that needs a
+derive for its callers is named one by one in `start_from`.
+
+## 6. Protocol model
+
+One small module, `spec/Invocation.tla`, checked before `agent prepare` is
+wired (#145). It does not change `KbWrite` or `RunGraph`.
+
+Constants: two clones, one step that owes `deliver:m`, at most two
+invocations, payloads `{p, q}`.
+
+Actions: `Prepare(c)`; `Deliver(c, ι, payload)` (the worker is this
+action, enabled at any time for any payload); `Check(c)`; `EditClosure(c)`;
+`Withdraw(c, cand)`; `Advance(c)`; `Merge(c, d)`; `Crash(c)` between a
+publication and the next step of the same verb.
+
+Invariants:
+
+- `BoundOnlyWithIntent`: `invocation.bound` passes in a clone only for a
+  candidate whose invocation record is in that clone.
+- `ConflictNeverReady`: when the live candidates naming one invocation
+  hold two payloads, none of them is ready.
+- `DoneOnlyWhenReady`: every done record was written in a clone where its
+  candidate was ready at that moment.
+- `DeliveryDoesNotAdvance`: `Deliver` and `Check` leave the done set
+  unchanged.
+- `OtherStepNeverBinds`: an invocation prepared at one step never makes a
+  candidate ready for another.
+- `StaleNeverMovesBack`: no action removes a done record or moves the
+  current step back.
+
+Mutants, each of which must break its invariant: `NoSingle`
+(`ConflictNeverReady`), `NoClosureRecheck` (`DoneOnlyWhenReady`),
+`BindAcrossSteps` (`OtherStepNeverBinds`), `AdvanceOnDeliver`
+(`DeliveryDoesNotAdvance`).
+
+A probe that must stay reachable: `probe-MergeAfterDone`. Clone A is done
+on report `p`; clone B delivers `q` for the same invocation; after the
+merge the done step is stale and still done. That is the honest outcome,
+not a failure to hide.
+
+Not modelled, because Writfold does not do them: launching, cancelling or
+acknowledging a worker, budgets, delegation. A progress property would
+need fairness of a harness Writfold does not run, so none is claimed.
+
+## 7. Deferred, with the corrections found
+
+| Item | Why deferred | Correction to carry | Owner |
+|---|---|---|---|
+| Budget reservations | Writfold cannot stop a model; no first-slice decision reserves | no release rule (crashes leak for ever, `k` retries cost `k·r`); settlement must be keyed by invocation, idempotent, with conflict; limits live in `(ℕ ∪ {∞})^k`; parent and child accounting is undefined; two clones break the invariant on merge | #159 |
+| Authority intersection, delegation | one grant source today | check coverage per source; never build the intersection | #159 |
+| Tool schemas, effects, path scopes, bindings | nothing checks them; scope inclusion is not a fold | choose a validator and a grammar first | #146 |
+| Authenticated issuers, signed observations | no producer of such a fact in a serverless, unsigned product | an observation is a statement until a receiver verifies it | #64 |
+| Requirements at prepare (`needs`) | not needed for the first slice | reuse `guard::require` facts | #154 |
+| Unit-local reuse of reviews after the corpus moves | needs a per-unit content digest and an argument for it | the first rule is: the corpus moved, every row is stale | #156 |
+| Context epochs for inline use | Writfold sees "emitted", not "read" | join #141's stages | #123, #141 |
+| A general rule language over evidence | it is the removed assessed gate under another name | fixed built-in names only | not planned |
+
+## 8. What is claimed
+
+Lean covers pure decisions over the facts they are given. TLC covers
+bounded interleavings of the publications Writfold makes. Tests cover the
+reading, hashing and writing that turn files into facts.
+
+None of them shows that a model read its instructions, that a review is
+right, that a harness confined a process, or that a recorded statement is
+true. Receipts resist mistakes, not adversaries
+([mission](../../writfold/mission.md)). The boundary that resists a worker
+that does not cooperate is a receiver running `handoff check` on its own
+policy revision (#57, #64), and it accepts no statement.
