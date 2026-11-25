@@ -2915,3 +2915,78 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "complete-ignores-no-manifest",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/vale.rs"
+function = "weigh"
+lean = "writfold_core.vale.weigh"
+theorems = [
+  "Writfold.Core.Vale.weigh_spec",
+  "Writfold.Core.Vale.weigh_never",
+  "Writfold.Core.Vale.weigh_error_blocks",
+  "Writfold.Core.Vale.weigh_mono",
+]
+total = "Writfold.Core.Vale.weigh_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "vale-never-blocks",
+  "vale-warning-skips",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/vale.rs"
+function = "usable"
+lean = "writfold_core.vale.usable"
+theorems = [
+  "Writfold.Core.Vale.usable_spec",
+  "Writfold.Core.Vale.usable_exit_agrees",
+  "Writfold.Core.Vale.usable_exit",
+]
+total = "Writfold.Core.Vale.usable_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "vale-absent-usable",
+  "vale-other-version-usable",
+  "vale-exit2-usable",
+  "vale-exit-disagrees-usable",
+  "vale-cut-usable",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/vale.rs"
+function = "rules"
+lean = "writfold_core.vale.rules"
+theorems = [
+  "Writfold.Core.Vale.rules_spec",
+]
+total = "Writfold.Core.Vale.rules_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "vale-no-canary-pass",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/vale.rs"
+function = "settle"
+lean = "writfold_core.vale.settle"
+theorems = [
+  "Writfold.Core.Vale.settle_spec",
+  "Writfold.Core.Vale.settle_unusable_unknown",
+  "Writfold.Core.Vale.settle_no_coverage_unknown",
+  "Writfold.Core.Vale.settle_pass_iff",
+  "Writfold.Core.Vale.settle_fail_iff",
+  "Writfold.Core.Vale.settle_advice_never_decides",
+  "Writfold.Core.Vale.settle_perm",
+  "Writfold.Core.Vale.settle_agrees",
+  "Writfold.Core.Vale.countB_weigh_zero",
+  "Writfold.Core.Vale.pass_stricter_pass",
+]
+total = "Writfold.Core.Vale.settle_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "vale-unusable-fail",
+]

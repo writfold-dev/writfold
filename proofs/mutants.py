@@ -230,6 +230,50 @@ MUTANTS = (
            "        Outcome::Pass => blocking == 0,",
            "        Outcome::Pass => true,",
            ("Writfold.Core.Prose.agrees_spec",)),
+    # vale (#131): only the pinned executable's run is read
+    Mutant("vale-absent-usable", "vale.rs",
+           "        Tool::Absent | Tool::Other => return false,",
+           "        Tool::Absent => {}\n        Tool::Other => return false,",
+           ("Writfold.Core.Vale.usable_spec",)),
+    Mutant("vale-other-version-usable", "vale.rs",
+           "        Tool::Absent | Tool::Other => return false,",
+           "        Tool::Other => {}\n        Tool::Absent => return false,",
+           ("Writfold.Core.Vale.usable_spec",)),
+    # vale: exit 2 (a runtime or config error) is never read
+    Mutant("vale-exit2-usable", "vale.rs",
+           "        Ending::Exited(_) | Ending::Signaled | Ending::TimedOut | Ending::Error => false,",
+           "        Ending::Exited(_) => true,\n        Ending::Signaled | Ending::TimedOut | Ending::Error => false,",
+           ("Writfold.Core.Vale.usable_spec",)),
+    # vale: exit 0 must agree with no error-level alert
+    Mutant("vale-exit-disagrees-usable", "vale.rs",
+           "        Ending::Exited(0) => ran.errors == 0,",
+           "        Ending::Exited(0) => true,",
+           ("Writfold.Core.Vale.usable_spec",)),
+    # vale: cut-off or unreadable output is never read
+    Mutant("vale-cut-usable", "vale.rs",
+           "    if !ran.whole {\n        return false;\n    }",
+           "    if !ran.whole {\n        return true;\n    }",
+           ("Writfold.Core.Vale.usable_spec",)),
+    # vale: a silent canary means no rule applied
+    Mutant("vale-no-canary-pass", "vale.rs",
+           "    if canary == 0 { 0 } else { enabled }",
+           "    if canary == 0 { enabled } else { enabled }",
+           ("Writfold.Core.Vale.rules_spec",)),
+    # vale: with vale_block = "never" nothing blocks
+    Mutant("vale-never-blocks", "vale.rs",
+           "        BlockFrom::Never => Weight::Advice,",
+           "        BlockFrom::Never => Weight::Blocking,",
+           ("Writfold.Core.Vale.weigh_spec",)),
+    # vale: with vale_block = "warning" a warning blocks
+    Mutant("vale-warning-skips", "vale.rs",
+           "            Level::Error | Level::Warning => Weight::Blocking,\n            Level::Suggestion => Weight::Advice,",
+           "            Level::Error => Weight::Blocking,\n            Level::Warning | Level::Suggestion => Weight::Advice,",
+           ("Writfold.Core.Vale.weigh_spec",)),
+    # vale: an unreadable run is unknown, never a failure
+    Mutant("vale-unusable-fail", "vale.rs",
+           "        return Outcome::Unknown;",
+           "        return Outcome::Fail;",
+           ("Writfold.Core.Vale.settle_spec",)),
     # runs (#98): --open never hides a state outside the vocabulary
     Mutant("other-hidden-by-open", "runs.rs",
            "        State::Other => Shown::Flagged,",

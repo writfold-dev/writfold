@@ -72,5 +72,6 @@ pub mod runs;
 pub mod scope;
 pub mod store;
 pub mod subject;
+pub mod vale;
 pub mod verdict;
 pub mod walk;

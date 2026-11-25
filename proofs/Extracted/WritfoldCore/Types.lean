@@ -662,6 +662,34 @@ inductive subject.Pick where
 | Kb : subject.Pick
 | Nothing : subject.Pick
 
+/-- [writfold_core::vale::Level]
+    Source: 'crates/writfold-core/src/vale.rs', lines 23:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive vale.Level where
+| Suggestion : vale.Level
+| Warning : vale.Level
+| Error : vale.Level
+
+/-- [writfold_core::vale::BlockFrom]
+    Source: 'crates/writfold-core/src/vale.rs', lines 31:0-37:1
+    Visibility: public -/
+@[discriminant isize]
+inductive vale.BlockFrom where
+| Never : vale.BlockFrom
+| Error : vale.BlockFrom
+| Warning : vale.BlockFrom
+| Suggestion : vale.BlockFrom
+
+/-- [writfold_core::vale::Tool]
+    Source: 'crates/writfold-core/src/vale.rs', lines 41:0-48:1
+    Visibility: public -/
+@[discriminant isize]
+inductive vale.Tool where
+| Absent : vale.Tool
+| Other : vale.Tool
+| Pinned : vale.Tool
+
 /-- [writfold_core::verdict::locate::Window]
     Source: 'crates/writfold-core/src/verdict/locate.rs', lines 11:0-20:1
     Visibility: public -/

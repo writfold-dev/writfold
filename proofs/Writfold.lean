@@ -28,6 +28,7 @@ import Writfold.Inventory
 import Writfold.Runs
 import Writfold.Packet
 import Writfold.Prose
+import Writfold.Vale
 import Writfold.Catalog
 import Writfold.Handoff
 import Writfold.Publish

@@ -6732,6 +6732,105 @@ def subject.pick
            then ok subject.Pick.Kb
            else ok subject.Pick.Nothing
 
+/-- [writfold_core::vale::Level]
+    Source: 'crates/writfold-core/src/vale.rs', lines 23:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive vale.Level where
+| Suggestion : vale.Level
+| Warning : vale.Level
+| Error : vale.Level
+
+/-- [writfold_core::vale::BlockFrom]
+    Source: 'crates/writfold-core/src/vale.rs', lines 31:0-37:1
+    Visibility: public -/
+@[discriminant isize]
+inductive vale.BlockFrom where
+| Never : vale.BlockFrom
+| Error : vale.BlockFrom
+| Warning : vale.BlockFrom
+| Suggestion : vale.BlockFrom
+
+/-- [writfold_core::vale::Tool]
+    Source: 'crates/writfold-core/src/vale.rs', lines 41:0-48:1
+    Visibility: public -/
+@[discriminant isize]
+inductive vale.Tool where
+| Absent : vale.Tool
+| Other : vale.Tool
+| Pinned : vale.Tool
+
+/-- [writfold_core::vale::Ran]
+    Source: 'crates/writfold-core/src/vale.rs', lines 52:0-64:1
+    Visibility: public -/
+structure vale.Ran where
+  tool : vale.Tool
+  ending : gate.Ending
+  whole : Bool
+  errors : Std.Usize
+  enabled : Std.Usize
+  canary : Std.Usize
+
+/-- [writfold_core::vale::weigh]:
+    Source: 'crates/writfold-core/src/vale.rs', lines 67:0-80:1
+    Visibility: public -/
+def vale.weigh
+  (level : vale.Level) («from» : vale.BlockFrom) : Result prose.Weight := do
+  match «from» with
+  | vale.BlockFrom.Never => ok prose.Weight.Advice
+  | vale.BlockFrom.Error =>
+    match level with
+    | vale.Level.Suggestion => ok prose.Weight.Advice
+    | vale.Level.Warning => ok prose.Weight.Advice
+    | vale.Level.Error => ok prose.Weight.Blocking
+  | vale.BlockFrom.Warning =>
+    match level with
+    | vale.Level.Suggestion => ok prose.Weight.Advice
+    | vale.Level.Warning => ok prose.Weight.Blocking
+    | vale.Level.Error => ok prose.Weight.Blocking
+  | vale.BlockFrom.Suggestion => ok prose.Weight.Blocking
+
+/-- [writfold_core::vale::usable]:
+    Source: 'crates/writfold-core/src/vale.rs', lines 84:0-97:1
+    Visibility: public -/
+def vale.usable (ran : vale.Ran) : Result Bool := do
+  match ran.tool with
+  | vale.Tool.Absent => ok false
+  | vale.Tool.Other => ok false
+  | vale.Tool.Pinned =>
+    if ran.whole
+    then
+      match ran.ending with
+      | gate.Ending.Exited i =>
+        match i with
+        | 0#iscalar => ok (ran.errors = 0#usize)
+        | 1#iscalar => ok (ran.errors > 0#usize)
+        | _ => ok false
+      | gate.Ending.Signaled => ok false
+      | gate.Ending.TimedOut => ok false
+      | gate.Ending.Error => ok false
+    else ok false
+
+/-- [writfold_core::vale::rules]:
+    Source: 'crates/writfold-core/src/vale.rs', lines 101:0-103:1
+    Visibility: public -/
+def vale.rules
+  (enabled : Std.Usize) (canary : Std.Usize) : Result Std.Usize := do
+  if canary = 0#usize
+  then ok 0#usize
+  else ok enabled
+
+/-- [writfold_core::vale::settle]:
+    Source: 'crates/writfold-core/src/vale.rs', lines 107:0-112:1
+    Visibility: public -/
+def vale.settle
+  (ran : vale.Ran) (found : Slice prose.Weight) : Result gate.Outcome := do
+  let b ← vale.usable ran
+  if b
+  then let i ← vale.rules ran.enabled ran.canary
+       prose.verdict i found
+  else ok gate.Outcome.Unknown
+
 /-- [writfold_core::verdict::locate::Window]
     Source: 'crates/writfold-core/src/verdict/locate.rs', lines 11:0-20:1
     Visibility: public -/
