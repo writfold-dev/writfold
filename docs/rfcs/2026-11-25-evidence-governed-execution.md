@@ -13,437 +13,370 @@ supersedes: []
 superseded_by: []
 blocked_on:
   - "2026-11-25-agent-vocabulary"
-  - "https://github.com/writfold-dev/writfold/issues/145"
 ---
 
 # RFC: Evidence-governed execution
 
-Prose instructions cannot establish that a required skill reached the model, that a prerequisite ran before an action, or that a report belongs to the checked inputs. Make those observable requirements explicit and refuse the corresponding operation when its evidence is missing or stale.
+Groomed on 25 November 2026 with the
+[agent vocabulary RFC](2026-11-25-agent-vocabulary.md). The first draft
+proposed typed obligations, issuer roles, use phases and an evidence graph.
+The [grooming review](2026-11-25-agent-vocabulary/grooming.md) (rows E1 to
+E20) found that Writfold already judges evidence at three of the four
+places the draft named, with proved kernels, and that the fourth is
+`agent prepare` from the vocabulary RFC. This RFC now records that mapping,
+adds one small thing, and says what is not built and why. The shared
+algebra is the [calculus](2026-11-25-agent-vocabulary/calculus.md).
 
-This owner-requested planning set is for later grooming. It does not authorize implementation, merge, or model evaluation. It extends [the agent-vocabulary proposal in PR #152](https://github.com/writfold-dev/writfold/pull/152), with [KB research contracts](2026-11-25-kb-research-contracts.md) as the first worked application. [Tracker #153](https://github.com/writfold-dev/writfold/issues/153) owns the set.
+## Summary
 
-Repository observations below are pinned to `2b9c9db0ea47b62011c83c8c582e146cefa83151`; the agent-vocabulary draft was read at `a3a686e2cc31d5a7fe3c07d30de0b7719c777c03`. Proposed names and schemas are not claims about shipped interfaces.
+Prose cannot show that a required skill reached a worker, that a
+prerequisite held before an action, or that a report belongs to the inputs
+that were checked. Writfold answers with records and gates, not with more
+prose.
 
-## Pure kernels and proof boundary
+Decisions:
 
-Place the new pure decisions in `crates/writfold-core`, reusing current plan, gate, policy and packet kernels. Final module/function names are a grooming choice; these are the required interfaces:
+1. **No new evidence type.** There is no obligation record, issuer role,
+   use phase, `derived` gate class or rule language. An obligation is a
+   gate or a delivery mode, as today.
+2. **Four use sites, one set of judgments.** Evidence is consulted before
+   a worker is set up, before a tool call, before a step is done and
+   before a candidate is accepted elsewhere. The last three are shipped.
+   The first is `agent prepare`.
+3. **One addition: `needs`.** A skill or an agent profile may list gates
+   that must be met now, when a worker is set up. A step that was done
+   earlier and has since gone stale does not count.
+4. **An observation is a statement.** What a harness says it did (sent
+   these bytes to a model) is recorded with `deliver attest`, shown as
+   attested and never as a passed check.
+5. **Three tiers of trust, in the words Writfold already uses:** recorded,
+   guarded, received. Only the receiver resists a worker that does not
+   cooperate.
 
-| Decision | Inputs | Output |
+## Proof obligations
+
+One kernel changes. `invoke::prepare_check` (vocabulary RFC) gains a last
+input, the requirement facts of the closure's `needs`:
+
+- `prepare_check(facts: &Prepare, needs: &[guard::Fact])
+  -> Result<(), PrepareRefusal>`. After its six existing checks, in their
+  order, it refuses with `Needs(i)`, where `i` is the first fact that is
+  not `Met`.
+- Each fact is `guard::require::gate_fact(read, defined, met)`, the
+  shipped function behind a guard rule's `gate:<id>`: unknown unless the
+  gates were judged, then met only for a defined gate that is met.
+
+`proofs/Writfold/Invoke.lean` proves:
+
+- `prepare_check_spec` and `prepare_ok_iff`, restated with the seventh
+  condition: admitted exactly when the six hold and every need is `Met`.
+- `needs_unknown_refused`: an `Unknown` need is never admitted.
+- `needs_first`: the refusal names the least index that is not met.
+- `no_needs_unchanged`: with no needs, the decision is the vocabulary
+  RFC's, so a profile without the key behaves as before.
+
+Mutants:
+
+| Mutant | Change | Breaks |
 |---|---|---|
-| Evidence applicability | Typed receipt, authenticated issuer facts, required bindings, current basis and admitted trust policy | Eligible, ineligible or unknown, with reasons |
-| Obligation evaluation | Complete obligation inventory, finite verified evidence/dependency graph and phase | Per-obligation judgments and missing evidence |
-| Admission | Existing graph state, operation/phase, approved policy, judgments and protected-state basis | Admit or refuse/unknown; never an external effect |
-| Obligation composition | Two typed obligation maps and authority restrictions | Compatible conjunction/intersection, or a conflict |
+| `prepare-skips-needs` | the needs are not consulted | `prepare_check_spec` |
+| `needs-unknown-met` | `Unknown` counts as met | `prepare_check_spec` |
 
-Authentication facts enter from tested adapters; an arbitrary `issuer` string is not an authenticated fact. The kernel must not perform network IO, read mutable files or invoke an LLM. Proofs establish implications under the explicit input/trust model.
+Reused as they stand: `gate_fact_met_iff`, `gate_fact_unknown_iff`,
+`unknown_never_passes`, `decide_pass_iff`, `advance_facts_ok_iff`,
+`guard_allow_iff`, `strict_accepted_iff`, `statement_never_passes`,
+`run_current_met_iff`.
 
-## Proof obligations before implementation
+**Tested, not proved:** parsing `needs`; judging each named gate for the
+run and subject, which is the code a guard rule already uses; the
+diagnostics.
 
-The following are proposed properties, not existing theorem names. Prove the pure decision functions over their shipped Rust through Charon/Aeneas before wiring them into verbs.
+The first draft listed ten properties. Their resolution is in the
+[calculus](2026-11-25-agent-vocabulary/calculus.md#51-the-drafts-obligations-resolved):
+four are shipped theorems, four need one theorem for a new kind of record
+(owned by #148, #149 and #156), one is `bound_pass_iff`, and "a record
+does not advance" is a test and a TLC invariant.
 
-| Property | Required meaning |
+## Motivation
+
+The owner asked that an agent should not be able to omit a skill, skip
+prose-defined research, or claim completion without evidence that the
+required work was set up and done. A skill today is text a harness loads.
+Nothing records whether it was handed over.
+
+## What each kind of evidence shows
+
+| Evidence | What it shows |
 |---|---|
-| `admission_requires_evidence` | An admitted operation has evidence for every instantiated obligation of the selected policy and phase. |
-| `evidence_bound_to_use` | Evidence from the wrong run, step, attempt, subject, policy, source version or context epoch cannot satisfy a use that requires those bindings. |
-| `context_submission_bound` | A result needing a skill is accepted only when its producing invocation is linked to a trusted submission observation for the required effective context. |
-| `incomplete_never_complete` | Unreadable inventories, unexhausted pagination, cut traversal, missing artifacts and unknown observations cannot establish completeness. |
-| `coverage_requires_universe` | Universal review coverage is evaluated over a declared, verified manifest; an absent manifest cannot become an empty successful review. |
-| `dependencies_preserved` | Derived evidence is supported by an acyclic, valid dependency graph and cannot survive an invalidated required premise. |
-| `obligations_not_weakened` | Skill composition, delegation and permitted replanning preserve mandatory obligations and issuer restrictions. |
-| `judgment_not_promoted` | Checking a model report's structure cannot turn its semantic judgment into a mechanical proof. |
-| `record_does_not_advance` | Storing a result does not itself mark a plan step done. Advancement is a separate checked transition. |
-| `unknown_not_success` | Ambiguous dispatch, timeout, cancellation and repair exhaustion cannot become successful completion. |
+| An agent prints a hash | The agent wrote a string |
+| The closure digest in an invocation record | Writfold resolved these definitions and wrote this package |
+| `invocation.bound` passes | This report names that record, at this step, and the definitions have not moved |
+| A harness attests "submitted" | Someone stated that the package was sent. Recorded as given |
+| A check of the report passes | The report has the property that check tests |
+| A reviewer attests the report | Someone read it against the gate's instructions |
 
-These theorems are conditional on the facts entering the kernel. Parsing, hashing, signatures, source enumeration, request serialization, host instrumentation and confinement need their own tests and explicit trust assumptions. A proof about a monitor cannot establish that an uninstrumented host obeys it.
+None shows that a model understood or obeyed its instructions. A proof
+about a kernel is a proof about a decision over recorded facts, not about
+an event in the world.
 
-### Falsifying mutants and tests
+## The four use sites
 
-| Removed or weakened guard | Property that must fail |
-|---|---|
-| Issuer authorization or effective-context binding | `context_submission_bound`, `evidence_bound_to_use` |
-| Complete required inventory | `admission_requires_evidence`, `incomplete_never_complete` |
-| Required premise or current source basis | `dependencies_preserved`, `evidence_bound_to_use` |
-| Obligation/authority intersection | `obligations_not_weakened` |
-| Evidence-kind distinction | `judgment_not_promoted` |
-| Separate record/advance or unknown dispatch state | `record_does_not_advance`, `unknown_not_success` |
+| Site | Verb | What is judged | Kernel | Shipped |
+|---|---|---|---|---|
+| Before a worker is set up | `agent prepare` | the closure, the plan, the packet, `needs` | `invoke::prepare_check` | no: #148, and `needs` here |
+| Before a tool call | `hook pre-tool-use` | the rule's requirements: `run.current`, `step.met`, `gate:<id>`, `gates.met`; for a posting command, the candidate's bytes | `guard::decide`, `delivery::guard` | yes |
+| Before a step is done | `plan advance` | every gate of the step, each under its `accept` | `plan::advance` | yes |
+| Before a candidate is accepted elsewhere | `handoff check` | the operator's required gates at the operator's policy revision, checks only | `handoff::checked` | yes |
 
-Extraction drift, `lake build`, axiom audit and mutants must pass before verb wiring. Test parser rejection, canonical encodings, hashing/signatures, manifest retention, actual request serialization, host bypasses and protected-state rechecks separately. Extend the real `RunGraph`/`KbWrite` and invocation protocol models under #145; bounded TLC exploration and tested IO are not Lean proof coverage of a deployed host.
+```mermaid
+flowchart TD
+    Defs["Definitions in .writfold/: gates, modes, plans, skills, agents"] --> J["Judgments: standing of each gate or mode, under its accept"]
+    Recs["Records in runs/RUN/: receipts, statements, covers, invocations, candidates"] --> J
+    J --> P["agent prepare: needs, closure, packet"]
+    J --> G["hook pre-tool-use: guard rules, delivery guard"]
+    J --> A["plan advance: the step's gates"]
+    J --> H["handoff check: the operator's required gates, checks only"]
+    P -->|refused or a package| Worker["External harness and worker"]
+    Worker -->|deliver prepare --invocation| Recs
+```
 
-## Recommendation
+At every site an unknown answer refuses, and an empty set of obligations
+is not "all met" (`unknown_never_passes`, `gates_fact_met_iff`,
+`empty_never_ready`, `strict_spec`).
 
-Make Writfold's existing run graph advance, and its adapters authorize governed operations, only from typed obligations supported by verified evidence. The plan owns ordering; gates judge evidence; the harness observes model/tool execution and mediates actions. Record the evidence dependencies inside existing runs. Do not add a second workflow scheduler or an agent-controlled checklist of claimed compliance.
+An exit gate cannot undo work done out of order. That is why a
+prerequisite is judged again where it is used: `needs` at prepare, a guard
+rule before a command. A step once done can read `!stale` and the current
+step does not move back, so "the step is done" is not "the gate holds now".
 
-A gate can require evidence that a skill was supplied to the model. A skill hash alone is insufficient: it identifies content, but says nothing about loading. Require a receipt from an authorized harness that binds the effective skill content to the actual model request that produced the relevant result. Even this establishes input delivery, not understanding or obedience.
+## Behaviour
 
-For prose such as “search all related KB references for inconsistencies”, specify a bounded, explicit research contract: enumerate a declared reference universe, construct review units, supply those units to an attributed reviewer, retain a result for each, and disposition the findings. Keep scope completeness, process coverage and semantic correctness separate.
+```toml
+# .writfold/skills/kb-consistency.toml
+schema = "writfold-skill/1"
+id = "kb-consistency"
+description = "Compare related KB records for conflicts."
+tools = ["kb.read"]
+plan = "kb-consistency"
+needs = ["related-scope"]        # gate ids, judged when a worker is set up
+instructions_file = ".claude/skills/kb-consistency/SKILL.md"
+```
 
-## What Writfold already has
+`needs` is a list of gate ids, on a skill or an agent profile. A name that
+is not a defined gate is `ref.undefined` when the file is linted.
 
-The proposal should reuse these components rather than duplicate them:
+```text
+$ writfold kb agent prepare kb-reviewer --input units.json --out /tmp/inv
+refused: skill kb-consistency needs gate related-scope, which is [stale] (the KB moved since its receipt); next: writfold kb gate run related-scope
+```
 
-| Existing component | Current behavior | Extension needed |
+Exit 3, nothing written. When the gates cannot be judged (the run or a
+definition does not read), the refusal says `unknown` and names what did
+not read.
+
+An existing setup notices nothing: a profile or skill without `needs`
+behaves as the vocabulary RFC says (`no_needs_unchanged`).
+
+## Observations are statements
+
+The draft separated "context prepared", "request submitted" and "result
+returned". Two of those survive:
+
+| Level | Who knows it | How it is recorded |
 |---|---|---|
-| [Plan kernel](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/crates/writfold-core/src/plan.rs) | `advance` checks the current node and its supplied gate facts. | Bind invocation and use-time prerequisites to the same step; verify the completeness of the supplied obligation inventory. |
-| [Gates](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/docs/guide/gates.md) | Evidence is bound to definitions and subjects; retained artifacts, unknown outcomes, acceptance policies and freshness already exist. | Typed execution observations, authorized issuers, dependency manifests and derived predicates. |
-| [Run graph](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/docs/guide/run-graph.md) | An ordered plan spine, includes, splices, bounded loops and historical done records. | Use the existing identities and transitions. The evidence graph is provenance, not another scheduler. |
-| [Skills](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/docs/guide/skills.md) | External Markdown; Writfold does not verify that it was followed. | Resolve required skill bundles before invocation; bind the effective request context. |
-| [Packet kernel](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/crates/writfold-core/src/packet.rs) | Required rows and unreadable inputs affect completeness. | Carry this distinction through the adapter into the actual model request, including after compaction. |
-| [Hooks](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/docs/guide/hooks.md) | Optional, best-effort integration; configured routes can check exact delivery bytes. | A conforming adapter must mediate every operation for which it claims enforcement. |
+| prepared | Writfold, first hand: it wrote the package | the invocation record |
+| submitted | the harness | `deliver attest --check <name> --by adapter:<name>@<version>` on the report |
 
-The documented `research.backfilled` check establishes that a record or citation was written within the step window. It does not establish that every relevant reference was considered. Historical done steps can become stale without moving the plan backwards; preserve that history while refusing new uses that depend on invalid evidence.
+A mode that wants the stronger level lists an attestation, for example
+`attest = ["context.submitted"]`, and decides with `waivable` whether a
+waiver may stand in for it. A harness that cannot observe its own request
+leaves the obligation open, and the report is not ready. Nothing is
+weakened without a visible waiver.
 
-## Research foundations and choices
+A harness's own receipt may be the basis of such a statement only for what
+it means. "Queued" or "stored" is not "submitted". The statement's text
+says what was observed.
 
-### Policy queries over execution provenance
+There is no circular requirement. The package exists before the worker
+starts; the statement is made after.
 
-[Formal Policy Enforcement for Agentic Systems, arXiv 2602.16708v4](https://arxiv.org/html/2602.16708v4), originally introduced as PCAS and now describing FORGE, is the closest architectural reference. It evaluates Datalog policies over an execution dependency graph and mediates proposed actions. Its guarantee assumes complete mediation and faithful observations. It also explicitly separates policy correctness from the correctness of a natural-language translation.
+## Trust
 
-Adopt that separation and the relational model. Do not immediately add its full runtime, instrumentation stack or a general-purpose Datalog service to Writfold. Start with a small finite predicate language in the pure kernel: bound identities, approved issuers, exact digests, reachability, complete inventories and universal coverage of a manifest.
-
-### Compositional plans
-
-[Proof-Carrying Plans: a Resource Logic for AI Planning, PPDP 2020](https://arxiv.org/pdf/2008.04165) gives a plan logic drawing on Hoare, linear and separation logic, with an Agda formalization and soundness relative to planning semantics. It supports reasoning about composition from action contracts. It does not make natural-language action descriptions or real-world observations automatically true.
-
-Use pre/postconditions for skills and tools, and resource accounting for invocation permits and budgets. Model an LLM step as nondeterministic: its successful result must be checked; success is not an assumed postcondition.
-
-### Authenticated evidence about a process
-
-[in-toto, USENIX Security 2019](https://www.usenix.org/system/files/sec19-torres-arias.pdf) separates an approved workflow layout from signed link metadata binding steps, actors, inputs and products. [SLSA 1.2 verification](https://slsa.dev/spec/v1.2/verifying-artifacts) checks trusted producer identity, artifact binding and expected execution parameters. These provide a useful model for execution receipts. Signing authenticates a statement from a trusted producer; it does not prove the producer's implementation or the adequacy of its checks.
-
-### Preserving context across boundaries
-
-[CONTINUITY, September 2026 preprint](https://arxiv.org/pdf/2609.05269) studies failures when authority, provenance and action identity are lost or changed across components. It proposes assume-guarantee contracts, authenticated context and effect-bound permits. Treat it as design and test-case inspiration; its reported evaluations and conditional theorem do not establish Writfold's implementation correctness.
-
-### Optional later algebra
-
-Database provenance offers a way to record which premises jointly support a result and which alternative derivations exist. The [ProvSQL Lean provenance documentation](https://provsql.org/lean-docs/Provenance.html) is a candidate reference for later formal work. No dependency or compatibility decision is proposed here. An explicit evidence DAG suffices initially; semantic negation and missing-data reasoning need more care than positive dependency tracking.
-
-## Who owns each responsibility
-
-| Component | Responsibility |
-|---|---|
-| Tool definition | Typed operation, declared effects, input/output contracts and replaceable implementation binding. |
-| Skill definition | Instructions, required tool contracts, context requirements and a reference to one existing plan. |
-| Agent profile | Worker configuration and permitted capabilities; it does not choose which mandatory requirements to discard. |
-| Plan | Steps, dependencies expressed by existing includes/order, repetitions and gate use sites. |
-| Gate | A pure judgment about whether specified evidence is sufficient for an obligation. |
-| Adapter/harness | Actual context assembly, model/tool dispatch, observations and interception of governed operations. |
-| Runtime/receiver trust policy | Which issuers and policy revisions are authoritative, and which effects require admission. |
-
-An obligation and a receipt are internal semantic concepts, not necessarily two more top-level user-authored entities. Users continue to configure tools, gates, skills, agents and plans under `.writfold/`.
-
-## Rendered composition and execution visual
-
-![A harness supplies required context and records evidence; gates judge it before the existing run graph permits progress.](2026-11-25-enforcement/execution.png)
-
-The diagram is a committed PNG so it remains readable in clients that do not render Mermaid.
-
-## What a skill hash does and does not establish
-
-| Evidence | Defensible claim |
-|---|---|
-| Agent prints a hash | The agent supplied a string. |
-| Resolver verifies the skill bundle digest | These are the selected source files and definitions. |
-| File-read observation | A tool read those bytes; the result may still have been omitted or truncated before generation. |
-| Trusted request-submission observation | The adapter submitted the declared content in the request associated with this invocation. |
-| Observed action/result plus checked obligations | This observable behavior satisfied the specified checks. |
-| Formal proof term checked by a proof kernel | The encoded proposition follows from its formal premises. |
-
-None of the first four proves that the model understood the skill. A proof term cannot prove that an external event occurred unless the model includes an appropriate trusted premise about that event.
-
-Use two content identities: a source-bundle root covering the resolved skill and behavior-relevant dependencies, and an effective-context digest covering what was actually rendered for this invocation. Dynamic text, tool descriptions, selected bindings, instruction ordering and transformations must be captured where they affect the contract. A hash of `SKILL.md` alone misses these inputs.
-
-Receipts should be issued by the component capable of observing the claim. The model can propose a result and cite receipt IDs; it cannot mint a trusted “skill supplied” or “tool succeeded” fact by writing JSON.
-
-### Illustrative context-submission receipt
-
-The schema below is a proposal. Digest and ID values are abbreviated for readability and are not valid fixture values.
-
-```json
-{
-  "schema": "writfold-execution-receipt/proposal",
-  "kind": "model.request-submitted",
-  "run": "run-42",
-  "step": "review#1/inspect",
-  "attempt": "attempt-3",
-  "invocation": "inv-7",
-  "context_epoch": 2,
-  "policy_digest": "sha256:POLICY",
-  "adapter_digest": "sha256:ADAPTER",
-  "skill_bundle_digest": "sha256:SKILL",
-  "effective_context_digest": "sha256:CONTEXT",
-  "request_digest": "sha256:REQUEST",
-  "input_manifest_digest": "sha256:MANIFEST",
-  "parents": ["receipt-context-prepared-7"],
-  "issuer": "trusted-harness",
-  "observation": "submitted",
-  "required_omitted": 0,
-  "authentication": {"method": "deployment-selected"}
-}
-```
-
-The verifier obtains identity from authenticated transport or a verifiable signature, not the `issuer` string. It checks the producer's authorization for this receipt kind. Retain the necessary manifests and source references; a bare root hash cannot later demonstrate which items were included. Avoid retaining credentials or unnecessary private transcript bytes. Redacted manifests must state the resulting verification limits.
-
-## Adapter instrumentation and deterministic run bootstrap
-
-An adapter is ordinary integration code installed for a particular host: an extension/hook bundle, or wrapper functions around an SDK such as the Python precursor. It translates host events into Writfold operations, assembles required context and submits observations. Writfold supplies decisions; the component that owns model/tool/output execution must apply those decisions. An adapter is not another reasoning agent and cannot compel an unmodified host merely by existing in `.writfold/`.
-
-Name the **task-entry owner** explicitly. This is the configured harness callback or external SDK wrapper that receives the task before governed work starts. It invokes bootstrap as ordinary code; the model is not responsible for remembering a run-creation command. It may live in the existing harness process and does not require a Writfold service or companion.
-
-The proposed bootstrap sequence is:
-
-1. Establish trusted workspace, harness-session and task identity; select an explicit workflow or approved baseline. A session-start event may precede the task text. Do not assume every user message is a new task, or that compaction is one.
-2. Create an admissible run, or validate an explicit attachment to an existing open run, through Writfold's normal record/write path. Repeated delivery of the same task-start event is idempotent. A new task receives a distinct binding unless explicitly attached.
-3. Bind the admitted run, policy revision and task/session scope in the trusted execution context. A worker-supplied run ID, environment variable or shared current-run pointer is a locator, not proof of that binding.
-4. Before the first and each later governed operation, the execution owner independently requires a valid current binding and all applicable obligations. Failure, timeout, missing policy or an unusable binary cannot authorize that operation under a strict contract.
-5. Recheck binding on resume, fork/delegation, task switch and policy revision. Preserve historical work; do not silently attach to another session's run or overwrite active policy during a replay.
-
-The binding admission predicate is an additional premise of the operation rule: the run exists and is open; its task/workspace/session association is authorized; the approved policy and intended step apply; and required host capabilities hold. Merely finding a directory named after a run is insufficient.
-
-**Automatic creation and enforcement are separate.** A startup callback can create runs conveniently, but a missing callback cannot deny anything. A separately enforced pre-operation check rejects missing bindings even if bootstrap never fired. If both hooks can disappear or be bypassed, the integration has no prevention guarantee for that path. The protected host/executor must control configuration and honor missing/error outcomes; an adapter capability declaration or startup handshake alone does not prove continued coverage.
-
-Choose instrumentation according to actual host interfaces:
-
-| Integration | What it can establish | Required limit |
+| Tier | What is in it | What it resists |
 |---|---|---|
-| Native task/context/tool/output callbacks | Bootstrap and checks at the callbacks the host actually exposes and honors | Enumerate paths, disable/error behavior and protected configuration; test missing callbacks |
-| Controlled SDK wrapper | Direct code before model calls and dispatched tools, with explicit task/run state | Cover all relevant dispatch paths and keep policy/authority outside worker mutation |
-| Launch wrapper | Initial run setup, selected configuration and session binding | Launch alone does not observe later prompts or intercept arbitrary child actions |
-| Independent tool or receiver | Admission to its own operation, artifact acceptance or publication | Cannot prevent or undo earlier actions through another uncontrolled path |
+| Recorded | everything under `runs/<run>/`: receipts, statements, invocations, candidates | mistakes. A cooperating agent cannot skip a step by accident. Anyone who can write the run can write these files |
+| Guarded | guard rules in a harness hook | an agent using the tool calls the hook sees. "A guard, not enforcement" |
+| Received | `handoff check` on another machine, at the operator's policy revision, accepting checks only | a worker that edits its plan, its gates, its profile or its statements |
 
-The inspected [current hook guide](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/docs/guide/hooks.md) explicitly documents best-effort/fail-open behavior. This proposal must not describe those existing hooks as this stronger boundary. Strict integration is a separately exercised capability. A receiver remains responsible for its full candidate/policy/evidence checks, not just a run-existence check.
+Consequences the first draft did not draw:
 
-[Ten executable design dry runs](2026-11-25-enforcement/dry-runs.md) separate these roles and exercise the bootstrap gap. They passed 43 assertions in a synthetic Python model; they do not establish current product or live harness conformance. Add `governed_action_requires_bound_run` and pure binding/replay-selection properties to #145/#154's proof ledger. Idempotent publication, missing-hook behavior, task-start races and crashes additionally require actual protocol/IO/host tests under #150/#157.
+- No kernel takes an "authenticated issuer". Nothing in a product with no
+  server and no signing can produce that fact. `--by` is recorded as
+  given, and the Git author is the record of who wrote a file.
+- A harness's statement is never a pass at a receiver
+  (`statement_never_passes`). A receiver that wants to rely on what
+  happened on another machine needs signed observations. That is the
+  second part of
+  [#64](https://github.com/writfold-dev/writfold/issues/64), after
+  independent re-execution, and not part of this RFC.
+- The definitions a run's modes name are pinned with the run's policy
+  (vocabulary RFC). An agent that edits its own profile makes the run read
+  `policy moved`. That is detection in the recorded tier and refusal in
+  the received tier.
 
-## Invocation lifecycle without circular evidence requirements
+## The run a worker belongs to
 
-Do not require a submitted-request receipt before that same request can be sent.
+The draft asked for a deterministic bootstrap, a task-entry owner and a
+strict run binding. What exists covers the cooperative case:
 
-1. **Resolve:** the runtime selects a task contract under the approved policy and pins the skill/configuration closure. A model may suggest a workflow; it does not get to remove baseline obligations through classification.
-2. **Prepare:** the adapter constructs the actual request, proves mechanically that required content is present under the selected serialization, and obtains admission for that exact request identity.
-3. **Dispatch:** the adapter submits it and records what it observed. A local request submission is not a claim about provider-internal attention or hidden transformations.
-4. **Associate:** output and tool proposals are associated with that invocation by the adapter. The agent cannot rebind output from another request.
-5. **Check:** gates judge reports, tool observations and derived evidence against the step's contract.
-6. **Advance or act:** a separate graph transition or effect admission rechecks the applicable obligations under the current protected state.
+- The current run is decided per session and work tree (`pointer`,
+  `session_decides`, `other_session_undisturbed`).
+- A guard rule can require `run.current` before a governed command
+  (`run_current_met_iff`), so a session whose start hook never ran is
+  refused at the command, not at the start.
+- `agent prepare` takes its run and step, re-checks both under the write
+  lock, and writes them into the invocation record. A report is judged
+  against that record, not against whichever run is current when it
+  arrives.
 
-A crash between dispatch and recording creates an unknown attempt, not evidence of a completed or unstarted invocation. Reconcile it or perform a separately identified retry; do not assume an effectful action is safe to repeat.
+Not built: a host that fails closed when a hook is missing. Hooks are best
+effort by design ([hooks](../guide/hooks.md)), and Writfold is not on the
+path of a tool call it is not shown.
 
-After compaction, delegation or a changed effective context, create a new context epoch. Each relevant model invocation needs valid current context evidence; a session-start load receipt is insufficient for the rest of the session. A host that cannot expose the actual request boundary can report a weaker observation, but cannot satisfy a contract requiring the stronger one.
+## Models and harnesses
 
-## Gate evaluation and graph enforcement
+The owner requires that different models and harnesses stay usable. The
+boundary is small and has no harness in it:
 
-Use the same gate evaluator at three distinct use sites:
+- in: the package directory `agent prepare` writes (`invocation.json`,
+  `instructions.md`, `input`, `packet.md`);
+- out: `deliver prepare --invocation`, and optionally `deliver attest`.
 
-| Use site | Typical requirement |
-|---|---|
-| Before model invocation | Approved skill/configuration, prepared required context, usable input scope and admitted budget. |
-| Before a governed effect | Current operation authority and any prerequisites that must already hold before the effect occurs. |
-| Before advancement/completion | Required outputs, valid producing-invocation evidence, coverage and accepted outcome. |
+Any harness with a shell can use it. A model name is a hint recorded in
+the invocation and judged by nothing. Changing the model or the harness is
+a new invocation; the KB, the run and every report that is still bound
+stay. No judgment depends on an event format, so there is nothing to
+normalize. MCP is not offered: the CLI is the interface (owner,
+15 November 2026).
 
-Some requirements are maintained throughout a step: read-only authority, current context identity or a fixed source snapshot. Recheck them at the operations they constrain. An exit gate alone cannot undo work already executed out of order.
+What a harness can add is listed per operation, by the adapter that
+claims it (#150): it can attest submission, or it cannot. A claim is a
+statement, like any other.
 
-The model may perform arbitrary internal deliberation. Writfold governs observable operations and accepted artifacts. Evidence edges should mean concrete relations such as `input-to-request`, `output-of-invocation`, `checked-against` and `derived-from`. They do not claim to reveal what the model internally relied on.
+## Conformance cases
 
-### Minimal calculus
+The draft's seventeen cases, each with the slice that owns it.
 
-Let `P` be the admitted policy, `G` the existing plan state, `E` verified evidence, `B` the applicable source/context basis, and `a` a proposed operation at node `n`.
-
-An obligation has a typed predicate, bound arguments, accepted evidence kinds, authorized issuer roles and a use phase. Write `E ⊢[B] o` when the verifier establishes obligation `o` from valid evidence on basis `B`.
-
-Admission requires all of:
-
-```
-Enabled(G, n, a)
-CompleteRequiredInventory(P, n, a)
-for every o in Need(P, n, a): E ⊢[B] o
-CurrentProtectedStateMatches(B, a)
-```
-
-Only then may the host perform `a` or the graph record the corresponding transition. Missing inventories are unknown, not empty sets. Boolean truth is computed only after the validity/completeness checks; absence of a receipt is not a trusted negative fact about the world.
-
-For a coverage predicate, let `U` be the manifest's required unit set:
-
-```
-Coverage(U, E) := ManifestComplete(U)
-                  and for every u in U:
-                      EligibleReportFor(u, E)
-```
-
-Eligibility includes the required invocation and input bindings, report validator, issuer restrictions and accepted outcomes. If policy requires conclusive assessments, `uncertain` does not discharge that additional requirement. Coverage and conclusiveness are distinct predicates.
-
-Use finite, range-restricted rules. Positive reachability over finite evidence is useful; negation/“none missing” must be evaluated over a complete declared inventory. Do not put arbitrary scripts, network IO or LLM calls inside the pure policy evaluator. Such operations first produce typed observations with explicit uncertainty.
-
-### Composition and reuse
-
-Combine obligation maps by retaining every requirement, conjoining compatible predicates and intersecting accepted evidence/issuer sets. Reject contradictory bindings. Capabilities intersect. Ordered skill composition uses pre/postcondition compatibility; a frame rule is justified only when declared effects preserve the framed facts.
-
-The appropriate partial-correctness claim is: if the monitored skill finishes successfully, its checked postconditions hold. It cannot guarantee that an LLM eventually produces a satisfactory answer.
-
-Evidence is usually persistent and reusable when its bindings still match and policy permits reuse. Invocation identity, context epochs, budget reservations and single-use effect permits have different lifetimes. Do not make every receipt consumable, or treat an old context receipt as reusable everywhere. Cross-clone global permit consumption requires an authoritative receiver; disconnected Git histories cannot provide distributed exactly-once effects.
-
-## Algebra and small-step rules
-
-These are proposed definitions to refine into the extracted Rust proof ledger, not completed proofs. Let a binding basis be
-
-$$B=(run,step,round,attempt,invocation,epoch,policy,inputs,scope,context).$$
-
-An obligation $o=(k,p,b,K,I,\phi)$ has key $k$, a finite typed predicate $p$, required bindings $b$, accepted evidence kinds $K$, authorized issuer roles $I$, and phase $\phi$. Individual predicates specify which coordinates of $B$ matter; a snapshot review need not become stale merely because an unrelated invocation exists.
-
-Write $E\vdash_B o$ for derivability from authenticated, applicable observations and their valid premises. A receipt rule has this shape:
-
-$$
-\frac{e\in E\quad Auth_P(e)\quad Kind(e)\in K\quad Role(e)\in I\quad Match_b(e,B)\quad PremisesValid(e,E,B)\quad Check_p(e,B)}{E\vdash_B o}.
-$$
-
-`Check` is a deterministic predicate for the stated evidence kind. For a model assessment it establishes the attributed assessment, not the truth of the assessment's proposition. Dependencies must be finite and acyclic; no circular self-supporting pass.
-
-For compatible obligations sharing a key and phase, define partial composition:
-
-$$
-(p_1,b_1,K_1,I_1)\sqcap(p_2,b_2,K_2,I_2)
-= (p_1\land p_2,\operatorname{unify}(b_1,b_2),K_1\cap K_2,I_1\cap I_2).
-$$
-
-Keep distinct keys/phases as separate requirements. Reject incompatible bindings or an empty required evidence/issuer intersection; do not drop the obligation. Under a canonical predicate conjunction and compatible bindings, combination is associative, commutative and idempotent up to semantic equality. This is a partial meet, not concatenation of executable steps. Step sequencing remains ordered and generally noncommutative.
-
-Let $O_2\preceq O_1$ mean that every evidence set satisfying $O_2$ also satisfies $O_1$: $O_2$ is at least as restrictive. A composed contract must be below both inputs. Authority combines by set intersection; the same monotonicity prevents a skill from granting capabilities by being loaded.
-
-For state $\sigma=(G,E,B,L)$, where $L$ holds local reservations/permits, the checked transition rule is:
-
-$$
-\frac{Enabled(G,a)\quad Complete(Need_P(G,a))\quad
-\forall o\in Need_P(G,a),\ E\vdash_B o\quad Current(B,a)\quad Resources(L,a)}
-{\sigma\xrightarrow{admit(a)}\sigma'}.
-$$
-
-The host must enforce admission at the effect boundary. The logical rule alone cannot prevent a bypassing host. Preparation consumes no fabricated submission evidence; submission is a later observed event. A `record(e)` transition changes the retained evidence state but leaves $G$'s progress unchanged. Advancement is a separate transition using the rule above.
-
-For sequential skills, use partial-correctness triples:
-
-$$
-\{P\}\ S_1\ \{Q\},\quad \{Q\}\ S_2\ \{R\}
-\quad\Longrightarrow\quad \{P\}\ S_1;S_2\ \{R\}.
-$$
-
-The triple means successful monitored completion implies the checked postcondition. An LLM can fail, time out or propose an inadmissible result. There is no theorem that it eventually succeeds. Frame reasoning requires effect-disjointness or explicit preservation of the framed premises. Persistent evidence and linear reservations/single-use permits have different resource rules; disconnected clones cannot provide global linearity without an authoritative consumption boundary.
-
-## Enforcement and trust boundaries
-
-Offer accurately scoped adapter guarantees:
-
-1. **Record validation:** Writfold can check the records and bindings supplied to it. Locally editable checksums offer integrity checking, not authentic execution provenance against a malicious writer.
-2. **Observed execution:** an authorized adapter supplies protected observations about actual requests and tool calls. The guarantee is conditional on that adapter and its trust boundary.
-3. **Mediated execution:** every operation covered by the policy passes through admission before its effect. The adapter refuses a contract it cannot mediate.
-
-A deployment can implement protected observations with an isolated runner and authenticated process boundary; signatures are useful for portable receipts. The signing key must not be available to the agent's shell. Storing a public receipt in Git is fine if its authorization is verified; storing policy and receipts in an agent-writable directory without an external trust root is not enforcement.
-
-Pin the approved policy and checker implementations outside the agent's authority for the attempt. The agent can propose configuration edits for later admission, but cannot weaken the active contract or mint a waiver identity by setting `--by`. Protect generic shell, network, browser and alternate tool paths where they could bypass governed effects. Complete mediation is always relative to the explicitly enumerated operations and host support.
-
-This does not require a Writfold server or a new resident companion. The binary can remain a Git-native decision/recording tool. An external harness invokes its admission/checking interfaces and owns execution. Gripsack may provision the environment, but provisioning is not evidence that the harness honored the contract.
-
-## Model and harness portability
-
-Portability is a product requirement. The core contract vocabulary, evidence judgments, run history and KB remain independent of any model provider or harness event schema. A user can author one procedure under `.writfold/` and bind it to different execution hosts. This does not imply that every host can enforce every possible contract.
-
-### Stable boundary and adapters
-
-The Writfold binary owns policy, artifact/evidence validation and existing graph transitions. The chosen harness owns its model loop, context assembly, compaction, tool dispatch and UI. An adapter maps that host's observations into a versioned Writfold evidence envelope, preserving issuer, observation kind, bindings, uncertainty and the original source reference where needed. Transport can use the CLI and structured input/output; an optional MCP or other wrapper is a transport choice, not a required Writfold server or new policy authority.
-
-Do not make OMP message IDs, Claude hook names, OpenAI request objects or provider-native tool formats part of the pure kernel. Host-specific payloads belong in adapter extensions. Model/provider identity is retained as provenance and may be constrained by an explicit policy, but ordinary workflow predicates do not depend on one vendor. Requested model features must be represented as explicit requirements with supported/unsupported outcomes.
-
-Import an existing harness receipt where its actual meaning and issuer meet the required predicate. A message stored or queued, context prepared, a request submitted, and an external effect completed are distinct observations. Mapping may preserve or narrow the source claim; it cannot strengthen a delivery receipt into request-submission evidence, or a local log into authenticated provenance. Declared adapter capability is not evidence that a particular invocation exercised it.
-
-### Useful core without deep harness integration
-
-| Available boundary | Useful Writfold behavior | Limit |
+| Case | Expected | Owner |
 |---|---|---|
-| CLI invocation or artifact exchange | KB lookup, plans, deterministic tool-owned checks, retained artifacts and independent receiver acceptance | Cannot certify hidden prompt assembly or prevent unmediated host actions |
-| Relevant observable host events | Attribute supported context/tool/result observations through an adapter | Observation alone does not establish complete mediation |
-| A protected pre-operation interception point | Refuse the particular governed operation before its effect | Only the documented, tested operation paths are covered |
+| A correct hash is copied with no invocation | `invocation.bound` fails: the candidate names no invocation | #149 |
+| The skill text changed after prepare | `invocation.bound` fails, or reads stale after a pass | #149 |
+| Prepared, never delivered | the invocation reads `prepared`; the step owes its delivery | #148 |
+| A report is attached to another step's invocation | `invocation.bound` fails | #149 |
+| A report from before a retry is delivered again | the newer candidate decides; two payloads for one invocation never pass | #149 |
+| A harness says "queued", the mode asks for "submitted" | the attestation stays open | this RFC, #150 |
+| A search stops at its work limit | the scope gate fails (`truncated_never_complete`) | #155 |
+| A search crashes or times out | the scope gate is unknown (`outcome_pass_iff`) | shipped |
+| Two of ten units have no row | the checklist owes them, by name | #156 |
+| A related record is added | the scope gate is stale; the universe is absent until it is run again | #155, #156 |
+| A model judgment is offered as a check result | it can only be attested (`statement_never_passes`, `standing_satisfied_iff`) | shipped |
+| The agent edits a gate or its profile | `policy moved`; a receiver judges its own revision | shipped pins, #57 |
+| The subject changes between check and use | re-check under the lock (`still_stands_spec`); `needs` at prepare | shipped, this RFC |
+| The same report is delivered twice | no judgment changes | #149 |
+| Two different reports for one invocation | neither passes until one is withdrawn | #149 |
+| A forged statement or a recomputed digest | accepted in the recorded tier; refused by a receiver that takes checks only | out of scope here, #64 |
+| A command bypasses the hook | not seen. Writfold does not claim otherwise | out of scope |
 
-These are capabilities per operation, not one global certification level. A harness might expose exact model requests but lack a final-output veto; another might gate a file write without exposing its prompt. Record that matrix at the tested host/adapter version, including unsupported and unverified paths.
+## Not built, with the reason
 
-A workflow requires only the evidence needed for its stated guarantee. Tool-owned facts such as a bound KB enumeration or deterministic checker result need not depend on a model-request receipt. A workflow promising that a particular skill was supplied to the producing invocation does require the stronger observation. If that requirement is unsupported, the affected operation stays blocked with an explanation; ordinary KB and inspection use remains available. Never silently weaken the admitted policy. Selecting a different contract or granting an exception is an explicit authorized change.
-
-Writfold can require a skill in an exported context packet without claiming that an opaque host actually delivered it. Exported instructions, a hook acknowledgement and an observed final request must retain their different meanings.
-
-### Changing models or harnesses
-
-A switch creates a new invocation/context binding and rechecks effective capabilities. It does not discard the KB or rewrite completed history. Reuse previous artifacts and reports only where their own input/policy/issuer bindings and reuse rules still hold. Invocation-specific context evidence cannot be reassigned to the new host. Model outputs and provider context limits can differ; portability is not identical answers, prompts or billing.
-
-### Portability acceptance
-
-- The same policy and semantically equivalent normalized evidence produce the same core judgment, independent of adapter event names and unconstrained provider labels.
-- Extend #157 with two differently shaped mock event sources, plus missing-capability cases, without requiring a second production adapter or paid models.
-- Verify no-integration CLI/artifact use, model/host switching, honest receipt import, and refusal of unsupported strict requirements.
-- Keep one production adapter initially under #150, selected for observable interfaces. It must exercise a portable boundary rather than define a mandatory runtime dependency.
-
-### Oh My Pi comparison
-
-The [OMP hooks reference](https://github.com/can1357/oh-my-pi/blob/main/docs/hooks.md) documents context and tool interception, while also identifying paths that do not emit ordinary tool events. Its [message-receipt discussion #14212](https://github.com/can1357/oh-my-pi/issues/14212) distinguishes a runtime message handoff from the recipient receiving it at a model boundary. These are possible sources of observations, not proof of Writfold conformance. The design inference is to adapt the precise runtime fact into Writfold's policy judgment. No OMP dependency or claim of a completed adapter is proposed.
-
-### Delivery modes are one instance
-
-Bind the delivery mode, target/channel constraints and exact final bytes to the approved check. Admission occurs before the send or accepted export, and the sender uses the same immutable bytes. Any edit creates a new artifact identity and requires a new check. A host that lets the model emit final user-visible text or send through an unchecked alternate path cannot claim that path is enforced. Requirements about tone or meaning remain attributed judgment unless encoded in a deterministic check; the gate's result must preserve that distinction.
-
-## Implementation slices and ownership
-
-| Deliverable | Owner |
+| Draft item | Reason |
 |---|---|
-| New phase-specific evidence/admission kernel | [#154](https://github.com/writfold-dev/writfold/issues/154) |
-| Formal ledger and actual invocation protocol | Existing [#145](https://github.com/writfold-dev/writfold/issues/145) |
-| Existing plan/skill composition | Existing [#147](https://github.com/writfold-dev/writfold/issues/147) |
-| Actual request/context binding and post-compaction delivery | Existing [#148](https://github.com/writfold-dev/writfold/issues/148), [#123](https://github.com/writfold-dev/writfold/issues/123) |
-| Retained outcomes, duplicate/conflict semantics | Existing [#149](https://github.com/writfold-dev/writfold/issues/149) |
-| One adapter and protected acceptance | Existing [#150](https://github.com/writfold-dev/writfold/issues/150), [#64](https://github.com/writfold-dev/writfold/issues/64) |
-| KB scope and review coverage | [#155](https://github.com/writfold-dev/writfold/issues/155), [#156](https://github.com/writfold-dev/writfold/issues/156) |
-| Deterministic adversarial end-to-end fixture | [#157](https://github.com/writfold-dev/writfold/issues/157), reusing [#151](https://github.com/writfold-dev/writfold/issues/151) |
+| Issuer roles and authenticated issuer facts | no component can produce them; see [Trust](#trust) |
+| `class = "derived"`, `[[requires]] predicate = …`, a finite rule language, Datalog later | a general evaluator that derives "met" from grounded premises is the assessed gate removed on 21 November (#54) |
+| An evidence dependency graph | references are leaves; pins already stop evidence holding when a premise moves (`unheld_never_holds`) |
+| Receipt rule "some eligible receipt exists" | the newest bound record decides (`state_spec`); the old rule let a stale pass outvote a new failure |
+| Hoare triples and a frame rule | the sequencing rule is false unless the precondition is judged again; nothing consumes triples; there is no effect system |
+| Context epochs | one invocation is one package. Inline use in a long session is #123 and #141 |
+| A strict bootstrap and a protected binding table | a resident component on the product path |
+| Single-use effect permits | no effect is performed by Writfold; a cross-clone permit needs an authority Writfold does not have |
 
-These are ownership boundaries, not duplicate implementations. Existing #109 has delivered packet work; use its follow-up #123. Retained artifacts and bound checker inputs remain #121/#128/#116. The Python precursor can use the same fixture and record/decision boundary around a controlled model-call wrapper; that does not transfer Lean proof coverage to Python.
+## Sources read
 
-## Required conformance cases
+- [Formal Policy Enforcement for Agentic Systems](https://arxiv.org/html/2602.16708v4):
+  adopted, the separation of a policy's correctness from the faithfulness
+  of observations. Declined, its runtime and a Datalog evaluator.
+- [in-toto](https://www.usenix.org/system/files/sec19-torres-arias.pdf)
+  and [SLSA verification](https://slsa.dev/spec/v1.2/verifying-artifacts):
+  the model for signed observations, with #64.
+- [Proof-Carrying Plans](https://arxiv.org/pdf/2008.04165): read; its
+  triples are not adopted
+  ([calculus §3.8](2026-11-25-agent-vocabulary/calculus.md#38-use-sites-and-why-a-postcondition-must-be-judged-again)).
+- [CONTINUITY](https://arxiv.org/pdf/2609.05269): a source of test cases.
+- [Oh My Pi hooks](https://github.com/can1357/oh-my-pi/blob/main/docs/hooks.md)
+  and its
+  [message-receipt discussion](https://github.com/can1357/oh-my-pi/issues/14212):
+  an example of "handed off" being weaker than "received".
 
-These are implementation acceptance fixtures, not a claim that tests were run during this research.
+## Compatibility and reversibility
 
-| Counterexample | Expected result |
+`needs` is a new optional key. A file without it has the digest and the
+behaviour it had. Removing the key removes the feature.
+
+## Alternatives
+
+| Alternative | Why it lost |
 |---|---|
-| Agent copies a correct skill hash without a request observation | Required context evidence remains unmet. |
-| Skill source is correct but rendered request omitted a required section | Invocation admission refused. |
-| A request was prepared but never dispatched | No submitted/executed claim; later output cannot borrow the prepared record. |
-| A skill was loaded after the report was produced | No causal binding to that report's invocation. |
-| Old receipt used after compaction, delegation or a new attempt | Refused when its required bindings do not match. |
-| Retrieval returns ten hits with another page or inaccessible store | Coverage partial, not complete. |
-| Search crashes and returns no usable rows | Unknown, not successful empty scope. |
-| Two of ten pair units lack eligible reports | Coverage gate lists the two missing IDs. |
-| A new related record appears without changing old records | Corpus/scope basis changes; current completeness must be re-established. |
-| Agent writes a fake signed-by-harness field or recomputed checksum | Authentication/issuer check fails. |
-| Valid report schema contains a plausible but incorrect interpretation | Structural checks can pass; semantic correctness is not thereby claimed. |
-| Model-produced assessment submitted as a deterministic checker result | Evidence-kind or issuer mismatch. |
-| Agent changes the active gate definition or checker code | Approved-policy binding rejects the replacement for this attempt. |
-| Source changes between checking and a governed operation | Recheck under the appropriate lock/snapshot or refuse. |
-| Duplicate receipt is submitted | Idempotent record; no duplicate work/budget charge. |
-| Conflicting receipts or uncertain external effect after a crash | Preserve conflict/unknown; require reconciliation. |
-| Alternate shell/browser/network path bypasses the guard | Adapter cannot claim enforcement for that operation until the path is mediated. |
+| A new phase-aware evidence kernel shared by three sites, as drafted | Three of the sites already have proved kernels over the same judgments |
+| Put prerequisites only in the plan order | Order says a step was once done. It does not say its gate holds now |
+| Let `needs` name any guard requirement (`step.met`, `gates.met`) | `step.met` is about the step being worked on, so it is false while that step's worker is being set up. Gate ids are enough |
+| A resident runner that mediates every call | A server on the product path |
 
-TLA+ should cover the actual prepare/admit/dispatch/record/advance protocol, concurrency, crash recovery and stale-use windows. Extend existing `RunGraph`/`KbWrite` or the proposed invocation model according to the real protocol boundaries. State fairness assumptions for any progress property. No mathematical guarantee of an LLM finding every contradiction or eventually completing the task is proposed.
+## Evidence and tests
 
-## First milestone recommendation
+- Unit and property tests for `prepare_check` with needs; the proofs gate
+  with the two mutants.
+- In `fixtures/kb/kb-consistency/` (#157): prepare refused while the scope
+  gate is open, stale and unknown, then admitted.
+- The [ten dry runs](2026-11-25-enforcement/dry-runs.md) are kept as the
+  record of the design exercise, with each scenario mapped to this design.
 
-Make one complete, provider-neutral example work: a trusted adapter submits a pinned consistency-review skill with a small fixed KB scope, produces attributable reports, and Writfold refuses advancement for missing context, incomplete coverage, stale inputs or untrusted evidence. A deliberately noncompliant fake agent should exercise these failures without paid model calls. This demonstrates the general mechanism before broadening the authoring language or supporting additional hosts.
+## Rollout
 
-The user-facing diagnostic should name the actual missing condition: “cannot conclude: review units B–D and C–E have no eligible result”, or “invocation 7 omitted the required consistency-review instructions”. It should not ask the model to explain retrospectively why it ignored prose.
+After the vocabulary RFC's steps 0 to 6.
 
-## Compatibility, rollout and alternatives
+| Step | Issue | Ships |
+|---|---|---|
+| 1 | [#154](https://github.com/writfold-dev/writfold/issues/154) | `needs`, proved, wired into `agent prepare`; the use-site table in the guide |
+| 2 | [#155](https://github.com/writfold-dev/writfold/issues/155), [#156](https://github.com/writfold-dev/writfold/issues/156) | [KB research contracts](2026-11-25-kb-research-contracts.md) |
+| 3 | [#157](https://github.com/writfold-dev/writfold/issues/157) | the KB-consistency fixture with two differently shaped fake harnesses |
+| later | [#150](https://github.com/writfold-dev/writfold/issues/150), [#64](https://github.com/writfold-dev/writfold/issues/64) | one adapter that attests submission; signed observations at a receiver |
 
-This proposal is pre-alpha. Choose a coherent new typed schema and remove superseded experimental paths when implementation is accepted; do not add compatibility layers for these illustrative proposal schemas. Changes to shipped formats must be explicit in the implementing RFC notes and changes guide, never silently reinterpreted.
+## Unresolved questions
 
-Start with a finite built-in predicate vocabulary and one controlled adapter. A general Datalog runtime, broad autonomous scheduler and third-party enforcement stack are optional later decisions. More prose, a model-authored compliance checklist, or a bare hash cannot provide the proposed guarantees. A fully semantic proof of arbitrary prose comprehension is outside scope.
+None blocks acceptance.
 
-Required work is selected from an approved contract, not a fallible model's decision about whether a skill seems relevant. For explicitly selected workflows this is deterministic; ambiguous task classification must retain baseline obligations and expose the ambiguity. Natural-language-to-policy authoring remains a reviewed translation, not a proved interpretation of the user's intent.
+- Owner: is the recorded tier enough for your daily use, with the
+  receiver (#64) as the only boundary against a worker that does not
+  cooperate? Default: yes. A stricter in-product boundary would need a
+  resident process, which AGENTS.md rules out.
 
 ## Decision log
 
-- 2026-11-25: Exercised ten synthetic protocol flows (43 assertions) at the owner's request. Made task-entry ownership, deterministic create/attach, task-scoped binding, independent pre-operation checks and the actual effect owner explicit. Linked the executable design model and traces; these are not production or proof conformance claims.
-- 2026-11-25: Owner clarified that different models and harnesses must remain usable. Added the portable evidence boundary, useful CLI/artifact-only operation, per-operation capabilities, explicit unsupported-guarantee refusal and switching/conformance cases. Harness-specific event schemas remain outside the kernel.
-- 2026-11-25: Prepared at the owner's request as RFCs and related issues for later grooming. Recorded the difference between input delivery, procedural coverage and semantic correctness; retained the existing run graph and external-harness boundary. No new proof, runtime behavior or model evaluation is claimed.
-
+- 2026-11-25: Prepared at the owner's request. Separated input delivery,
+  procedural coverage and semantic correctness.
+- 2026-11-25: Owner said different models and harnesses must remain
+  usable. Added the portable boundary.
+- 2026-11-25: Ten synthetic protocol flows exercised (43 assertions) in a
+  Python model; task entry, binding and effect ownership made explicit.
+- 2026-11-25: The first draft's rendered diagram,
+  [execution.png](2026-11-25-enforcement/execution.png), is kept as the
+  picture of the model before grooming. It still names trusted issuers,
+  which this RFC no longer has. The diagram under
+  [The four use sites](#the-four-use-sites) replaces it.
+- 2026-11-25: Groomed with the vocabulary RFC. Outcomes: the algebra
+  moved to the shared calculus; three of four use sites recognised as
+  shipped; `needs` kept as the one addition, with four theorems and two
+  mutants; observations are statements; issuer roles, the `derived` class,
+  the rule language, the evidence graph, epochs, triples, strict bootstrap
+  and the MCP mention removed, each with its reason above. Status left
+  `draft` for the main session to accept.

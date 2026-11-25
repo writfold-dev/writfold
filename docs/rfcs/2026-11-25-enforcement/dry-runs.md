@@ -4,6 +4,16 @@ Executed with the standard-library Python reference model [dry_run.py](dry_run.p
 **10 scenarios, 43 assertions passed.**
 Machine-readable events and checks: [dry-run-results.json](dry-run-results.json).
 
+> **Groomed, 25 November 2026.** This page records a design exercise made
+> on the first drafts. The Python model and its JSON traces are kept as that
+> record and are not maintained. The design they explored was reduced in
+> grooming ([review](../2026-11-25-agent-vocabulary/grooming.md), row E20):
+> the model assumes a protected binding table, issuer identities and a
+> receipt ledger, none of which is built. The checked protocol model will be
+> `spec/Invocation.tla`
+> ([calculus §6](../2026-11-25-agent-vocabulary/calculus.md#6-protocol-model)).
+> [Each scenario is mapped to the groomed design below](#the-scenarios-in-the-groomed-design).
+
 This exercises a proposed protocol under explicit assumptions. It does not run Writfold,
 a live model, a real harness, a proof kernel, or a protected production executor. Passing
 means the modeled decisions are internally consistent for these traces; it does not
@@ -65,6 +75,21 @@ Task entry can be a native extension callback or a controlled SDK wrapper. A lau
 wrapper only establishes startup unless it also controls later operations. Session start
 may not yet contain a task: the binding must be established at an explicit task boundary
 or before the first governed action. Compaction is not automatically a new task.
+
+## The scenarios in the groomed design
+
+| # | Scenario | Where it lands | Owner |
+|---|---|---|---|
+| 01 | Complete research and delivery | The two fixtures: a bound report on a step, then scope, units and disposition | #151, #157 |
+| 02 | Startup hook never runs | Shipped: a guard rule that requires `run.current` refuses the governed command (`run_current_met_iff`). `agent prepare` refuses without an open run. A host that fails closed is not built | shipped, #148 |
+| 03 | Duplicate start and wrong task | Shipped: the current run per session and work tree (`session_decides`, `other_session_undisturbed`). An invocation records its own run and step | shipped, #148 |
+| 04 | Skill omitted or only prepared | A report that names no invocation fails `invocation.bound`. "Prepared" is Writfold's record; "submitted" is a harness's statement | #149 |
+| 05 | Compaction before dispatch | A new package is a new invocation. A report under a closure that has since moved fails or reads stale. Context epochs for inline use are deferred | #149, #123, #141 |
+| 06 | Incomplete or failed KB search | Shipped: a walk stopped early is never complete (`truncated_never_complete`); a timeout is unknown (`outcome_pass_iff`). The scope gate carries both | #155 |
+| 07 | Eight of ten comparisons | Generated checklist items; the shipped roll-up names what is owed (`rollup_covered_iff`) | #156 |
+| 08 | A newly related sixth document | The scope gate reads stale through its scope digest, and the units have no universe until it is run again. **Differs from the dry run:** the first rule makes every earlier row stale. Reuse of the ten earlier reviews is deferred | #155, #156 |
+| 09 | Model or harness switch, CLI-only use | The package and `deliver prepare` are the whole boundary. A switch is a new invocation. An attestation a harness cannot make stays open | #150 |
+| 10 | Forged evidence, altered draft, bypass | An altered draft: shipped, receipts and statements are bound to bytes, and the delivery guard passes only a ready candidate's bytes (`guard_allow_iff`). Forged records and a bypassed hook: not resisted in the run. The receiver is the boundary | shipped, #64 |
 
 ## Reproduce
 

@@ -12,239 +12,358 @@ milestone: null
 supersedes: []
 superseded_by: []
 blocked_on:
-  - "2026-11-25-evidence-governed-execution"
-  - "https://github.com/writfold-dev/writfold/issues/154"
+  - "2026-11-25-agent-vocabulary"
+  - "https://github.com/writfold-dev/writfold/issues/149"
 ---
 
 # RFC: KB research contracts and review coverage
 
-“Check all related KB references for inconsistencies” combines scope discovery, actual review and a semantic judgment. Make each part visible and independently checkable, so a search call or summary cannot stand in for omitted work.
+Groomed on 25 November 2026 with the
+[agent vocabulary RFC](2026-11-25-agent-vocabulary.md) and
+[evidence-governed execution](2026-11-25-evidence-governed-execution.md).
+The first draft proposed six new kernels, a `derived` gate class and a
+scope-recipe schema. The
+[grooming review](2026-11-25-agent-vocabulary/grooming.md) (rows R1 to
+R11) found that a scope is a mechanical gate with retained evidence, that
+review units are checklist items, and that findings are an attested gate.
+What is new is small: a manifest, generated items, and a report as the
+evidence of a row. The shared algebra is in the
+[calculus](2026-11-25-agent-vocabulary/calculus.md#39-coverage-of-a-generated-universe).
 
-This owner-requested planning set is for later grooming. It applies [evidence-governed execution](2026-11-25-evidence-governed-execution.md), and is tracked by [#153](https://github.com/writfold-dev/writfold/issues/153), [scope #155](https://github.com/writfold-dev/writfold/issues/155), [coverage #156](https://github.com/writfold-dev/writfold/issues/156) and [fixture #157](https://github.com/writfold-dev/writfold/issues/157). Examples below are illustrative schemas, not accepted binary input.
+This is the second milestone's work. It is written down now so that the
+first slice does not close a door on it.
 
-## Proof obligations before design
+## Summary
 
-New decisions belong in pure `writfold-core` kernels, proved over shipped Rust through Charon/Aeneas before wiring. Reuse #145 for the proof ledger and the companion RFC for evidence admission.
+"Check all related KB records for inconsistencies" mixes three things: a
+scope, the work of reviewing it, and a judgment. Each becomes a gate on
+its own plan step.
 
-| Kernel | Inputs and outputs | Required property; falsifying mutant |
+| Step | Gate | Class | What it says |
+|---|---|---|---|
+| enumerate | a scope gate | mechanical, as shipped | the related records were read in full, and here is the list |
+| inspect | a unit checklist | checklist, with generated items | every pair on that list has a review |
+| reconcile | a disposition gate | attested, as shipped | someone dealt with what the reviews found |
+
+What each review says is in its report. It reaches no standing. So four
+things are shown and never folded into one word: the scope, the coverage,
+the assessments and the disposition.
+
+New: `kb impact --manifest FILE`; three checklist keys (`items_from`,
+`units`, `allow_empty`); a `delivery:<id>` reference in a cover row; and
+`agent prepare --for GATE.ITEM`.
+
+## Proof obligations
+
+### `writfold_core::units` (new)
+
+- `pairs(n: usize) -> Option<Vec<Pair>>`: every `(a, b)` with
+  `a < b < n`, in lexicographic order, or `None` when `n` is over
+  `MAX_MEMBERS` (64, so at most 2,016 units).
+- `generated(present: bool, count: usize, allow_empty: bool,
+  rollup: Rollup) -> Rollup`: what a checklist with generated items adds
+  up to.
+
+`proofs/Writfold/Units.lean` proves:
+
+- `pairs_spec`: the list is exactly the pairs `a < b < n`, in order, each
+  once.
+- `pairs_len`: it has `n(n−1)/2` entries.
+- `over_cap_refused`: `None` exactly when `n > MAX_MEMBERS`. A work limit
+  never produces a shorter list that could read as complete.
+- `generated_covered_iff`: covered exactly when the universe is present,
+  it has at least one unit or the checklist allows an empty one, and the
+  shipped roll-up says every unit is covered.
+- `absent_universe_never_covered`: with no manifest, the checklist is not
+  covered, whatever rows exist.
+- `empty_universe_needs_allow`: zero units are covered only when the
+  checklist says `allow_empty = true`.
+
+The guard matters because the shipped roll-up over zero items is true:
+"every required item is covered" holds of none.
+
+### `writfold_core::ground` (one function added)
+
+- `of_delivery(found: bool, ready: bool, bound: bool) -> Grounding`: a
+  cover row may cite a report.
+- `of_delivery_grounded_iff`: grounded exactly when the candidate exists,
+  is ready and passes `invocation.bound`.
+
+Which item the report is for is the shipped `bind` kernel's question. A
+report whose invocation was prepared `--for` this item is `Bound::This`;
+one prepared for another item is `Bound::Other` and answers nothing
+(`other_never_answers`).
+
+### Mutants
+
+| Mutant | Change | Breaks |
 |---|---|---|
-| Scope eligibility | Recipe, manifest, observed closure and current basis to complete/partial/unknown | Complete implies all required source/page/frontier obligations are satisfied; omit a required page |
-| Scope freshness | Recipe/corpus membership basis and current basis to current/stale/unknown | New related members or edges invalidate applicability; check only returned blob hashes |
-| Unit generation | Canonical finite manifest and selected unit rule to deterministic required units | All-pairs produces each unordered distinct pair once; delete a pair or duplicate one |
-| Report eligibility | Unit, input versions, producing invocation and validated report to eligible/refused/unknown | Wrong inputs, invocation or evidence kind cannot substitute; accept the unit ID alone |
-| Coverage | Complete scope/unit universe and eligible reports to covered/missing/unknown | Coverage requires an eligible result for every required unit; treat absent universe as empty |
-| Finding disposition | Findings, dispositions and approved completion policy to allowed/refused/unknown | Unresolved/uncertain/excepted results are accepted only as policy allows; accept a worker-authored waiver |
+| `pairs-drops-last` | the inner loop stops one short | `pairs_spec` |
+| `pairs-keeps-diagonal` | `(a, a)` is emitted | `pairs_spec` |
+| `generated-absent-covered` | an absent universe returns the roll-up | `generated_covered_iff` |
+| `generated-empty-covered` | zero units are covered without `allow_empty` | `generated_covered_iff` |
+| `delivery-unready-grounds` | an unready report grounds a row | `of_delivery_grounded_iff` |
 
-Parsers, enumeration IO, Git/index snapshots, pagination, reference/span reads, request assembly and external observations stay tested. Formal completeness is conditional on the declared universe and faithful observations. It is not a theorem of global semantic recall or correct interpretation of prose. Model extraction of typed facts must retain model-judgment provenance even if a subsequent domain constraint check is deterministic.
+### Reused as they stand
 
-Pass extraction drift, Lean builds, axiom audit and falsifying mutants before wiring decisions. Use fault/property tests for pagination, loss of a store, new members, stale indexes, publication/recheck races and cold-read diagnostics. Reuse actual write/protocol models; do not introduce a second scheduler.
+- The scope is complete: `complete_within_iff`,
+  `truncated_never_complete`; a timeout, a signal or a moved subject is
+  unknown (`outcome_pass_iff`); a missing manifest file is never a pass
+  (`kept_missing_never_pass`).
+- The scope is still about the present KB: `judge_other_bytes`,
+  `state_spec`.
+- One unit: `item_spec`, `item_under_spec`, `item_under_narrows`.
+- All units: `rollup_covered_iff`, `standing_never_satisfied`.
+- The disposition: `standing_attested_iff`, `waiver_rejected_never_met`.
 
-## Worked contract: inspect related KB references for inconsistencies
+### Tested, not proved
 
-### 1. Define a reference universe
+Writing and reading the manifest; mapping members to unit names; the
+digest that joins a generated checklist to its manifest; resolving a
+`delivery:` reference; rendering. A proof of coverage is about the
+declared list. It is not a claim that every relevant record is on it, or
+that a review is right.
 
-“All related” must be given a finite operational meaning. For example:
+## Motivation
 
-- Approved stores: the project's KB and named documentation repositories.
-- A pinned revision or declared observation basis for each store.
-- Seeds: the change's subject IDs and directly affected records.
-- Membership: declared relations such as `describes`, `depends-on`, `supersedes` and incoming/outgoing citations, traversed to closure within those stores.
-- Eligibility: record kinds, inclusion/exclusion rules and access scope recorded in the contract.
-- Every page and traversal frontier exhausted; inaccessible required sources and resource limits produce partial coverage.
+The shipped `research.backfilled` check shows that something was written
+during a step. It does not show that every related record was looked at.
+An agent can run one search, read three of five records and write a
+summary. Nothing owed says which two were skipped.
 
-Existing typed KB links are one possible input. A new semantic relation inferred by a model remains a judgment unless separately validated. Vector or keyword searches can add candidates, but top-k retrieval cannot establish that all semantically relevant material has been found.
+## Behaviour
 
-The enumerator produces a scope manifest with source versions, the recipe identity, selected references and their digests, index/source agreement, omissions, excluded classes, pagination/traversal closure and completeness status. “Complete” means complete within this declared universe. Global semantic recall remains unknown.
-
-### 2. Generate review units
-
-Generate the required work from the manifest, rather than let the agent choose what counts as done. Examples include one review per document against a subject contract, or a comparison for every pair in a declared set of overlapping claims.
-
-For a fixture with five documents and a requirement to compare every unordered pair, the enumerator generates ten stable review-unit IDs. If eight have valid reports, coverage is eight of ten. Merely calling `kb find` cannot discharge the other two.
-
-Comparing every pair is quadratic and often unnecessary. A production contract may instead partition by declared subject/property and compare all units within each group. That changes the coverage claim and must be visible. Do not silently substitute a heuristic subset for an all-pairs promise.
-
-Each unit binds its input versions and relevant spans. If a unit requires full documents but the packet only contains excerpts, the unit is not fully supplied. Large reviews may use several bounded invocations and an explicit aggregation contract; a summary is a derived, potentially lossy artifact.
-
-### 3. Record attributed results
-
-Each unit produces a structured report with its unit ID, input references, claim spans, disposition, explanation and producing invocation. Suggested dispositions are `conflict-found`, `no-conflict-found` and `uncertain`.
-
-A structural checker verifies required fields, reference/span existence, input/version bindings, actual context delivery, unit coverage and permitted dispositions. It cannot establish that an arbitrary natural-language explanation is correct merely because the JSON is valid or every citation exists.
-
-Use a deterministic contradiction checker where facts and constraints are actually formalized, such as incompatible values for the same exclusive configuration property. Extracting those facts from prose may itself be fallible and must retain that distinction. For broader prose comparisons, record an attributed model or human assessment. Independent review may improve reliability, but does not become a mathematical proof by adding a second model.
-
-### 4. Reconcile and conclude
-
-Every discovered conflict needs the contract's required treatment: resolve it, explicitly preserve it as an unresolved finding, or obtain an authorized exception. A research-only task may validly conclude with unresolved conflicts; an implementation or publication step may require their resolution. The policy decides this, not a universal “no conflicts” gate.
-
-Expose several results instead of one misleading green check:
-
-- Scope coverage: complete within recipe `R` at source basis `B`.
-- Review coverage: every required unit has an eligible result.
-- Judgment: reviewer found a conflict / no conflict / uncertainty.
-- Findings: resolved / outstanding / excepted.
-
-An empty result set needs a positive completeness witness and an explicit empty-scope policy. A failed search is not a successful empty search. “No conflicts found” remains a statement about a particular search and assessment.
-
-### 5. Handle changes and newly related documents
-
-Bind evidence to the query recipe and source inventory, not only to files already returned. Otherwise adding a newly related document leaves all old file hashes unchanged and incorrectly preserves “all reviewed”. Initially, pin the whole relevant corpus snapshot. Later optimize invalidation only with a sound scope-membership dependency analysis that catches insertions and new edges as well as changed content.
-
-Preserve completed work as history. Invalidate eligibility for dependent current operations and create the necessary new work using existing plan operations. Do not silently rewrite historical done records. A historical review can remain valid for its old snapshot while being insufficient for a claim about the current one.
-
-### Scope evidence and unit evidence have different dependencies
-
-[Dry-run scenario 08](2026-11-25-enforcement/dry-runs.md) exercises the distinction: five documents yield ten pair reports; adding a sixth document invalidates collection completeness and creates five more pairs. It need not invalidate an existing pair's report when both input versions, required skill, policy and authorized producing-invocation evidence still match and reuse is permitted.
-
-Bind the whole-scope completeness claim to the recipe and corpus-membership basis. Bind a unit report to its own input set and declared dependencies. Its producing context may have been submitted under an earlier scope snapshot; that is retained honestly. A newly established complete manifest can reuse that report only if the admitted policy permits such reuse. A policy requiring every assessment at the same global snapshot may instead require re-review. Do not imply that all old context receipts can be reassigned to new invocations.
-
-The ten-scenario Python model exercises decisions under assumed faithful enumeration and protected observations. It does not run the real KB indexer, establish natural-language contradiction correctness, test a live adapter, or discharge the Rust/Lean proof obligations.
-
-## Formal scope and coverage model
-
-Let $R$ be the admitted scope recipe and $B$ its source/inventory basis. Its finite declared universe is $D(R,B)$. An enumerator returns a manifest $M$ and observation witness $w$. The scope kernel can accept `Complete(M,R,B,w)` only when all declared inventory/frontier obligations are discharged. Without a snapshot-capable source, the contract must explicitly weaken its claim or refuse snapshot completeness.
-
-For a selected all-pairs unit rule:
-
-$$U(M)=\{\{d_i,d_j\}\mid d_i,d_j\in M,\ i<j\},\qquad |U(M)|=\frac{|M|(|M|-1)}{2}.$$
-
-Use canonical reference IDs and version-bound inputs, not display order, for stable unit identities. A membership change affects the universe even when every previously returned document is unchanged.
-
-$$
-Covered(M,E,B)\iff Complete(M,R,B,w)\land
-\forall u\in U(M),\ \exists r\in E:\ Eligible(r,u,B).
-$$
-
-The empty-manifest case additionally requires the contract's explicit empty-scope policy. Missing inputs, inaccessible stores or search errors do not satisfy `Complete`. Negation such as “no units missing” is valid only over a certified finite inventory.
-
-Keep four independent judgments:
-
-$$J=(Scope, Coverage, Assessment, Disposition).$$
-
-For example, `(complete, 10/10, conflict-found, outstanding)` can be a valid completed research task and still fail a publication policy requiring resolved findings. `(complete, 10/10, no-conflict-found, recorded)` is not a theorem that no contradiction exists. An uncertain but valid report can discharge procedural coverage while leaving a conclusive-assessment obligation unmet.
-
-The approved contract determines which coordinates gate a particular operation. The agent cannot replace those requirements with its own single “done” flag.
-
-## Illustrative `.writfold/` authoring
-
-These TOML examples are proposed extensions, not accepted by today's binary. `.../proposal` schema identifiers deliberately distinguish them from shipped schemas. They show roles and bindings; the named predicates, scope recipe, schemas and adapters would require implementations and conformance fixtures.
+### The scope gate
 
 ```toml
-# .writfold/skills/kb-consistency.toml
-schema = "writfold-skill/proposal"
-id = "kb-consistency"
+# .writfold/gates/related-scope.toml
+schema = "writfold-gate/1"
+id = "related-scope"
 version = 1
-plan = "kb-consistency"
-required_tools = ["kb.enumerate", "kb.read", "review.record"]
-instructions = """
-Compare the references in each supplied review unit. Identify conflicts,
-cite the relevant spans, and preserve uncertainty in your disposition.
-"""
+class = "mechanical"
+argv = ["writfold", "kb", "impact", "harbor-api", "--direction", "both",
+        "--depth", "2", "--manifest", "{artifacts}/manifest.json"]
+workdir = "."
+timeout_seconds = 60
+scope = ["**", "!runs/**"]
+retain = ["manifest.json"]
+accept = ["satisfied"]
+description = "every record within two links of harbor-api, read in full"
+```
 
-[execution]
-context_binding = "every-model-invocation"
-required_scope = "kb-related-references"
+`kb impact` already walks typed links from a record, bounded, and answers
+`coverage=partial` with exit 2 when it stopped early. `--manifest FILE`
+writes what it reached:
+
+```json
+{
+  "schema": "writfold-manifest/1",
+  "seed": "harbor-api",
+  "direction": "both",
+  "depth": 2,
+  "coverage": "complete",
+  "members": [
+    {"id": "adr-12", "path": "decisions/adr-12.md", "digest": "sha256:…"},
+    {"id": "adr-31", "path": "decisions/adr-31.md", "digest": "sha256:…"}
+  ]
+}
+```
+
+Members are sorted by id. The gate machinery does the rest:
+
+- A partial walk exits 2, so the receipt is `fail`.
+- A timeout or crash is `unknown`.
+- The manifest is kept with the receipt and checked on every read.
+- The `scope` covers the KB's records. When a record is added, removed or
+  edited the scope digest moves and the receipt is `stale`. A newly
+  related record cannot leave an old "complete" standing.
+
+"Complete" means complete for this seed, direction and depth over typed
+links. It is not a claim about records that are related in meaning and
+not linked. Search hits can suggest links to record; they do not widen the
+scope by themselves.
+
+### The unit checklist
+
+```toml
+# .writfold/gates/pair-review.toml
+schema = "writfold-gate/1"
+id = "pair-review"
+version = 1
+class = "checklist"
+items_from = "related-scope/manifest.json"
+units = "pairs"
+allow_empty = false
+scope = ["**", "!runs/**"]
+description = "every pair of related records compared"
+```
+
+The items are not listed in the file. They are the pairs of the members
+of the manifest retained by `related-scope`'s deciding receipt, named
+`<id>~<id>` with the ids in byte order. When that receipt is not a
+current pass, or its manifest does not read, there are no items and the
+checklist is not covered:
+
+```text
+gate pair-review [open] checklist @.writfold/gates/pair-review.toml:1
+  why: its items come from related-scope, which is [stale]; next: writfold kb gate run related-scope
+```
+
+Each unit is covered by a row that cites a report:
+
+```sh
+writfold kb agent prepare kb-reviewer --for 'pair-review.adr-12~adr-31' \
+  --input pair.json --out /tmp/inv
+# the worker writes report.md
+writfold kb deliver prepare --mode pair-report --from report.md --invocation ID
+writfold kb deliver check
+writfold kb gate cover pair-review 'adr-12~adr-31' supported delivery:CANDIDATE --by WHO
+```
+
+`--from` rows cover many units in one write, as today. With eight of ten
+units covered:
+
+```text
+gate pair-review [open] checklist 8/10 units @.writfold/gates/pair-review.toml:1
+  item: adr-12~adr-40 [open]
+  item: adr-31~adr-44 [open]
+  next: writfold kb gate cover pair-review 'adr-12~adr-40' supported delivery:ID --by WHO
+```
+
+A row says a review exists for the unit. Whether the review found a
+conflict is in the report. A unit whose review could not be done is
+covered `unsupported` with a reason, and stays owed.
+
+### The disposition gate and the plan
+
+```toml
+# .writfold/gates/findings-dispositioned.toml
+schema = "writfold-gate/1"
+id = "findings-dispositioned"
+version = 1
+class = "attested"
+scope = ["**", "!runs/**"]
+accept = ["attested"]
+instructions = "findings-dispositioned.md"
+description = "each conflict the reviews found is resolved, kept open with a reason, or excepted by name"
 ```
 
 ```toml
 # .writfold/plans/kb-consistency.toml
-# Existing plan syntax; referenced gate definitions below are proposed.
 schema = "writfold-plan/1"
 name = "kb-consistency"
 steps = [
-  "enumerate: scope-complete",
-  "inspect: review-units-covered",
+  "enumerate: related-scope",
+  "inspect: pair-review",
   "reconcile: findings-dispositioned",
-  "conclude: kb-review-contract",
 ]
 ```
 
-```toml
-# .writfold/gates/kb-review-contract.toml
-schema = "writfold-gate/proposal"
-id = "kb-review-contract"
-version = 1
-class = "derived"
+The three steps are the contract. There is no fourth gate that derives a
+verdict from the other three. A research task may end with open findings
+if the instructions allow it; a publishing step can owe a stricter gate.
 
-[[requires]]
-predicate = "context.skill-bound-to-producing-invocation"
-skill = "kb-consistency"
-artifacts = "review-reports"
-issuer_role = "harness"
+### When the KB moves
 
-[[requires]]
-predicate = "scope.complete"
-manifest = "related-reference-manifest"
-issuer_role = "enumerator"
+Add a sixth record that links to the seed. Then:
 
-[[requires]]
-predicate = "review.units-covered"
-manifest = "review-unit-manifest"
-artifacts = "review-reports"
-issuer_role = "structural-validator"
+1. `related-scope` reads `stale`. The `enumerate` step shows `!stale` and
+   stays done.
+2. `pair-review` has no items until `related-scope` is run again. Then it
+   has fifteen.
+3. Every earlier row is stale, because a row is about the checklist's
+   definition and the manifest it was generated from.
 
-[[requires]]
-predicate = "findings.dispositioned"
-artifacts = "reconciliation-report"
-issuer_role = "structural-validator"
-```
+Step 3 is the safe first rule, and the draft's own starting point ("pin
+the whole relevant corpus"). The dry runs reused the ten earlier reviews.
+That needs a digest per unit and an argument that a new member cannot
+change what an old pair means. It is later work, noted in #156.
 
-Artifact names resolve to typed, step-bound outputs, never arbitrary paths supplied by the model at check time. The first predicate requires an eligible context receipt for each producing invocation represented in the report set. The last two establish coverage and recorded disposition, not semantic truth. Additional gates can require a particular assessor role or a deterministic domain checker where appropriate.
+### What an existing setup can notice
 
-The execution block installs invocation admission requirements; it does not create another set of workflow steps. Entry validation uses the prepared request, while the concluding gate uses its later submission/result observations. This avoids the circular requirement of needing a dispatch receipt before dispatch.
+New: the `--manifest` flag; `items_from`, `units` and `allow_empty` on a
+checklist; `delivery:<id>` as a cover reference; `--for` on
+`agent prepare`. A checklist with neither `items` nor `items_from`, or
+with both, is refused.
 
-The scope recipe belongs in the existing context configuration direction, with explicit stores, relation kinds, closure policy, units and partial/empty behavior. Do not quietly interpret arbitrary prose as executable gate logic. A policy authoring assistant may draft the structured contract once; retain a trace from each prose clause to its rule or to an explicit advisory judgment. The admitted policy remains fixed for the run unless an authorized revision is recorded.
+## Design notes
 
-### Explicit scope recipe
+- **Unit names** use record ids, not versions. A changed member makes its
+  rows stale. It does not mint new units and orphan old ones.
+- **The cap.** Over 64 members the checklist is refused with the count. A
+  rule that partitions by subject is a different coverage claim and a
+  later key, never a silent substitute.
+- **No new protocol.** Every write here is an existing publication:
+  a gate receipt with retained evidence, a cover row, a delivery. No TLA+
+  model changes.
+- **No retrieval receipt.** The manifest is a gate's retained file. The
+  retrieval receipts removed in #105 do not return.
 
-This additional proposal sketch shows the information the recipe must carry. `project-kb` resolves to an approved store binding; `<snapshot>` is an illustrative placeholder, not a valid commit pin. The initial contract pins the full relevant corpus, which safely catches newly related documents. Later selective invalidation needs its own sound membership-dependency argument.
+## Points to settle when the slice starts
 
-```toml
-# .writfold/context/kb-related-references.toml
-schema = "writfold-research-scope/proposal"
-id = "kb-related-references"
-stores = ["project-kb"]
-source_basis = { "project-kb" = "<snapshot>" }
-seeds = "step.subjects"
-relations = ["describes", "depends-on", "supersedes", "cites"]
-direction = "both"
-closure = "exhaustive-within-declared-stores"
-on_partial = "refuse-complete"
-on_empty = "require-explicit-allow-empty"
-units = "all-unordered-pairs"
-```
+- Whether a read verb may run as a gate's command while `gate run` holds
+  the run (expected: yes, `impact` takes no write lock). If not, the scope
+  gate becomes a built-in `run-record` requirement instead.
+- One seed per manifest, as `impact` takes one id today, or several.
+- Whether `gate cover --from` should take a manifest of reports, so a
+  driver covers all units in one call.
 
-Relation names are selected contract vocabulary, not a claim that every named relation exists in today's KB schema. Unknown relations or unresolved store bindings must refuse rather than silently shrink the universe. A production recipe may deliberately use a different unit rule, with a correspondingly different coverage claim.
+## Compatibility and reversibility
 
-## Concrete acceptance fixture
+All keys are new and optional. A checklist with listed items is
+unchanged. Removing the feature is removing the three gate files.
 
-Create synthetic documents A through E and a declared complete scope at basis B1. Generate AB, AC, AD, AE, BC, BD, BE, CD, CE and DE. Each report refers to its exact unit inputs and producing invocation. Give the fake reviewer valid reports for eight units, withholding BD and CE.
+## Alternatives
 
-The expected diagnostic is: `cannot conclude: 8/10 review units covered; missing BD, CE`. Supplying the missing two permits the coverage check, but finding disposition remains a separate check. A correct hash without a protected context observation still fails the invocation-bound requirement.
+| Alternative | Why it lost |
+|---|---|
+| Six new kernels (scope eligibility, scope freshness, unit generation, report eligibility, coverage, disposition), as drafted | Four are shipped kernels under other names |
+| A `derived` gate that requires named predicates of other gates | The removed assessed gate by another name; the plan already orders and conjoins |
+| A scope-recipe schema with stores, relations and closure policy | The recipe is the scope gate's command; its bytes are in the definition digest |
+| Keep old pair reviews when a member is added | Needs per-unit digests and its own argument; deferred |
+| Let the agent list what it reviewed | That is today's behaviour, and the problem |
 
-Add related document F without changing A–E. The B1 result remains valid history; it cannot establish current scope completeness at B2. If the chosen rule remains all-pairs over six documents, the new manifest has fifteen units. Reuse prior reports only when their individual bindings and reuse policy permit it, and never reuse the old whole-scope completeness claim.
+## Evidence and tests
 
-Include a schema-valid report with a deliberately wrong interpretation. Structural checks may accept its format and provenance; it must still be displayed as model assessment. Add a separate typed-fact fixture only if its formal vocabulary and extraction trust boundary are explicit.
+`fixtures/kb/kb-consistency/`: records A to E linked to one seed, a fake
+worker, and these cases:
 
-## Execution, changes and recovery
+- ten units; eight covered; the two owed are named; the last two covered;
+  the step advances; the disposition gate is still owed;
+- a walk stopped by a work limit: the scope gate fails;
+- a search that times out: unknown;
+- record F added: scope stale, no items, then fifteen, earlier rows stale;
+- a report prepared for another unit: the row is refused;
+- a schema-valid report with a wrong reading: every gate can be met. The
+  fixture says so in a comment. Coverage is not correctness.
 
-The external driver schedules mandatory scope enumeration before review. It builds bounded review requests from generated units and obtains the invocation admission defined in the companion RFC. A model may propose extra references or findings; the driver validates them against a deliberate scope revision instead of silently widening or shrinking the admitted task.
+Plus the proofs gate with the five mutants, quality and unit.
 
-Compaction/new attempts need current request evidence. Changed context or source snapshots require the applicable checks again. Historical completed plan steps are never silently rewritten; use existing plan operations to represent additional required work. Crash or lost dispatch observations remain unknown and require reconciliation.
+## Rollout
 
-The first slice uses a fixed synthetic corpus and a fake model. #155 owns scope, #156 owns coverage/disposition, #154 owns shared gate admission, and #157 owns the end-to-end fixture. Existing #148/#149 supply request and result evidence; #150/#64 supply adapter and receiver boundaries. #151 can present the example without reimplementing these pieces. There is no new search engine, workflow service or paid evaluation in this intake.
+| Step | Issue | Ships |
+|---|---|---|
+| 1 | [#155](https://github.com/writfold-dev/writfold/issues/155) | `impact --manifest`, the scope-gate recipe, tests for partial, unknown and membership change |
+| 2 | [#156](https://github.com/writfold-dev/writfold/issues/156) | `units` proved; generated checklist items; `delivery:` references; `--for` |
+| 3 | [#157](https://github.com/writfold-dev/writfold/issues/157) | the fixture and a guide page |
 
-## Compatibility and open grooming decisions
+## Unresolved questions
 
-The research contract and unit identities are independent of the chosen model and harness. Scope enumeration and deterministic checks can produce tool-owned evidence through ordinary CLI/artifact use; a context-delivery requirement additionally needs an adapter that can observe the relevant model boundary. Do not make that stronger requirement an implicit prerequisite for all KB use. Switching hosts retains the manifest/history and any still-eligible reports while requiring fresh invocation evidence for new work. See the companion RFC's [portability boundary](2026-11-25-evidence-governed-execution.md#model-and-harness-portability).
+None blocks acceptance.
 
-Use `.writfold/` as the authored source. Preserve plain text for instructions and explicitly advisory assessments; do not translate arbitrary prose into executable policy without review. Choose the first supported scope/unit grammar, required-store behavior and authorized exception policy during grooming. The draft proposal schemas have no backward-compatibility obligation. Any future replacement of shipped behavior must be explicit in its implementation notes.
-
-The research basis and trust assumptions are shared with [the evidence-governed execution RFC](2026-11-25-evidence-governed-execution.md#research-foundations-and-choices). No claim that a finite recipe finds every semantically relevant fact is proposed.
+- Owner: is "everything stale when the KB moves" acceptable as the first
+  rule? Default: yes.
 
 ## Decision log
 
-- 2026-11-25: Added the executed design dry-run results and made collection-level invalidation versus policy-permitted unit-report reuse explicit. The exercise validates selected modeled transitions, not the shipped implementation or semantic completeness.
-- 2026-11-25: Separated scope completeness, review coverage, semantic assessment and finding disposition at the owner's request. Added corpus-membership invalidation and a five-document/ten-unit fixture. The issue set is held for later grooming; no runtime change or new proof is claimed.
-
+- 2026-11-25: Scope completeness, review coverage, assessment and finding
+  disposition separated at the owner's request. A five-document, ten-unit
+  fixture defined.
+- 2026-11-25: Dry-run results added; collection-level invalidation
+  distinguished from unit reuse.
+- 2026-11-25: Groomed. Outcomes: the scope is a shipped mechanical gate
+  with `retain`; units are generated checklist items; the disposition is a
+  shipped attested gate; one new kernel (`units`) and one new grounding,
+  seven theorems and five mutants; the `derived` class, the `[execution]`
+  block and the scope-recipe schema removed; unit reuse deferred. Status
+  left `draft` for the main session to accept.
