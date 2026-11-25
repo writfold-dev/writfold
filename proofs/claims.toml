@@ -2990,3 +2990,37 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "vale-unusable-fail",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/compose.rs"
+function = "covers"
+lean = "writfold_core.compose.covers"
+theorems = [
+  "Writfold.Core.Compose.covers_loop_spec",
+  "Writfold.Core.Compose.covers_spec",
+  "Writfold.Core.Compose.covers_none_iff",
+]
+total = "Writfold.Core.Compose.covers_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "covers-ignores-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/compose.rs"
+function = "closure"
+lean = "writfold_core.compose.closure"
+theorems = [
+  "Writfold.Core.Compose.closure_loop_spec",
+  "Writfold.Core.Compose.closure_spec",
+  "Writfold.Core.Compose.closure_ok_iff",
+  "Writfold.Core.Compose.more_skills_never_admit",
+]
+total = "Writfold.Core.Compose.closure_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "closure-wrong-kind-found",
+  "closure-skips-tools",
+]

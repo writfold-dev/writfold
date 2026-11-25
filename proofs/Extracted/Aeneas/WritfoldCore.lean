@@ -758,6 +758,166 @@ def command.named
   then ok false
   else command.named_loop «prefix» words 0#usize
 
+/-- [writfold_core::compose::RefFact]
+    Source: 'crates/writfold-core/src/compose.rs', lines 18:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive compose.RefFact where
+| Found : compose.RefFact
+| Missing : compose.RefFact
+| WrongKind : compose.RefFact
+| Twice : compose.RefFact
+
+/-- [writfold_core::compose::Refusal]
+    Source: 'crates/writfold-core/src/compose.rs', lines 31:0-36:1
+    Visibility: public -/
+@[discriminant isize]
+inductive compose.Refusal where
+| Reference : Std.Usize → compose.Refusal
+| Tool : Std.Usize → compose.Refusal
+
+/-- [writfold_core::plan::contains]: loop body 0:
+    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
+    Visibility: public -/
+@[rust_loop_body]
+def plan.contains_loop.body
+  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len keys
+  if index < i
+  then
+    let v ← Slice.index_usize keys index
+    let s := alloc.vec.Vec.deref v
+    let b ← bytes.same s key
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::plan::contains]: loop 0:
+    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
+    Visibility: public -/
+@[rust_loop]
+def plan.contains_loop
+  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
+  (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => plan.contains_loop.body keys key index1)
+    index
+
+/-- [writfold_core::plan::contains]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 190:0-199:1
+    Visibility: public -/
+@[reducible]
+def plan.contains
+  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8) :
+  Result Bool
+  := do
+  plan.contains_loop keys key 0#usize
+
+/-- [writfold_core::compose::covers]: loop body 0:
+    Source: 'crates/writfold-core/src/compose.rs', lines 41:4-48:1
+    Visibility: public -/
+@[rust_loop_body]
+def compose.covers_loop.body
+  (required : Slice (alloc.vec.Vec Std.U8))
+  (granted : Slice (alloc.vec.Vec Std.U8)) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := Slice.len required
+  if index < i
+  then
+    let v ← Slice.index_usize required index
+    let s := alloc.vec.Vec.deref v
+    let b ← plan.contains granted s
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done (some index))
+  else ok (done none)
+
+/-- [writfold_core::compose::covers]: loop 0:
+    Source: 'crates/writfold-core/src/compose.rs', lines 41:4-48:1
+    Visibility: public -/
+@[rust_loop]
+def compose.covers_loop
+  (required : Slice (alloc.vec.Vec Std.U8))
+  (granted : Slice (alloc.vec.Vec Std.U8)) (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => compose.covers_loop.body required granted index1)
+    index
+
+/-- [writfold_core::compose::covers]:
+    Source: 'crates/writfold-core/src/compose.rs', lines 39:0-48:1
+    Visibility: public -/
+@[reducible]
+def compose.covers
+  (required : Slice (alloc.vec.Vec Std.U8))
+  (granted : Slice (alloc.vec.Vec Std.U8)) :
+  Result (Option Std.Usize)
+  := do
+  compose.covers_loop required granted 0#usize
+
+/-- [writfold_core::compose::closure]: loop body 0:
+    Source: 'crates/writfold-core/src/compose.rs', lines 54:4-67:1
+    Visibility: public -/
+@[rust_loop_body]
+def compose.closure_loop.body
+  (refs : Slice compose.RefFact) (required : Slice (alloc.vec.Vec Std.U8))
+  (granted : Slice (alloc.vec.Vec Std.U8)) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Unit compose.Refusal))
+  := do
+  let i := Slice.len refs
+  if index < i
+  then
+    let rf ← Slice.index_usize refs index
+    match rf with
+    | compose.RefFact.Found => let index1 ← index + 1#usize
+                               ok (cont index1)
+    | compose.RefFact.Missing =>
+      ok (done (core.result.Result.Err (compose.Refusal.Reference index)))
+    | compose.RefFact.WrongKind =>
+      ok (done (core.result.Result.Err (compose.Refusal.Reference index)))
+    | compose.RefFact.Twice =>
+      ok (done (core.result.Result.Err (compose.Refusal.Reference index)))
+  else
+    let o ← compose.covers required granted
+    match o with
+    | none => ok (done (core.result.Result.Ok ()))
+    | some tool =>
+      ok (done (core.result.Result.Err (compose.Refusal.Tool tool)))
+
+/-- [writfold_core::compose::closure]: loop 0:
+    Source: 'crates/writfold-core/src/compose.rs', lines 54:4-67:1
+    Visibility: public -/
+@[rust_loop]
+def compose.closure_loop
+  (refs : Slice compose.RefFact) (required : Slice (alloc.vec.Vec Std.U8))
+  (granted : Slice (alloc.vec.Vec Std.U8)) (index : Std.Usize) :
+  Result (core.result.Result Unit compose.Refusal)
+  := do
+  loop
+    (fun index1 => compose.closure_loop.body refs required granted index1)
+    index
+
+/-- [writfold_core::compose::closure]:
+    Source: 'crates/writfold-core/src/compose.rs', lines 52:0-67:1
+    Visibility: public -/
+@[reducible]
+def compose.closure
+  (refs : Slice compose.RefFact) (required : Slice (alloc.vec.Vec Std.U8))
+  (granted : Slice (alloc.vec.Vec Std.U8)) :
+  Result (core.result.Result Unit compose.Refusal)
+  := do
+  compose.closure_loop refs required granted 0#usize
+
 /-- [writfold_core::decision::State]
     Source: 'crates/writfold-core/src/decision.rs', lines 25:0-37:1
     Visibility: public -/
@@ -5032,50 +5192,6 @@ def plan.close_check
   if last_open
   then plan.first_owed present
   else ok none
-
-/-- [writfold_core::plan::contains]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
-    Visibility: public -/
-@[rust_loop_body]
-def plan.contains_loop.body
-  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
-  (index : Std.Usize) :
-  Result (ControlFlow Std.Usize Bool)
-  := do
-  let i := Slice.len keys
-  if index < i
-  then
-    let v ← Slice.index_usize keys index
-    let s := alloc.vec.Vec.deref v
-    let b ← bytes.same s key
-    if b
-    then ok (done true)
-    else let index1 ← index + 1#usize
-         ok (cont index1)
-  else ok (done false)
-
-/-- [writfold_core::plan::contains]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
-    Visibility: public -/
-@[rust_loop]
-def plan.contains_loop
-  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
-  (index : Std.Usize) :
-  Result Bool
-  := do
-  loop
-    (fun index1 => plan.contains_loop.body keys key index1)
-    index
-
-/-- [writfold_core::plan::contains]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 190:0-199:1
-    Visibility: public -/
-@[reducible]
-def plan.contains
-  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8) :
-  Result Bool
-  := do
-  plan.contains_loop keys key 0#usize
 
 /-- [writfold_core::plan::splice_check]:
     Source: 'crates/writfold-core/src/plan.rs', lines 208:0-227:1

@@ -230,6 +230,21 @@ MUTANTS = (
            "        Outcome::Pass => blocking == 0,",
            "        Outcome::Pass => true,",
            ("Writfold.Core.Prose.agrees_spec",)),
+    # compose (#144): the last required tool is checked too
+    Mutant("covers-ignores-last", "compose.rs",
+           "    while index < required.len() {",
+           "    while index + 1 < required.len() {",
+           ("Writfold.Core.Compose.covers_loop_spec",)),
+    # compose: a definition of the wrong kind never resolves a reference
+    Mutant("closure-wrong-kind-found", "compose.rs",
+           "            RefFact::Found => {}\n            RefFact::Missing | RefFact::WrongKind | RefFact::Twice => {",
+           "            RefFact::Found | RefFact::WrongKind => {}\n            RefFact::Missing | RefFact::Twice => {",
+           ("Writfold.Core.Compose.closure_loop_spec",)),
+    # compose: a skill's tools must be granted by the profile
+    Mutant("closure-skips-tools", "compose.rs",
+           "        Some(tool) => Err(Refusal::Tool(tool)),",
+           "        Some(_) => Ok(()),",
+           ("Writfold.Core.Compose.closure_loop_spec",)),
     # vale (#131): only the pinned executable's run is read
     Mutant("vale-absent-usable", "vale.rs",
            "        Tool::Absent | Tool::Other => return false,",

@@ -128,6 +128,14 @@ def claims : List Name := [
   ``Writfold.Core.Vale.settle_agrees,
   ``Writfold.Core.Vale.countB_weigh_zero,
   ``Writfold.Core.Vale.pass_stricter_pass,
+  -- agent profile closures (writfold_core::compose, #144)
+  ``Writfold.Core.Compose.covers_loop_spec,
+  ``Writfold.Core.Compose.covers_spec,
+  ``Writfold.Core.Compose.covers_none_iff,
+  ``Writfold.Core.Compose.closure_loop_spec,
+  ``Writfold.Core.Compose.closure_spec,
+  ``Writfold.Core.Compose.closure_ok_iff,
+  ``Writfold.Core.Compose.more_skills_never_admit,
   -- policy inventories (writfold_core::inventory, #56)
   ``Writfold.Core.Inventory.readable_spec,
   ``Writfold.Core.Inventory.complete_loop_spec,

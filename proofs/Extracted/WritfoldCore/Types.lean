@@ -110,6 +110,24 @@ inductive gate.Standing where
 | Attested : gate.Standing
 | Waived : gate.Standing
 
+/-- [writfold_core::compose::RefFact]
+    Source: 'crates/writfold-core/src/compose.rs', lines 18:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive compose.RefFact where
+| Found : compose.RefFact
+| Missing : compose.RefFact
+| WrongKind : compose.RefFact
+| Twice : compose.RefFact
+
+/-- [writfold_core::compose::Refusal]
+    Source: 'crates/writfold-core/src/compose.rs', lines 31:0-36:1
+    Visibility: public -/
+@[discriminant isize]
+inductive compose.Refusal where
+| Reference : Std.Usize → compose.Refusal
+| Tool : Std.Usize → compose.Refusal
+
 /-- [writfold_core::decision::State]
     Source: 'crates/writfold-core/src/decision.rs', lines 25:0-37:1
     Visibility: public -/

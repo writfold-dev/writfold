@@ -34,3 +34,4 @@ import Writfold.Handoff
 import Writfold.Publish
 import Writfold.Graph
 import Writfold.Round
+import Writfold.Compose

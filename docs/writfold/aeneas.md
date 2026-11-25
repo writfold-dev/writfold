@@ -1247,6 +1247,16 @@ blocks exactly at or above the mode's threshold; a pass under a stricter
 threshold is a pass under a laxer one). Their mutants (`prose-*`,
 `vale-*`) are in `proofs/mutants.py`; the table above predates them.
 
+Agent profile closures (v0.6.0-dev.22, #144, RFC 2026-11-25-agent-vocabulary
+calculus §3.6): `writfold_core::compose` (`Compose.lean`: `covers` is the
+least index of a required tool the profile does not grant, `None` exactly
+when every one is granted; `closure` refuses the first reference that does
+not resolve to one definition of the expected kind, then the first
+uncovered tool, and admits exactly when neither exists; adding a skill
+never turns a refused closure into an admitted one). Mutants
+`covers-ignores-last`, `closure-wrong-kind-found`, `closure-skips-tools`.
+Its protocol is `spec/Invocation.tla` (#145).
+
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition
 parsing, digests, Git and file reads, the write protocol

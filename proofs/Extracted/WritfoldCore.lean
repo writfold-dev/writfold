@@ -8,9 +8,10 @@ public import Extracted.WritfoldCore.Checklist
 public import Extracted.WritfoldCore.Bind
 public import Extracted.WritfoldCore.Catalog
 public import Extracted.WritfoldCore.Command
-public import Extracted.WritfoldCore.Decision
 public import Extracted.WritfoldCore.Policy
 public import Extracted.WritfoldCore.Plan
+public import Extracted.WritfoldCore.Compose
+public import Extracted.WritfoldCore.Decision
 public import Extracted.WritfoldCore.Delivery
 public import Extracted.WritfoldCore.Diag
 public import Extracted.WritfoldCore.Find

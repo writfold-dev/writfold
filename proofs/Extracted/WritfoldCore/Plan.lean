@@ -23,6 +23,50 @@ set_option maxRecDepth 2048
 
 namespace writfold_core
 
+/-- [writfold_core::plan::contains]: loop body 0:
+    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
+    Visibility: public -/
+@[rust_loop_body]
+def plan.contains_loop.body
+  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len keys
+  if index < i
+  then
+    let v ← Slice.index_usize keys index
+    let s := alloc.vec.Vec.deref v
+    let b ← bytes.same s key
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::plan::contains]: loop 0:
+    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
+    Visibility: public -/
+@[rust_loop]
+def plan.contains_loop
+  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
+  (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => plan.contains_loop.body keys key index1)
+    index
+
+/-- [writfold_core::plan::contains]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 190:0-199:1
+    Visibility: public -/
+@[reducible]
+def plan.contains
+  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8) :
+  Result Bool
+  := do
+  plan.contains_loop keys key 0#usize
+
 /-- [writfold_core::plan::GateFact]
     Source: 'crates/writfold-core/src/plan.rs', lines 110:0-114:1
     Visibility: public -/
@@ -505,50 +549,6 @@ def plan.close_check
   if last_open
   then plan.first_owed present
   else ok none
-
-/-- [writfold_core::plan::contains]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
-    Visibility: public -/
-@[rust_loop_body]
-def plan.contains_loop.body
-  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
-  (index : Std.Usize) :
-  Result (ControlFlow Std.Usize Bool)
-  := do
-  let i := Slice.len keys
-  if index < i
-  then
-    let v ← Slice.index_usize keys index
-    let s := alloc.vec.Vec.deref v
-    let b ← bytes.same s key
-    if b
-    then ok (done true)
-    else let index1 ← index + 1#usize
-         ok (cont index1)
-  else ok (done false)
-
-/-- [writfold_core::plan::contains]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
-    Visibility: public -/
-@[rust_loop]
-def plan.contains_loop
-  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8)
-  (index : Std.Usize) :
-  Result Bool
-  := do
-  loop
-    (fun index1 => plan.contains_loop.body keys key index1)
-    index
-
-/-- [writfold_core::plan::contains]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 190:0-199:1
-    Visibility: public -/
-@[reducible]
-def plan.contains
-  (keys : Slice (alloc.vec.Vec Std.U8)) (key : Slice Std.U8) :
-  Result Bool
-  := do
-  plan.contains_loop keys key 0#usize
 
 /-- [writfold_core::plan::splice_check]:
     Source: 'crates/writfold-core/src/plan.rs', lines 208:0-227:1

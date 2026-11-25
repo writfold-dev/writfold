@@ -46,6 +46,7 @@ pub mod bytes;
 pub mod catalog;
 pub mod checklist;
 pub mod command;
+pub mod compose;
 pub mod decision;
 pub mod delivery;
 pub mod diag;
