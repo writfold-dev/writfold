@@ -1237,6 +1237,16 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `best-recorded-skips-last` | `verdict/recorded.rs` | recorded: the last recorded statement is a candidate | `Recorded.best_recorded_loop_spec` |
 <!-- end generated -->
 
+Delivery prose checks (v0.6.0-dev.20 and dev.21): `writfold_core::prose`
+(`Prose.lean`: advice never decides, any blocking match fails, no rules is
+unknown, a receipt's outcome agrees with its blocking findings) and
+`writfold_core::vale` (`Vale.lean`, RFC 2026-11-25-vale-for-documents:
+only a whole report from the pinned Vale whose exit status agrees with its
+alerts is read; no enabled check or a silent canary is unknown; an alert
+blocks exactly at or above the mode's threshold; a pass under a stricter
+threshold is a pass under a laxer one). Their mutants (`prose-*`,
+`vale-*`) are in `proofs/mutants.py`; the table above predates them.
+
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition
 parsing, digests, Git and file reads, the write protocol

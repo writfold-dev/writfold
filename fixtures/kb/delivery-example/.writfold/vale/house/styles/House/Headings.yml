@@ -1,0 +1,6 @@
+# An example rule: headings in sentence case.
+extends: capitalization
+message: "Use sentence case for the heading '%s'."
+level: warning
+scope: heading
+match: $sentence

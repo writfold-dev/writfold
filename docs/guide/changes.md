@@ -6,6 +6,11 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.21
+
+- **Vale for documents** ([#117](https://github.com/writfold-dev/writfold/issues/117)): a new built-in check, `prose.vale`, with new mode keys `vale` and `vale_block`, new profile files `.writfold/deliveries/vale-<name>.toml`, and a new KB directory `.writfold/vale/<name>/` for the Vale config and styles. It is never a default, so the built-in modes and existing receipts are unchanged. Mode names starting `vale-` are refused, as `deny-*` and `prose-*` are. `kb init --example delivery` also writes a `design-doc` mode, the `house` profile and an example style.
+- A failed `prose.rules` finding is drawn with the help line "a blocking rule" instead of "a blocking prose rule". The JSON `column` of a finding is now read from a detail such as `column 14: warning: …` as well as `column 14`.
+
 ## v0.6.0-dev.20
 
 - **Prose rules for delivery drafts** ([#127](https://github.com/writfold-dev/writfold/issues/127)): a new built-in check, `prose.rules`, with a new mode key `prose` and new rule files, `.writfold/deliveries/prose-<set>.toml`. It is never a default, so the built-in modes and existing receipts are unchanged. Mode names starting `prose-` are refused, as `deny-*` is. `kb init --example delivery` writes `prose-plain.toml` and lists the check in `release-note.toml`.

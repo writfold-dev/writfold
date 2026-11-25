@@ -128,3 +128,37 @@ fn the_example_commit_message_flow() -> TestResult {
     );
     Ok(())
 }
+
+/// #134: the example's design-doc mode runs `prose.vale` with the example
+/// profile, here against the stand-in in `fixtures/vale/` (not Vale): a
+/// placeholder blocks, and a clean draft is ready.
+#[test]
+fn the_example_design_doc_flow() -> TestResult {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/vale/bin/vale");
+    writfold_kb::deliver::vale::use_program(path);
+    let w = example()?;
+    set(&w, "change")?;
+    let from = w.base.join("design.md");
+    for (at, (standin, want)) in [("errors", 1), ("clean", 0)].into_iter().enumerate() {
+        std::fs::write(
+            &from,
+            format!("<!-- standin: {standin} -->\n# A design\n\nText.\n"),
+        )?;
+        let prep = DeliverVerb::Prepare(writfold_kb::deliver::candidate::Prepare {
+            mode: "design-doc".into(),
+            from: from.clone(),
+            audience: Some("internal".into()),
+            destination: None,
+            run: Some(RUN.into()),
+        });
+        let at = NOW + 60 * (i64::try_from(at)? + 1);
+        run(&w, prep, at)?;
+        let id = ids(&w)?.pop().ok_or("no candidate")?;
+        let (text, exit) = check(&w, &id, at + 30)?;
+        assert_eq!(exit == 0, want == 0, "{standin}: {text}");
+        if want == 1 {
+            assert!(text.contains("House.Todo"), "{text}");
+        }
+    }
+    Ok(())
+}

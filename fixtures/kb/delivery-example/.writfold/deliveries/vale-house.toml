@@ -1,0 +1,7 @@
+# An example to edit: the pin for the Vale styles in .writfold/vale/house/.
+# To use your own setup, copy your .vale.ini and styles directory there and
+# set version to the Vale you run.
+schema = "writfold-vale-profile/1"
+name = "house"
+version = "3.28.1"
+canary = "This sentence is very plain."

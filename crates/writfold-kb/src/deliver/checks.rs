@@ -23,6 +23,16 @@ use writfold_core::gate::Outcome;
 /// The most findings a receipt keeps (the total is kept too).
 pub const MAX_FINDINGS: usize = 20;
 
+/// The column a finding's detail starts with (`column 14` or
+/// `column 14: warning: …`).
+pub fn column(detail: &str) -> Option<usize> {
+    let rest = detail.strip_prefix("column ")?;
+    let end = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
+    rest[..end].parse().ok()
+}
+
 /// One thing a check found.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Finding {

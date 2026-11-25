@@ -168,6 +168,10 @@ fn init_writes_the_delivery_example() -> TestResult {
         ".writfold/gates/commit-format.toml",
         ".writfold/gates/commit_format.sh",
         ".writfold/plans/ship.toml",
+        ".writfold/deliveries/design-doc.toml",
+        ".writfold/deliveries/vale-house.toml",
+        ".writfold/vale/house/.vale.ini",
+        ".writfold/vale/house/styles/House/Placeholders.yml",
     ] {
         assert_eq!(
             std::fs::read(dir.join(file))?,

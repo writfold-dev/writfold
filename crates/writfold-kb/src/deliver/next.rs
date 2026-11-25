@@ -68,6 +68,15 @@ pub fn next(root: &Path, c: &Candidate, judged: &[Judged<'_>]) -> Option<String>
             super::config::DIR
         ));
     }
+    let fix = (j.standing == Standing::Checked(State::Unknown))
+        .then(|| {
+            j.receipt
+                .and_then(|(_, r)| r.note.as_deref()?.split_once("; to fix: "))
+        })
+        .flatten();
+    if let Some((_, fix)) = fix {
+        return Some(format!("{fix}, then: {check}"));
+    }
     match j.standing {
         Standing::Checked(State::Failed) => Some(format!(
             "edit {}{}, then: {check}",

@@ -34,53 +34,36 @@ const RESEARCH: [(&str, &str); 4] = [
     ),
 ];
 
+/// One file of the delivery example, at the same path in the new KB.
+macro_rules! example {
+    ($path:literal) => {
+        (
+            $path,
+            include_str!(concat!("../../../fixtures/kb/delivery-example/", $path)),
+        )
+    };
+}
+
 /// What `init` writes with `--example delivery`: the bytes of
 /// `fixtures/kb/delivery-example/`, which are the user's after `init`.
-const DELIVERY: [(&str, &str); 9] = [
-    (
-        ".writfold/deliveries/deny-external.toml",
-        include_str!(
-            "../../../fixtures/kb/delivery-example/.writfold/deliveries/deny-external.toml"
-        ),
-    ),
-    (
-        ".writfold/deliveries/deny-internal.toml",
-        include_str!(
-            "../../../fixtures/kb/delivery-example/.writfold/deliveries/deny-internal.toml"
-        ),
-    ),
-    (
-        ".writfold/deliveries/commit-message.toml",
-        include_str!(
-            "../../../fixtures/kb/delivery-example/.writfold/deliveries/commit-message.toml"
-        ),
-    ),
-    (
-        ".writfold/deliveries/release-note.toml",
-        include_str!(
-            "../../../fixtures/kb/delivery-example/.writfold/deliveries/release-note.toml"
-        ),
-    ),
-    (
-        ".writfold/deliveries/prose-plain.toml",
-        include_str!("../../../fixtures/kb/delivery-example/.writfold/deliveries/prose-plain.toml"),
-    ),
-    (
-        ".writfold/deliveries/guard.toml",
-        include_str!("../../../fixtures/kb/delivery-example/.writfold/deliveries/guard.toml"),
-    ),
-    (
-        ".writfold/gates/commit-format.toml",
-        include_str!("../../../fixtures/kb/delivery-example/.writfold/gates/commit-format.toml"),
-    ),
-    (
-        ".writfold/gates/commit_format.sh",
-        include_str!("../../../fixtures/kb/delivery-example/.writfold/gates/commit_format.sh"),
-    ),
-    (
-        ".writfold/plans/ship.toml",
-        include_str!("../../../fixtures/kb/delivery-example/.writfold/plans/ship.toml"),
-    ),
+const DELIVERY: [(&str, &str); 17] = [
+    example!(".writfold/deliveries/deny-external.toml"),
+    example!(".writfold/deliveries/deny-internal.toml"),
+    example!(".writfold/deliveries/commit-message.toml"),
+    example!(".writfold/deliveries/release-note.toml"),
+    example!(".writfold/deliveries/prose-plain.toml"),
+    example!(".writfold/deliveries/guard.toml"),
+    example!(".writfold/gates/commit-format.toml"),
+    example!(".writfold/gates/commit_format.sh"),
+    example!(".writfold/plans/ship.toml"),
+    example!(".writfold/deliveries/design-doc.toml"),
+    example!(".writfold/deliveries/vale-house.toml"),
+    example!(".writfold/vale/house/.vale.ini"),
+    example!(".writfold/vale/house/styles/House/Hedges.yml"),
+    example!(".writfold/vale/house/styles/House/Placeholders.yml"),
+    example!(".writfold/vale/house/styles/House/Terms.yml"),
+    example!(".writfold/vale/house/styles/House/SentenceLength.yml"),
+    example!(".writfold/vale/house/styles/House/Headings.yml"),
 ];
 
 /// The examples `--example` names.

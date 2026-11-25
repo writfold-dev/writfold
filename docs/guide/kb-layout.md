@@ -206,6 +206,9 @@ When one of these files is wrong, `writfold kb lint` reports every fault with it
 | `.writfold/deliveries/<mode>.toml` | changes to a built-in delivery mode | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/deny-<audience>.toml` | references a draft for that audience must not hold | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/guard.toml` | publishing commands the guard hook watches | [delivery-modes](delivery-modes.md) |
+| `.writfold/deliveries/prose-<set>.toml` | a prose rule set a mode names with `prose` | [delivery-modes](delivery-modes.md#prose-rules) |
+| `.writfold/deliveries/vale-<name>.toml` | a Vale profile: the pinned version and the canary line | [delivery-modes](delivery-modes.md#documents-and-vale) |
+| `.writfold/vale/<name>/` | your `.vale.ini` and styles for that profile, unchanged; every file is bound | [delivery-modes](delivery-modes.md#documents-and-vale) |
 | `.writfold/guards/<id>.toml` | one guard rule (built in v0.5.0-dev.1); in the KB root for every project, or in a repository for that repository only | [hooks](hooks.md#guard-rules) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
 | `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields, or its external checker; KB root only | [above](#a-citation-token) |

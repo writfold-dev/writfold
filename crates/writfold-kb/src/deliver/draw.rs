@@ -129,14 +129,12 @@ fn finding(x: &Ctx<'_>, j: &Judged<'_>, f: &Finding) -> String {
             out.push_str("  = help: read the source again, correct the sentence if it no longer holds, and replace the token: writfold kb cite make\n");
             out
         }
-        super::config::PROSE => {
+        super::config::PROSE | super::config::VALE => {
             let mut out = format!("failed[{name}]: {} ({})\n", f.rule, f.detail);
-            let col = (f.detail.strip_prefix("column "))
-                .and_then(|n| n.parse().ok())
-                .unwrap_or(1);
+            let col = super::checks::column(&f.detail).unwrap_or(1);
             out.push_str(&at(x, f, col));
             out.push_str(&format!(
-                "  = help: a blocking prose rule; edit the payload's source, then: {}\n",
+                "  = help: a blocking rule; edit the payload's source, then: {}\n",
                 x.check
             ));
             out
@@ -160,9 +158,7 @@ fn advised(x: &Ctx<'_>, j: &Judged<'_>, f: &Finding) -> String {
     let name = &j.obligation.name;
     let mut out = format!("advice[{name}]: {} ({})\n", f.rule, f.detail);
     if f.line > 0 {
-        let col = (f.detail.strip_prefix("column "))
-            .and_then(|n| n.parse().ok())
-            .unwrap_or(1);
+        let col = super::checks::column(&f.detail).unwrap_or(1);
         out.push_str(&at(x, f, col));
     }
     out.push_str("  = note: advice only; it does not hold the draft back\n");

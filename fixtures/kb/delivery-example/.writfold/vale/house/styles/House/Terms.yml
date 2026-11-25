@@ -1,0 +1,9 @@
+# An example rule: the team's preferred words.
+extends: substitution
+message: "Use '%s' instead of '%s'."
+level: warning
+ignorecase: true
+swap:
+  utilize: use
+  in order to: to
+  e-mail: email

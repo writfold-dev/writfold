@@ -82,10 +82,7 @@ fn keys(j: &Judged<'_>) -> Vec<(&'static str, serde_json::Value)> {
             .findings
             .iter()
             .map(|f| {
-                let column = f
-                    .detail
-                    .strip_prefix("column ")
-                    .and_then(|c| c.parse::<u64>().ok());
+                let column = super::checks::column(&f.detail);
                 match column {
                     Some(col) => {
                         json!({"line": f.line, "column": col, "rule": f.rule, "detail": f.detail})

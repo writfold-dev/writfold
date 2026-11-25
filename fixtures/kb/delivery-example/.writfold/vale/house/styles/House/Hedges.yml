@@ -1,0 +1,11 @@
+# An example rule: words that soften a claim without adding to it.
+extends: existence
+message: "Consider dropping '%s'."
+level: suggestion
+ignorecase: true
+tokens:
+  - very
+  - quite
+  - somewhat
+  - fairly
+  - arguably

@@ -1,0 +1,8 @@
+# An example rule: a placeholder must not reach readers.
+extends: existence
+message: "Replace the placeholder '%s' before this is shared."
+level: error
+tokens:
+  - TODO
+  - TBD
+  - FIXME

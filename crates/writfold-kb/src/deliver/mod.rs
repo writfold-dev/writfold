@@ -40,6 +40,10 @@ pub mod script;
 pub mod status;
 mod status_line;
 pub mod step;
+pub mod vale;
+pub mod vale_profile;
+pub mod vale_report;
+pub mod vale_tree;
 pub mod withdraw;
 pub mod word;
 

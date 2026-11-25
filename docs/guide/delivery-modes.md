@@ -196,7 +196,42 @@ Editing a pattern, renaming a rule or moving a rule between `advise` and `block`
 
 The decision (advice never decides, any blocking match fails, no rules is unknown) is proved in Lean (`writfold_core::prose`). Reading the rules and matching them are tested.
 
-These are rules you write. They do not do grammar or spelling, they do not judge tone or truth, and they give no quality score. `kb init --example delivery` writes a short example set, `prose-plain.toml`, to edit. An external linter (Vale, Harper, anything) can give advice through a candidate script gate (below); a recipe for Vale is planned ([#117](https://github.com/writfold-dev/writfold/issues/117)).
+These are rules you write. They do not do grammar or spelling, they do not judge tone or truth, and they give no quality score. `kb init --example delivery` writes a short example set, `prose-plain.toml`, to edit. For documents, use Vale (next section). Any other linter can give advice through a candidate script gate (below).
+
+## Documents and Vale
+
+Built in v0.6.0-dev.21 ([#117](https://github.com/writfold-dev/writfold/issues/117), [RFC](../rfcs/2026-11-25-vale-for-documents.md)). A delivery can be a document: an RFC, a design doc, a guide. The check `prose.vale` runs your own [Vale](https://vale.sh) styles on the draft. Vale is a separate program you install. Writfold never installs it, never runs `vale sync`, and never looks for it unless a mode lists `prose.vale`.
+
+A profile pins the Vale release and holds one canary line:
+
+```toml
+# .writfold/deliveries/vale-house.toml
+schema = "writfold-vale-profile/1"
+name = "house"
+version = "3.28.1"
+canary = "This sentence is very plain."
+```
+
+Your `.vale.ini` and styles directory go, unchanged, in `.writfold/vale/<name>/`. To adopt the setup you already use, copy them there; your editor and CI can point at the same file with `vale --config`. The config's top-level `StylesPath` must be a relative path inside that directory.
+
+```text
+# in a mode file
+checks = ["claims.cited-fresh", "prose.vale"]
+vale = "house"
+vale_block = "error"
+```
+
+- **What blocks.** An alert at or above `vale_block` fails the check; the rest is advice, recorded and shown, never deciding. `vale_block` is `error` (the default), `warning`, `suggestion` or `never`. Your config's `MinAlertLevel` still decides what Vale reports.
+- **One run.** Writfold copies the draft to `document.md` in a fresh private directory, writes the canary to `canary.md` beside it, and runs `vale --no-global --config .writfold/vale/<name>/.vale.ini --output=JSON --counts document.md canary.md` there, with every `VALE_*` variable removed and `HOME` pointing at that directory. Your global Vale config is never read. `WRITFOLD_VALE` names another executable.
+- **What is recorded.** The first 20 blocking alerts and the first 20 pieces of advice (errors, then warnings, then suggestions), each with line, column, Vale's rule name (`House.Hedges`) and message, and exact totals. The note gives the version, the number of checks, totals by severity, the five most frequent rules, and the command that lists every alert: `vale --no-global --config <tree>/.vale.ini <payload>`.
+- **Never a pass by accident.** Each of these is `unknown`, with a `next:` line that says what to do: Vale is not installed (install the pinned version); another version is installed (install the pin or move it); Vale exits 2 (its error is shown); the run is stopped or times out (`timeout_seconds` in the profile, default 60); the report is cut off or not Vale's JSON; the exit status disagrees with the alerts; Vale loaded no check; or the canary drew no alert, which is how a config that matches nothing shows up.
+- **What stales a receipt.** The profile's name, the pinned version, `vale_block`, the canary, and every file in `.writfold/vale/<name>/` by path and sha256: editing a rule, adding or removing a file, or changing a vocabulary. `timeout_seconds` does not. `deliver status` hashes the files and never runs Vale. A symbolic link, an unreadable file, or more than 2,000 files or 8 MiB in the directory refuses the mode.
+
+Vale's own inline `<!-- vale off -->` comments work as usual. Only Markdown is checked. A document mode is a user mode without `length.bounded` or `paragraphs.bounded`; drafts are limited to 1 MiB as before.
+
+`kb init --example delivery` writes a `design-doc` mode, the `house` profile and a five-rule example style (hedges, placeholders, preferred terms, sentence length, heading case) written for Writfold. Public style packages such as Microsoft, Google, write-good or proselint can be added to your own profile with `vale sync`, which you run, not Writfold.
+
+The meaning of a run (only a whole report from the pinned version whose exit status agrees with its alerts is read; no coverage is unknown; the threshold decides per alert; advice never decides) is proved in Lean (`writfold_core::vale`). Running Vale, reading its JSON and hashing the profile are tested, against a stand-in in `fixtures/vale/` and against the real Vale in the tools image.
 
 ## What a mode asks for: `deliver modes`
 

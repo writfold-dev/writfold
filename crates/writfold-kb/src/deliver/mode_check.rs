@@ -119,25 +119,29 @@ fn names(
     ok
 }
 
+/// Every key a mode file may have.
+const KEYS: [&str; 15] = [
+    "schema",
+    "mode",
+    "description",
+    "checks",
+    "paragraph_words",
+    "max_chars",
+    "max_lines",
+    "gates",
+    "attest",
+    "waivable",
+    "rendering",
+    "audience",
+    "prose",
+    "vale",
+    "vale_block",
+];
+
 /// `<mode>.toml`, over the mode's defaults.
 pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode, Report> {
     let mut c = Check::read(path, text, "a delivery mode");
-    let keys = [
-        "schema",
-        "mode",
-        "description",
-        "checks",
-        "paragraph_words",
-        "max_chars",
-        "max_lines",
-        "gates",
-        "attest",
-        "waivable",
-        "rendering",
-        "audience",
-        "prose",
-    ];
-    c.unknown_keys(&keys, &keys, "not a delivery mode key");
+    c.unknown_keys(&KEYS, &KEYS, "not a delivery mode key");
     schema(&mut c, "writfold-delivery-mode/1");
     let ok = named(
         &mut c,
@@ -169,8 +173,9 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         .chain(attest.iter().flatten().map(|a| &a.value.text))
         .cloned()
         .collect();
-    let listed = (mode.checks.iter()).any(|x| x == super::config::PROSE);
-    let prose = super::mode_keys::prose(&mut c, root, listed);
+    let listed = |check: &str| mode.checks.iter().any(|x| x == check);
+    let prose = super::mode_keys::prose(&mut c, root, listed(super::config::PROSE));
+    let vale = super::vale_profile::key(&mut c, root, listed(super::config::VALE));
     let measured = (mode.checks.iter()).any(|x| x == super::config::LENGTH);
     let unbounded = matches!((&max_chars, &max_lines), (Some(None), Some(None)));
     if measured && unbounded {
@@ -195,6 +200,7 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         }
         mode.audience = audience?;
         mode.prose = prose?;
+        mode.vale = vale?;
         mode.source = path.to_owned();
         (ok && unique && !(measured && unbounded)).then_some(mode)
     })();

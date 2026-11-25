@@ -1,0 +1,10 @@
+# An example to edit (writfold kb init --example delivery): a design
+# document or RFC, checked with Vale styles kept in the KB (prose.vale).
+# It needs the pinned Vale on PATH; without it the check is unknown, never
+# a pass. There is no line or paragraph cap: documents are long.
+schema = "writfold-delivery-mode/1"
+mode = "design-doc"
+description = "a design document or RFC, checked with the Vale styles in .writfold/vale/house"
+checks = ["claims.cited-fresh", "prose.vale"]
+vale = "house"
+vale_block = "error"

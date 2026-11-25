@@ -1,0 +1,53 @@
+#!/bin/sh
+# A stand-in for Vale's command line, for Writfold's tests. It is not Vale:
+# it prints hand-written reports in the shape of `vale --output=JSON
+# --counts` (read from Vale 3.28.1's source; see ../README.md).
+#
+# Its behaviour comes from the document it is given (`document.md` in the
+# working directory), from a first line `<!-- standin: MODE [version=X]
+# [log=FILE] -->`. With `log=FILE` it writes its arguments and the
+# environment variables it sees to FILE.
+set -u
+first=$(head -n 1 document.md 2>/dev/null || true)
+mode=$(printf '%s' "$first" | sed -n 's/.*standin: \([a-z-]*\).*/\1/p')
+version=$(printf '%s' "$first" | sed -n 's/.*version=\([0-9.]*\).*/\1/p')
+log=$(printf '%s' "$first" | sed -n 's/.*log=\([^ ]*\).*/\1/p')
+if [ -n "$log" ]; then
+    { echo "argv: $*"; env | sort; } > "$log"
+fi
+if [ "${1:-}" = "--version" ]; then
+    [ "$mode" = "absent" ] && exit 127
+    echo "vale version ${version:-3.28.1}"
+    exit 0
+fi
+alert() { # check severity line column message
+    printf '{"Action": {"Name": "", "Params": null}, "Span": [%s, %s], "Check": "%s", "Description": "", "Link": "", "Message": "%s", "Severity": "%s", "Match": "x", "Line": %s}' \
+        "$4" "$(($4 + 3))" "$1" "$5" "$2" "$3"
+}
+canary="\"canary.md\": [$(alert House.Todo warning 1 1 'No TODO.')]"
+counts='"counts": {"House.Hedges": 0, "House.Todo": 0, "House.Terms": 0}'
+report() { # files-body exit
+    printf '{"files": {%s}, %s}\n' "$1" "$counts"
+    exit "$2"
+}
+doc() { printf '"document.md": [%s]' "$1"; }
+case "$mode" in
+    clean) report "$canary" 0 ;;
+    advice) report "$(doc "$(alert House.Hedges suggestion 2 4 'Avoid very.'), $(alert House.Terms warning 3 1 'Say KB.')"), $canary" 0 ;;
+    errors) report "$(doc "$(alert House.Todo error 2 1 'No TODO.'), $(alert House.Hedges suggestion 3 2 'Avoid very.')"), $canary" 1 ;;
+    no-coverage) report "" 0 ;;
+    none-enabled) printf '{"files": {}, "counts": {}}\n'; exit 0 ;;
+    config-error) printf '{"Code": "E100", "Text": "unable to find StylesPath", "Path": "", "Line": 0, "Span": [0, 0]}\n' >&2; exit 2 ;;
+    garbage) echo "this is not JSON"; exit 0 ;;
+    cut) printf '{"files": {"document.md": [{"Check": "House'; exit 0 ;;
+    flood) head -c 9000000 /dev/zero | tr '\0' ' '; exit 0 ;;
+    exit-disagrees) report "$(doc "$(alert House.Todo error 2 1 'No TODO.')"), $canary" 0 ;;
+    unknown-severity) report "$(doc "$(alert House.Todo fatal 2 1 'No TODO.')"), $canary" 1 ;;
+    stray-path) report "\"other.md\": [$(alert House.Todo warning 1 1 'x')], $canary" 0 ;;
+    slow) sleep 30; report "$canary" 0 ;;
+    crash) kill -SEGV $$ ;;
+    many)
+        body=$(awk 'BEGIN { for (i = 1; i <= 2000; i++) { s = (i % 100 == 0) ? "warning" : "suggestion"; printf "%s{\"Span\": [1, 4], \"Check\": \"House.Hedges\", \"Message\": \"Avoid very.\", \"Severity\": \"%s\", \"Match\": \"very\", \"Line\": %d}", (i > 1 ? ", " : ""), s, i } }')
+        report "$(doc "$body"), $canary" 0 ;;
+    *) echo "standin: unknown mode '$mode'" >&2; exit 2 ;;
+esac

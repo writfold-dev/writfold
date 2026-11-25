@@ -52,6 +52,9 @@ pub struct Mode {
     /// `prose`: the rule set `prose.rules` checks against
     /// ([`super::prose`]); required with that check, refused without it.
     pub prose: Option<super::prose::Rules>,
+    /// `vale` and `vale_block`: the profile `prose.vale` runs
+    /// ([`super::vale_profile`]); required with that check, refused without.
+    pub vale: Option<super::vale_profile::Vale>,
 }
 
 impl Mode {
@@ -64,6 +67,15 @@ impl Mode {
     }
 
     /// `waivable = ["claims.cited-fresh"] @.writfold/deliveries/pr-comment.toml:6`.
+    /// What a rule-driven check means, for its obligation digest.
+    pub fn material(&self, check: &str) -> String {
+        match (check, &self.prose, &self.vale) {
+            (super::config::PROSE, Some(p), _) => p.material(),
+            (super::config::VALE, _, Some(v)) => v.material(),
+            _ => "(no rules)".into(),
+        }
+    }
+
     pub fn waivable_at(&self) -> String {
         let (names, line) = self.waivable.clone().unwrap_or_default();
         let list = serde_json::to_string(&names).unwrap_or_default();
@@ -107,16 +119,20 @@ pub(super) fn default(name: &str) -> Mode {
         rendering: super::render::VERBATIM.into(),
         audience: None,
         prose: None,
+        vale: None,
     }
 }
 
 /// The mode `name`: `.writfold/deliveries/<name>.toml` when present, else
 /// the built-in default; any other name is refused, naming the file to add.
 pub fn mode(root: &Path, name: &str) -> Result<Mode> {
-    let reserved = name == "guard" || name.starts_with("deny-") || name.starts_with("prose-");
+    let reserved = name == "guard"
+        || ["deny-", "prose-", "vale-"]
+            .iter()
+            .any(|p| name.starts_with(p));
     if !is_name(name) || reserved {
         return Err(KbError::Usage(format!(
-            "--mode {name:?} is not a mode name ([a-z0-9.-], not guard, deny-* or prose-*)"
+            "--mode {name:?} is not a mode name ([a-z0-9.-], not guard, deny-*, prose-* or vale-*)"
         )));
     }
     let file = format!("{name}.toml");

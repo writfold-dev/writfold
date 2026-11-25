@@ -19,8 +19,10 @@ pub const CLAIMS: &str = "claims.cited-fresh";
 pub const LENGTH: &str = "length.bounded";
 /// `prose.rules` (`prose = "<set>"`): never on by default.
 pub const PROSE: &str = "prose.rules";
+/// `prose.vale` (`vale = "<profile>"`): never on by default.
+pub const VALE: &str = "prose.vale";
 /// The built-in checks, in the order they run and are shown.
-pub const BUILTIN: [&str; 5] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH, PROSE];
+pub const BUILTIN: [&str; 6] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH, PROSE, VALE];
 /// The checks a built-in mode runs when no file names it.
 pub const DEFAULTS: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
@@ -155,10 +157,7 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
                 };
                 ("mechanical", format!("audience={}\n{list}", deny.audience))
             }
-            PROSE => (
-                "mechanical",
-                (mode.prose.as_ref()).map_or_else(|| "(no rule set)".into(), |p| p.material()),
-            ),
+            PROSE | VALE => ("mechanical", mode.material(check)),
             _ => ("observed", String::new()),
         };
         out.push(Obligation {
@@ -236,6 +235,9 @@ pub fn check_file(
     let root = dir.parent().and_then(Path::parent).unwrap_or(dir);
     if let Some(name) = stem.strip_prefix("prose-") {
         return super::prose::check(name, shown, text).map(|_| ());
+    }
+    if let Some(name) = stem.strip_prefix("vale-") {
+        return super::vale_profile::check(name, shown, text).map(|_| ());
     }
     match (stem, stem.strip_prefix("deny-")) {
         ("guard", _) => super::config_check::guard(shown, text, Some(root)).map(|_| ()),

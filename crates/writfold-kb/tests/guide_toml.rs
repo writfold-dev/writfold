@@ -146,6 +146,12 @@ fn accept(text: &str) -> TestResult {
                 .map(|_| ())
                 .map_err(|r| format!("{r:?}").into())
         }
+        "writfold-vale-profile/1" => {
+            let name = string(&map, "name")?;
+            writfold_kb::deliver::vale_profile::check(&name, &format!("vale-{name}.toml"), text)
+                .map(|_| ())
+                .map_err(|r| format!("{r:?}").into())
+        }
         "writfold-guard/1" => delivery("guard.toml", text, |root| {
             config::guard(root)
                 .map(|guard| guard.is_some())
