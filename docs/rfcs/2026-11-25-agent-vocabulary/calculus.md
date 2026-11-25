@@ -401,7 +401,7 @@ deferred. One is not a property of a pure function.
 | #144 | `compose::covers`, `compose::closure` | `covers_spec`, `covers_none_iff`, `closure_spec`, `closure_ok_iff`, `more_skills_never_admit` | `covers-ignores-last`, `closure-wrong-kind-found`, `closure-skips-tools` |
 | #147, #148 | `invoke::prepare_check` | `prepare_check_spec`, `prepare_ok_iff` | `prepare-skips-packet`, `prepare-skips-plan` |
 | #149 | `invoke::bound` | `bound_spec`, `bound_pass_iff`, `bound_unread_unknown`, `conflict_never_passes` | `bound-ignores-closure`, `bound-ignores-step`, `bound-ignores-single`, `bound-unread-passes` |
-| #154 | `invoke::prepare_check` gains the `needs` fact | `prepare_check_spec` and `prepare_ok_iff` restated, `needs_unknown_refused` | `prepare-skips-needs` |
+| #154 | `invoke::prepare_check` gains the `needs` facts | `prepare_check_spec` and `prepare_ok_iff` restated; `needs_unknown_refused`, `needs_first`, `no_needs_unchanged` | `prepare-skips-needs`, `needs-unknown-met` |
 | #156 | `units::pairs`, `units::generated`, `ground::of_delivery` | `pairs_spec`, `pairs_len`, `over_cap_refused`, `generated_covered_iff`, `absent_universe_never_covered`, `empty_universe_needs_allow`, `of_delivery_grounded_iff` | `pairs-drops-last`, `pairs-keeps-diagonal`, `generated-absent-covered`, `generated-empty-covered`, `delivery-unready-grounds` |
 
 Each mutant names the spec theorem whose proof unfolds the mutated

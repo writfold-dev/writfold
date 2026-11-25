@@ -448,7 +448,8 @@ comparison as every receipt (`gate::about`).
 ```
 
 One create-new file. `seq` orders invocations as it orders receipts;
-`recorded` is shown, never compared. The record holds paths and digests,
+`recorded` is shown, never compared. A run with no plan has no step: the
+record then holds none, and a report is judged for none. The record holds paths and digests,
 not copies: Git holds the bytes. The package is written outside the KB and
 is not committed.
 
