@@ -66,7 +66,9 @@ fn faults_of_the_subset_each_have_their_code() {
         ("\"a\" = 1\n", "syntax.subset"),
         ("a = 1.5\n", "syntax.subset"),
         ("a = 01\n", "syntax.expected"),
-        ("a = \"\"\"x\"\"\"\n", "syntax.subset"),
+        ("a = \"\"\"x\"\"\"\"\n", "syntax.subset"),
+        ("a = \"\"\"x \\\n y\"\"\"\n", "syntax.subset"),
+        ("a = \"\"\"x\n", "syntax.unclosed-string"),
         ("a = [1, 2]\n", "syntax.subset"),
         ("a = { b = 1 }\n", "syntax.subset"),
         ("a = \"x\" b\n", "syntax.expected"),
@@ -153,4 +155,22 @@ fn reading_generated_files_never_panics_and_keeps_its_invariants() {
         let (_, report) = read(&text);
         holds(&text, &report);
     }
+}
+
+#[test]
+fn multi_line_strings_read_as_toml_reads_them() {
+    let text = "a = \"\"\"\nfirst line\n  \"quoted\" \\t tab\n\"\"\"\nb = '''\nraw \\n stays\n'''\nc = \"\"\"one\"\"\"\nd = 1\n";
+    let mut check = Check::read("f.toml", text, "a test file");
+    let got = |c: &mut Check<'_>, k: &str| match c.text(k) {
+        Field::Got(v) => Some(v.value.text),
+        _ => None,
+    };
+    assert_eq!(
+        got(&mut check, "a").as_deref(),
+        Some("first line\n  \"quoted\" \t tab\n")
+    );
+    assert_eq!(got(&mut check, "b").as_deref(), Some("raw \\n stays\n"));
+    assert_eq!(got(&mut check, "c").as_deref(), Some("one"));
+    assert!(check.doc.has("d"));
+    assert_eq!(check.sink.report().diagnostics.len(), 0);
 }

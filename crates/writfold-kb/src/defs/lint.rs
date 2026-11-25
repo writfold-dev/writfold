@@ -27,6 +27,9 @@ pub enum Kind {
     Queries,
     Record,
     Catalog,
+    Tool,
+    Skill,
+    Agent,
 }
 
 /// One file read: where it is, how it is shown, its text and its faults.
@@ -42,7 +45,7 @@ pub struct File {
     pub report: Report,
 }
 
-const DIRS: [(&str, Kind); 7] = [
+const DIRS: [(&str, Kind); 10] = [
     (crate::gate::def::DIR, Kind::Gate),
     (crate::guard::rules::DIR, Kind::Guard),
     (crate::plan::template::DIR, Kind::Template),
@@ -50,6 +53,9 @@ const DIRS: [(&str, Kind); 7] = [
     (crate::stale::kinds::DIR, Kind::Source),
     (crate::store::DIR, Kind::Store),
     (crate::catalog::DIR, Kind::Catalog),
+    (crate::agents::TOOLS, Kind::Tool),
+    (crate::agents::SKILLS, Kind::Skill),
+    (crate::agents::AGENTS, Kind::Agent),
 ];
 
 fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: &str) -> Report {
@@ -66,6 +72,11 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
         Kind::Queries => crate::verbs::eval::lint(text, shown),
         Kind::Record => None,
         Kind::Catalog => crate::catalog::decl::check(text, stem, shown).err(),
+        Kind::Tool | Kind::Skill | Kind::Agent => {
+            let top = crate::agents::inspect::top_of(dir);
+            (crate::agents::refs::def_kind(kind))
+                .and_then(|k| crate::agents::manifest::check(k, text, stem, shown, &top).err())
+        }
         Kind::Mode | Kind::Deny | Kind::Delivery => {
             crate::deliver::config::check_file(dir, stem, shown, text).err()
         }
@@ -192,6 +203,9 @@ pub fn enclosing(kb: &Path, cwd: &Path) -> Option<PathBuf> {
 
 /// `kb lint` from its request ([`crate::Verb::Lint`]).
 pub fn run(kb: &Path, request: &crate::Request) -> Result<Output> {
+    if let crate::Verb::AgentInspect(i) = &request.verb {
+        return crate::agents::inspect::run(kb, request, &i.id, i.repo.as_deref());
+    }
     let crate::Verb::Lint {
         paths,
         repo,

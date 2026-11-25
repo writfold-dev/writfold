@@ -45,6 +45,8 @@ verbs:
                                    delivery modes, kinds, queries.jsonl), each at its line and
                                    column; --records: records' front matter, JSON and citation
                                    tokens. Reads files only (exit 0 clean, 2 errors, 1 usage)
+  agent inspect ID [--repo DIR]     an agent profile's closure (skills, tools, plans) and its
+                                   digest, or the first fault; read only (exit 3 when refused)
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
   runs --idle AGE [--project P] [--plan]

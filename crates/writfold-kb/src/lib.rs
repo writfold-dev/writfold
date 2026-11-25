@@ -11,6 +11,7 @@
 //! work tree dirty for the user to commit.
 #![forbid(unsafe_code)]
 
+pub mod agents;
 pub mod catalog;
 pub mod check;
 pub mod cursor;
@@ -54,7 +55,6 @@ use error::Result;
 use session::Session;
 use std::path::PathBuf;
 use verbs::brief::Home;
-use workspace::{GitTool, discover};
 
 /// Default and bounds of `--budget-tokens`.
 pub const DEFAULT_BUDGET: usize = 1000;
@@ -199,9 +199,10 @@ pub enum Verb {
         run: Option<String>,
         repo: Option<PathBuf>,
     },
-    /// `catalog diff|check`: project asset catalogs as reviewable patches
-    /// (#86).
+    /// `catalog diff|check`: asset catalogs as reviewable patches (#86).
     Catalog(catalog::CatalogVerb),
+    /// `agent inspect <id> [--repo DIR]` ([`agents::inspect`]).
+    AgentInspect(agents::Inspect),
 }
 
 /// One invocation.
@@ -233,7 +234,7 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     if let Verb::Init(init) = &request.verb {
         return init::execute(init, &request.cwd, request.json);
     }
-    let mut ws = discover(request.kb.as_deref(), &request.cwd)?;
+    let mut ws = workspace::discover(request.kb.as_deref(), &request.cwd)?;
     ws.seat.session = seat::session_id(session);
     let now = request.now.unwrap_or_else(time::now);
     if let Verb::Write(write) = &request.verb {
@@ -266,7 +267,7 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     if let Verb::Delta(verb) = &request.verb {
         return delta::execute(&ws, request, verb, now);
     }
-    if matches!(request.verb, Verb::Lint { .. }) {
+    if matches!(request.verb, Verb::Lint { .. } | Verb::AgentInspect(_)) {
         return defs::lint::run(&ws.root, request);
     }
     if let Verb::Catalog(verb) = &request.verb {
@@ -276,7 +277,7 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
         return check::execute(&ws, request, scope.as_deref(), now);
     }
     let tool = match &ws.repo {
-        Some(_) => Some(GitTool::locate()?),
+        Some(_) => Some(workspace::GitTool::locate()?),
         None => None,
     };
     let rebuild = matches!(request.verb, Verb::IndexRebuild);

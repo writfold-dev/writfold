@@ -26,6 +26,7 @@ pub const VERBS: &[&str] = &[
     "init",
     "policy",
     "lint",
+    "agent",
     "runs",
     "delta",
     "resume",

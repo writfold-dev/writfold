@@ -106,7 +106,7 @@ fn span(from: usize, to: usize) -> Span {
     Span::new(from, to)
 }
 
-/// A basic or literal string on one line.
+/// A basic or literal string: on one line, or multi-line ([`multi_line`]).
 pub fn string(cur: &mut Cursor<'_>) -> Result<Spanned<Text>, Fault> {
     let start = cur.pos;
     let quote = cur.bump();
@@ -117,9 +117,8 @@ pub fn string(cur: &mut Cursor<'_>) -> Result<Spanned<Text>, Fault> {
     if cur.peek() == quote {
         cur.bump();
         if cur.peek() == quote {
-            let why = "multi-line strings are not used in these files".into();
-            let fault = Fault::new("syntax.subset", span(start, cur.pos + 1), why, "");
-            return Err(fault.help("write the string on one line".into()));
+            cur.bump();
+            return multi_line(cur, start, quote);
         }
         let span = span(start, cur.pos);
         return Ok(Spanned { value: text, span });
@@ -149,6 +148,87 @@ pub fn string(cur: &mut Cursor<'_>) -> Result<Spanned<Text>, Fault> {
                 text.plain = false;
             }
             Some(c) if c.is_control() && c != '\t' => {
+                let why = "a control character in a string".into();
+                let fault = Fault::new("syntax.escape", span(at, at + c.len_utf8()), why, "");
+                return Err(fault.help("write it as an escape, such as \\t or \\u0007".into()));
+            }
+            Some(c) => {
+                cur.bump();
+                text.text.push(c);
+            }
+        }
+    }
+}
+
+/// The rest of a multi-line string (`"""` or `'''`, the opening delimiter
+/// read). A newline right after the delimiter is dropped, as TOML does.
+/// Refused, so the subset keeps one meaning: a backslash at a line end and
+/// a run of more than three quotes at the close (TOML reads both, but
+/// differently from how they look).
+fn multi_line(
+    cur: &mut Cursor<'_>,
+    start: usize,
+    quote: Option<char>,
+) -> Result<Spanned<Text>, Fault> {
+    let read = multi_body(cur, start, quote);
+    if read.is_err() {
+        // Go on past the closing quotes, so reading resumes after the string.
+        let close: String = core::iter::repeat_n(quote.unwrap_or('"'), 3).collect();
+        let rest = &cur.text[cur.pos..];
+        cur.pos = rest.find(&close).map_or(cur.text.len(), |i| {
+            let run = rest[i..].chars().take_while(|c| Some(*c) == quote).count();
+            cur.pos + i + run
+        });
+    }
+    read
+}
+
+fn multi_body(
+    cur: &mut Cursor<'_>,
+    start: usize,
+    quote: Option<char>,
+) -> Result<Spanned<Text>, Fault> {
+    let q = quote.unwrap_or('"');
+    // Never plain: the text does not start one byte into its span.
+    let mut text = Text {
+        text: String::new(),
+        plain: false,
+    };
+    match (cur.peek(), cur.text[cur.pos..].starts_with("\r\n")) {
+        (Some('\n'), _) => _ = cur.bump(),
+        (_, true) => cur.pos += 2,
+        _ => {}
+    }
+    loop {
+        let at = cur.pos;
+        let rest = &cur.text[at..];
+        match cur.peek() {
+            None => {
+                let why = format!("this multi-line string is not closed with {q}{q}{q}");
+                let fault = Fault::new("syntax.unclosed-string", span(start, at), why, "");
+                return Err(fault.help(format!("add {q}{q}{q} where the string ends")));
+            }
+            Some(c) if Some(c) == quote && rest.chars().take(3).all(|r| r == c) => {
+                if rest.chars().nth(3) == Some(c) {
+                    let why = "more than three quotes close this string".into();
+                    let fault = Fault::new("syntax.subset", span(at, at + 4), why, "");
+                    return Err(fault.help("end the text before the closing quotes".into()));
+                }
+                cur.pos += 3;
+                let span = span(start, cur.pos);
+                return Ok(Spanned { value: text, span });
+            }
+            Some('\\') if quote == Some('"') => {
+                cur.bump();
+                if matches!(cur.peek(), Some('\n' | '\r' | ' ' | '\t')) {
+                    let why = "a line-ending backslash is not used in these files".into();
+                    let fault = Fault::new("syntax.subset", span(at, at + 1), why, "");
+                    return Err(fault.help("remove the backslash".into()));
+                }
+                text.text.push(escape(cur, at)?);
+                text.plain = false;
+            }
+            Some(c) if c.is_control() && !matches!(c, '\t' | '\n' | '\r') => {
                 let why = "a control character in a string".into();
                 let fault = Fault::new("syntax.escape", span(at, at + c.len_utf8()), why, "");
                 return Err(fault.help("write it as an escape, such as \\t or \\u0007".into()));

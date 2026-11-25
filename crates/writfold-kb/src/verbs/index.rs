@@ -250,7 +250,7 @@ pub fn index_verify_with(
     request: &crate::Request,
     after_build: &dyn Fn(),
 ) -> Result<crate::emit::Output> {
-    let ws = crate::discover(request.kb.as_deref(), &request.cwd)?;
+    let ws = crate::workspace::discover(request.kb.as_deref(), &request.cwd)?;
     let now = request.now.unwrap_or_else(crate::time::now);
     let tool = match &ws.repo {
         Some(_) => Some(crate::workspace::GitTool::locate()?),

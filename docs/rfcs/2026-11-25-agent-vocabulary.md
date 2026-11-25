@@ -275,9 +275,6 @@ model = "reviewer"             # a hint: recorded and exported, not judged
 instructions = """
 Review only the supplied change and its evidence. Keep uncertainty.
 """
-
-[limits]                       # hints: recorded and exported, not judged
-max_turns = 8
 ```
 
 Rules, each a diagnostic at its line and column like every other file
@@ -595,3 +592,13 @@ Read as design inputs on 25 November 2026:
   brings skill and agent manifests into scope. Implementation is the
   v0.6.0-dev.22 milestone: #145, #144, #147, #148, #149, #151, in that
   order. #146, #150 and #159 stay in Later.
+- 2026-11-25: First slice of #144 built. The definition reader's TOML
+  subset now reads multi-line strings (`"""` and `'''`, a line-ending
+  backslash and more than three closing quotes refused), so instructions
+  can be prose in the file, as the owner asked; this applies to every file
+  the reader reads. `[limits]` is dropped from `writfold-agent-profile/1`:
+  the subset has no tables, and limits are budgets, which are #159
+  (Later). `model` stays a one-line hint. Lint codes reused:
+  `ref.undefined`, `ref.wrong-kind`, `file.twice`, `value.twice`,
+  `value.unmeetable` (a listed skill needs a tool the profile does not
+  grant).

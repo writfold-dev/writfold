@@ -20,6 +20,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::kinds::PROPOSE.as_slice(),
         "lint" => &["repo", "deny-warnings", "records"],
+        "agent" => &["repo"],
         "init" => &["example", "dry-run"],
         "policy" => &["paths"],
         _ => &[],
@@ -69,6 +70,13 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
                 records: switch(common, "records"),
             }));
         }
+        ("agent", [sub, id]) if sub == "inspect" => {
+            return Some(Ok(Verb::AgentInspect(writfold_kb::agents::Inspect {
+                id: id.clone(),
+                repo: get(common, "repo").map(std::path::PathBuf::from),
+            })));
+        }
+        ("agent", _) => return Some(Err("usage: agent inspect <id> [--repo DIR]".into())),
         ("check", []) => return Some(Ok(Verb::Check { scope: None })),
         ("check", [scope]) => {
             return Some(Ok(Verb::Check {
