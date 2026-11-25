@@ -252,6 +252,10 @@ from the bytes of one commit, exported under the Tuft state directory, with
 universal-ctags found on `PATH` or `$WRITFOLD_CTAGS`; the user's work tree,
 index and worktree list are untouched.
 
+### Skill and agent manifests (owner, 25 November 2026)
+
+The owner asked for typed tools, skills and agent profiles authored under `.writfold/`, and for enforcement of the prose rules agents are given. This lifts "a Writfold skill format" and "profile composition" from the 12 November "Not now" list, in the shape of [RFC 2026-11-25-agent-vocabulary](../rfcs/2026-11-25-agent-vocabulary.md): `.writfold/agents/`, `skills/` and `tools/` declare what an invocation needs; `agent prepare` records an invocation at a plan step; the worker's report is a delivery candidate bound to that invocation, judged by the shipped gate and delivery kernels. Writfold records and judges; the harness runs models. Authority levels, a governed profile, budgets and signing stay out (#159, #64).
+
 ## Adopted and declined from the review
 
 | Review point | Decision |

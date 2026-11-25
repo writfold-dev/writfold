@@ -1,14 +1,14 @@
 ---
 rfc: "2026-11-25-kb-research-contracts"
 title: "KB research contracts and review coverage"
-status: draft
+status: accepted
 implementation: not-started
 authors:
   - tknawara
 created: 2026-11-25
 updated: 2026-11-25
 issue: https://github.com/writfold-dev/writfold/issues/155
-milestone: null
+milestone: v0.6.0-dev.23
 supersedes: []
 superseded_by: []
 blocked_on:
@@ -367,3 +367,7 @@ None blocks acceptance.
   seven theorems and five mutants; the `derived` class, the `[execution]`
   block and the scope-recipe schema removed; unit reuse deferred. Status
   left `draft` for the main session to accept.
+- 2026-11-25: Accepted at the owner's request, taking the default that a
+  KB move makes every earlier review row stale as the first rule.
+  Implementation (#155, #156, #157) is the v0.6.0-dev.23 milestone, after
+  the dev.22 agent vocabulary slice.

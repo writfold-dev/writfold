@@ -1,14 +1,14 @@
 ---
 rfc: "2026-11-25-agent-vocabulary"
 title: "Composable tools, gates, skills and agent profiles"
-status: draft
-implementation: not-started
+status: accepted
+implementation: in-progress
 authors:
   - tknawara
 created: 2026-11-25
 updated: 2026-11-25
 issue: https://github.com/writfold-dev/writfold/issues/143
-milestone: null
+milestone: v0.6.0-dev.22
 supersedes: []
 superseded_by: []
 blocked_on: []
@@ -587,3 +587,11 @@ Read as design inputs on 25 November 2026:
   The full list is in the
   [grooming review](2026-11-25-agent-vocabulary/grooming.md). Status left
   `draft` for the main session to accept.
+- 2026-11-25: Accepted at the owner's request after the grooming review,
+  taking the defaults for the open questions: a worker's report is a
+  delivery candidate; tool files hold only `id` and `description`; the
+  recorded tier is enough, with the receiver (#64) as the boundary
+  against a non-cooperating worker. The mission gains a dated line that
+  brings skill and agent manifests into scope. Implementation is the
+  v0.6.0-dev.22 milestone: #145, #144, #147, #148, #149, #151, in that
+  order. #146, #150 and #159 stay in Later.

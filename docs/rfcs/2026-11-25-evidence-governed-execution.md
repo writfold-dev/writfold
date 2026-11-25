@@ -1,14 +1,14 @@
 ---
 rfc: "2026-11-25-evidence-governed-execution"
 title: "Evidence-governed execution"
-status: draft
+status: accepted
 implementation: not-started
 authors:
   - tknawara
 created: 2026-11-25
 updated: 2026-11-25
 issue: https://github.com/writfold-dev/writfold/issues/153
-milestone: null
+milestone: v0.6.0-dev.23
 supersedes: []
 superseded_by: []
 blocked_on:
@@ -380,3 +380,7 @@ None blocks acceptance.
   the rule language, the evidence graph, epochs, triples, strict bootstrap
   and the MCP mention removed, each with its reason above. Status left
   `draft` for the main session to accept.
+- 2026-11-25: Accepted at the owner's request with the agent vocabulary
+  RFC, which owns the shared calculus. Implementation (#154) is the
+  v0.6.0-dev.23 milestone and starts after the dev.22 slice ships
+  `agent prepare`.
