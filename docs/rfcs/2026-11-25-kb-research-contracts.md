@@ -229,6 +229,8 @@ The first slice uses a fixed synthetic corpus and a fake model. #155 owns scope,
 
 ## Compatibility and open grooming decisions
 
+The research contract and unit identities are independent of the chosen model and harness. Scope enumeration and deterministic checks can produce tool-owned evidence through ordinary CLI/artifact use; a context-delivery requirement additionally needs an adapter that can observe the relevant model boundary. Do not make that stronger requirement an implicit prerequisite for all KB use. Switching hosts retains the manifest/history and any still-eligible reports while requiring fresh invocation evidence for new work. See the companion RFC's [portability boundary](2026-11-25-evidence-governed-execution.md#model-and-harness-portability).
+
 Use `.writfold/` as the authored source. Preserve plain text for instructions and explicitly advisory assessments; do not translate arbitrary prose into executable policy without review. Choose the first supported scope/unit grammar, required-store behavior and authorized exception policy during grooming. The draft proposal schemas have no backward-compatibility obligation. Any future replacement of shipped behavior must be explicit in its implementation notes.
 
 The research basis and trust assumptions are shared with [the evidence-governed execution RFC](2026-11-25-evidence-governed-execution.md#research-foundations-and-choices). No claim that a finite recipe finds every semantically relevant fact is proposed.

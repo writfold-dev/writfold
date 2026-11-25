@@ -310,6 +310,47 @@ Pin the approved policy and checker implementations outside the agent's authorit
 
 This does not require a Writfold server or a new resident companion. The binary can remain a Git-native decision/recording tool. An external harness invokes its admission/checking interfaces and owns execution. Gripsack may provision the environment, but provisioning is not evidence that the harness honored the contract.
 
+## Model and harness portability
+
+Portability is a product requirement. The core contract vocabulary, evidence judgments, run history and KB remain independent of any model provider or harness event schema. A user can author one procedure under `.writfold/` and bind it to different execution hosts. This does not imply that every host can enforce every possible contract.
+
+### Stable boundary and adapters
+
+The Writfold binary owns policy, artifact/evidence validation and existing graph transitions. The chosen harness owns its model loop, context assembly, compaction, tool dispatch and UI. An adapter maps that host's observations into a versioned Writfold evidence envelope, preserving issuer, observation kind, bindings, uncertainty and the original source reference where needed. Transport can use the CLI and structured input/output; an optional MCP or other wrapper is a transport choice, not a required Writfold server or new policy authority.
+
+Do not make OMP message IDs, Claude hook names, OpenAI request objects or provider-native tool formats part of the pure kernel. Host-specific payloads belong in adapter extensions. Model/provider identity is retained as provenance and may be constrained by an explicit policy, but ordinary workflow predicates do not depend on one vendor. Requested model features must be represented as explicit requirements with supported/unsupported outcomes.
+
+Import an existing harness receipt where its actual meaning and issuer meet the required predicate. A message stored or queued, context prepared, a request submitted, and an external effect completed are distinct observations. Mapping may preserve or narrow the source claim; it cannot strengthen a delivery receipt into request-submission evidence, or a local log into authenticated provenance. Declared adapter capability is not evidence that a particular invocation exercised it.
+
+### Useful core without deep harness integration
+
+| Available boundary | Useful Writfold behavior | Limit |
+|---|---|---|
+| CLI invocation or artifact exchange | KB lookup, plans, deterministic tool-owned checks, retained artifacts and independent receiver acceptance | Cannot certify hidden prompt assembly or prevent unmediated host actions |
+| Relevant observable host events | Attribute supported context/tool/result observations through an adapter | Observation alone does not establish complete mediation |
+| A protected pre-operation interception point | Refuse the particular governed operation before its effect | Only the documented, tested operation paths are covered |
+
+These are capabilities per operation, not one global certification level. A harness might expose exact model requests but lack a final-output veto; another might gate a file write without exposing its prompt. Record that matrix at the tested host/adapter version, including unsupported and unverified paths.
+
+A workflow requires only the evidence needed for its stated guarantee. Tool-owned facts such as a bound KB enumeration or deterministic checker result need not depend on a model-request receipt. A workflow promising that a particular skill was supplied to the producing invocation does require the stronger observation. If that requirement is unsupported, the affected operation stays blocked with an explanation; ordinary KB and inspection use remains available. Never silently weaken the admitted policy. Selecting a different contract or granting an exception is an explicit authorized change.
+
+Writfold can require a skill in an exported context packet without claiming that an opaque host actually delivered it. Exported instructions, a hook acknowledgement and an observed final request must retain their different meanings.
+
+### Changing models or harnesses
+
+A switch creates a new invocation/context binding and rechecks effective capabilities. It does not discard the KB or rewrite completed history. Reuse previous artifacts and reports only where their own input/policy/issuer bindings and reuse rules still hold. Invocation-specific context evidence cannot be reassigned to the new host. Model outputs and provider context limits can differ; portability is not identical answers, prompts or billing.
+
+### Portability acceptance
+
+- The same policy and semantically equivalent normalized evidence produce the same core judgment, independent of adapter event names and unconstrained provider labels.
+- Extend #157 with two differently shaped mock event sources, plus missing-capability cases, without requiring a second production adapter or paid models.
+- Verify no-integration CLI/artifact use, model/host switching, honest receipt import, and refusal of unsupported strict requirements.
+- Keep one production adapter initially under #150, selected for observable interfaces. It must exercise a portable boundary rather than define a mandatory runtime dependency.
+
+### Oh My Pi comparison
+
+The [OMP hooks reference](https://github.com/can1357/oh-my-pi/blob/main/docs/hooks.md) documents context and tool interception, while also identifying paths that do not emit ordinary tool events. Its [message-receipt discussion #14212](https://github.com/can1357/oh-my-pi/issues/14212) distinguishes a runtime message handoff from the recipient receiving it at a model boundary. These are possible sources of observations, not proof of Writfold conformance. The design inference is to adapt the precise runtime fact into Writfold's policy judgment. No OMP dependency or claim of a completed adapter is proposed.
+
 ### Delivery modes are one instance
 
 Bind the delivery mode, target/channel constraints and exact final bytes to the approved check. Admission occurs before the send or accepted export, and the sender uses the same immutable bytes. Any edit creates a new artifact identity and requires a new check. A host that lets the model emit final user-visible text or send through an unchecked alternate path cannot claim that path is enforced. Requirements about tone or meaning remain attributed judgment unless encoded in a deterministic check; the gate's result must preserve that distinction.
@@ -371,4 +412,5 @@ Required work is selected from an approved contract, not a fallible model's deci
 
 ## Decision log
 
+- 2026-11-25: Owner clarified that different models and harnesses must remain usable. Added the portable evidence boundary, useful CLI/artifact-only operation, per-operation capabilities, explicit unsupported-guarantee refusal and switching/conformance cases. Harness-specific event schemas remain outside the kernel.
 - 2026-11-25: Prepared at the owner's request as RFCs and related issues for later grooming. Recorded the difference between input delivery, procedural coverage and semantic correctness; retained the existing run graph and external-harness boundary. No new proof, runtime behavior or model evaluation is claimed.
