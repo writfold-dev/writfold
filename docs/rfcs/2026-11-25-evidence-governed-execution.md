@@ -184,6 +184,37 @@ The schema below is a proposal. Digest and ID values are abbreviated for readabi
 
 The verifier obtains identity from authenticated transport or a verifiable signature, not the `issuer` string. It checks the producer's authorization for this receipt kind. Retain the necessary manifests and source references; a bare root hash cannot later demonstrate which items were included. Avoid retaining credentials or unnecessary private transcript bytes. Redacted manifests must state the resulting verification limits.
 
+## Adapter instrumentation and deterministic run bootstrap
+
+An adapter is ordinary integration code installed for a particular host: an extension/hook bundle, or wrapper functions around an SDK such as the Python precursor. It translates host events into Writfold operations, assembles required context and submits observations. Writfold supplies decisions; the component that owns model/tool/output execution must apply those decisions. An adapter is not another reasoning agent and cannot compel an unmodified host merely by existing in `.writfold/`.
+
+Name the **task-entry owner** explicitly. This is the configured harness callback or external SDK wrapper that receives the task before governed work starts. It invokes bootstrap as ordinary code; the model is not responsible for remembering a run-creation command. It may live in the existing harness process and does not require a Writfold service or companion.
+
+The proposed bootstrap sequence is:
+
+1. Establish trusted workspace, harness-session and task identity; select an explicit workflow or approved baseline. A session-start event may precede the task text. Do not assume every user message is a new task, or that compaction is one.
+2. Create an admissible run, or validate an explicit attachment to an existing open run, through Writfold's normal record/write path. Repeated delivery of the same task-start event is idempotent. A new task receives a distinct binding unless explicitly attached.
+3. Bind the admitted run, policy revision and task/session scope in the trusted execution context. A worker-supplied run ID, environment variable or shared current-run pointer is a locator, not proof of that binding.
+4. Before the first and each later governed operation, the execution owner independently requires a valid current binding and all applicable obligations. Failure, timeout, missing policy or an unusable binary cannot authorize that operation under a strict contract.
+5. Recheck binding on resume, fork/delegation, task switch and policy revision. Preserve historical work; do not silently attach to another session's run or overwrite active policy during a replay.
+
+The binding admission predicate is an additional premise of the operation rule: the run exists and is open; its task/workspace/session association is authorized; the approved policy and intended step apply; and required host capabilities hold. Merely finding a directory named after a run is insufficient.
+
+**Automatic creation and enforcement are separate.** A startup callback can create runs conveniently, but a missing callback cannot deny anything. A separately enforced pre-operation check rejects missing bindings even if bootstrap never fired. If both hooks can disappear or be bypassed, the integration has no prevention guarantee for that path. The protected host/executor must control configuration and honor missing/error outcomes; an adapter capability declaration or startup handshake alone does not prove continued coverage.
+
+Choose instrumentation according to actual host interfaces:
+
+| Integration | What it can establish | Required limit |
+|---|---|---|
+| Native task/context/tool/output callbacks | Bootstrap and checks at the callbacks the host actually exposes and honors | Enumerate paths, disable/error behavior and protected configuration; test missing callbacks |
+| Controlled SDK wrapper | Direct code before model calls and dispatched tools, with explicit task/run state | Cover all relevant dispatch paths and keep policy/authority outside worker mutation |
+| Launch wrapper | Initial run setup, selected configuration and session binding | Launch alone does not observe later prompts or intercept arbitrary child actions |
+| Independent tool or receiver | Admission to its own operation, artifact acceptance or publication | Cannot prevent or undo earlier actions through another uncontrolled path |
+
+The inspected [current hook guide](https://github.com/writfold-dev/writfold/blob/2b9c9db0ea47b62011c83c8c582e146cefa83151/docs/guide/hooks.md) explicitly documents best-effort/fail-open behavior. This proposal must not describe those existing hooks as this stronger boundary. Strict integration is a separately exercised capability. A receiver remains responsible for its full candidate/policy/evidence checks, not just a run-existence check.
+
+[Ten executable design dry runs](2026-11-25-enforcement/dry-runs.md) separate these roles and exercise the bootstrap gap. They passed 43 assertions in a synthetic Python model; they do not establish current product or live harness conformance. Add `governed_action_requires_bound_run` and pure binding/replay-selection properties to #145/#154's proof ledger. Idempotent publication, missing-hook behavior, task-start races and crashes additionally require actual protocol/IO/host tests under #150/#157.
+
 ## Invocation lifecycle without circular evidence requirements
 
 Do not require a submitted-request receipt before that same request can be sent.
@@ -412,5 +443,7 @@ Required work is selected from an approved contract, not a fallible model's deci
 
 ## Decision log
 
+- 2026-11-25: Exercised ten synthetic protocol flows (43 assertions) at the owner's request. Made task-entry ownership, deterministic create/attach, task-scoped binding, independent pre-operation checks and the actual effect owner explicit. Linked the executable design model and traces; these are not production or proof conformance claims.
 - 2026-11-25: Owner clarified that different models and harnesses must remain usable. Added the portable evidence boundary, useful CLI/artifact-only operation, per-operation capabilities, explicit unsupported-guarantee refusal and switching/conformance cases. Harness-specific event schemas remain outside the kernel.
 - 2026-11-25: Prepared at the owner's request as RFCs and related issues for later grooming. Recorded the difference between input delivery, procedural coverage and semantic correctness; retained the existing run graph and external-harness boundary. No new proof, runtime behavior or model evaluation is claimed.
+

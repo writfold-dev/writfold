@@ -93,6 +93,14 @@ Bind evidence to the query recipe and source inventory, not only to files alread
 
 Preserve completed work as history. Invalidate eligibility for dependent current operations and create the necessary new work using existing plan operations. Do not silently rewrite historical done records. A historical review can remain valid for its old snapshot while being insufficient for a claim about the current one.
 
+### Scope evidence and unit evidence have different dependencies
+
+[Dry-run scenario 08](2026-11-25-enforcement/dry-runs.md) exercises the distinction: five documents yield ten pair reports; adding a sixth document invalidates collection completeness and creates five more pairs. It need not invalidate an existing pair's report when both input versions, required skill, policy and authorized producing-invocation evidence still match and reuse is permitted.
+
+Bind the whole-scope completeness claim to the recipe and corpus-membership basis. Bind a unit report to its own input set and declared dependencies. Its producing context may have been submitted under an earlier scope snapshot; that is retained honestly. A newly established complete manifest can reuse that report only if the admitted policy permits such reuse. A policy requiring every assessment at the same global snapshot may instead require re-review. Do not imply that all old context receipts can be reassigned to new invocations.
+
+The ten-scenario Python model exercises decisions under assumed faithful enumeration and protected observations. It does not run the real KB indexer, establish natural-language contradiction correctness, test a live adapter, or discharge the Rust/Lean proof obligations.
+
 ## Formal scope and coverage model
 
 Let $R$ be the admitted scope recipe and $B$ its source/inventory basis. Its finite declared universe is $D(R,B)$. An enumerator returns a manifest $M$ and observation witness $w$. The scope kernel can accept `Complete(M,R,B,w)` only when all declared inventory/frontier obligations are discharged. Without a snapshot-capable source, the contract must explicitly weaken its claim or refuse snapshot completeness.
@@ -237,4 +245,6 @@ The research basis and trust assumptions are shared with [the evidence-governed 
 
 ## Decision log
 
+- 2026-11-25: Added the executed design dry-run results and made collection-level invalidation versus policy-permitted unit-report reuse explicit. The exercise validates selected modeled transitions, not the shipped implementation or semantic completeness.
 - 2026-11-25: Separated scope completeness, review coverage, semantic assessment and finding disposition at the owner's request. Added corpus-membership invalidation and a five-document/ten-unit fixture. The issue set is held for later grooming; no runtime change or new proof is claimed.
+

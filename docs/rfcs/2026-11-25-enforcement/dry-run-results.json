@@ -1,0 +1,1440 @@
+{
+  "kind": "design-model-dry-run",
+  "schema_version": 1,
+  "scope": "Synthetic protocol decisions only; no live host or model exercised",
+  "assumptions": [
+    "Trusted binding table and receipt ledger are protected by assumption",
+    "Source enumeration and request observations are faithful inputs",
+    "Simulated intercepted actions obey the decision atomically",
+    "No cryptographic, OS-isolation or concurrency guarantee is tested"
+  ],
+  "scenario_count": 10,
+  "assertion_count": 43,
+  "scenarios": [
+    {
+      "id": "01",
+      "title": "Complete research and delivery",
+      "passed": true,
+      "expected_outcome": "Allowed",
+      "lesson": "Preparation, observation, checking and sending have separate owners.",
+      "checks": [
+        {
+          "check": "recording does not advance",
+          "passed": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "check": "ten reports allow graph advancement",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "exact delivery artifact passes configured checks",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "protected sender releases the checked artifact",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "one simulated governed effect",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-B"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "D-E"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        },
+        {
+          "actor": "delivery checker",
+          "operation": "check-exact-artifact",
+          "outcome": "passed",
+          "reason": "",
+          "mode": "pr-comment"
+        },
+        {
+          "actor": "harness effect owner",
+          "operation": "publish",
+          "outcome": "allowed",
+          "reason": ""
+        }
+      ],
+      "model_calls": 1,
+      "protected_effects": 1,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "02",
+      "title": "Startup hook never runs",
+      "passed": true,
+      "expected_outcome": "Blocked, then repaired",
+      "lesson": "The protected action path must check binding independently of startup.",
+      "checks": [
+        {
+          "check": "independent protected operation check rejects absent run",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "no effect occurred through the protected path",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "check": "bootstrap repair establishes the required binding",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        }
+      ],
+      "events": [
+        {
+          "actor": "harness",
+          "operation": "task-start-hook",
+          "outcome": "not-called",
+          "reason": ""
+        },
+        {
+          "actor": "protected executor",
+          "operation": "tool-admission",
+          "outcome": "refused",
+          "reason": "no-valid-task-binding"
+        },
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "protected executor",
+          "operation": "tool-admission",
+          "outcome": "allowed",
+          "reason": ""
+        }
+      ],
+      "model_calls": 0,
+      "protected_effects": 1,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "03",
+      "title": "Duplicate start and wrong task",
+      "passed": true,
+      "expected_outcome": "Replay reused; invalid bindings blocked",
+      "lesson": "Session identity is not task identity; bindings and bootstrap must be explicit.",
+      "checks": [
+        {
+          "check": "duplicate start returns the same run",
+          "passed": true,
+          "actual": "run-1",
+          "expected": "run-1"
+        },
+        {
+          "check": "new task in same session receives a different binding",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "task cannot borrow another task's current-run pointer",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "closed run cannot authorize new work",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "replayed bootstrap cannot overwrite admitted policy",
+          "passed": true,
+          "actual": null,
+          "expected": null
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "reused",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-2"
+        },
+        {
+          "actor": "protected executor",
+          "operation": "tool-admission",
+          "outcome": "refused",
+          "reason": "no-valid-task-binding"
+        },
+        {
+          "actor": "protected executor",
+          "operation": "tool-admission",
+          "outcome": "refused",
+          "reason": "no-valid-task-binding"
+        },
+        {
+          "actor": "Writfold",
+          "operation": "bind-task",
+          "outcome": "refused",
+          "reason": "binding-conflict"
+        }
+      ],
+      "model_calls": 0,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "04",
+      "title": "Skill omitted or only prepared",
+      "passed": true,
+      "expected_outcome": "Blocked before submission",
+      "lesson": "A prepared packet is not evidence that a model call occurred.",
+      "checks": [
+        {
+          "check": "omitted skill blocks before model dispatch",
+          "passed": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "check": "no synthetic model call was made",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "check": "prepared context cannot masquerade as submitted invocation",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "observed submission supports attributable report",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "Writfold",
+          "operation": "prepare-admission",
+          "outcome": "refused",
+          "reason": "required-skill-omitted"
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "refused",
+          "reason": "missing-or-mismatched-submission",
+          "unit": "A-B"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-B"
+        }
+      ],
+      "model_calls": 1,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "05",
+      "title": "Compaction before dispatch",
+      "passed": true,
+      "expected_outcome": "Stale context blocked; fresh context admitted",
+      "lesson": "Context changes require fresh preparation and use-time checks.",
+      "checks": [
+        {
+          "check": "prepared request from prior context epoch cannot be dispatched",
+          "passed": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "check": "fresh preparation restores invocation eligibility",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "only the fresh call was submitted",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "adapter",
+          "operation": "switch-or-compact",
+          "outcome": "new-context",
+          "reason": "",
+          "epoch": 1,
+          "host": "adapter-A",
+          "model": "model-A"
+        },
+        {
+          "actor": "model-call owner",
+          "operation": "dispatch",
+          "outcome": "refused",
+          "reason": "prepared-binding-stale"
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-2"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        }
+      ],
+      "model_calls": 1,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "06",
+      "title": "Incomplete or failed KB search",
+      "passed": true,
+      "expected_outcome": "Blocked, then repaired",
+      "lesson": "The enumerator owns completeness observations; missing input is not empty success.",
+      "checks": [
+        {
+          "check": "partial scope blocks mandatory research input",
+          "passed": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "check": "search failure does not become empty success",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "complete enumeration allows preparation",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "partial",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "Writfold",
+          "operation": "prepare-admission",
+          "outcome": "refused",
+          "reason": "incomplete-or-stale-scope"
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "unknown",
+          "reason": "",
+          "members": 0
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "refused",
+          "reason": "incomplete-or-stale-scope",
+          "missing": []
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        }
+      ],
+      "model_calls": 0,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "07",
+      "title": "Eight of ten comparisons",
+      "passed": true,
+      "expected_outcome": "Blocked until two reports added",
+      "lesson": "Report recording, coverage and graph advancement are distinct.",
+      "checks": [
+        {
+          "check": "diagnostic names exact missing units",
+          "passed": true,
+          "actual": [
+            "B-D",
+            "C-E"
+          ],
+          "expected": [
+            "B-D",
+            "C-E"
+          ]
+        },
+        {
+          "check": "eight of ten does not complete review",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "all required units now have eligible reports",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "coverage does not promote assessments into semantic proofs",
+          "passed": true,
+          "actual": [
+            "model-assessment"
+          ],
+          "expected": [
+            "model-assessment"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-B"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "D-E"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "refused",
+          "reason": "missing-review-units",
+          "missing": [
+            "B-D",
+            "C-E"
+          ]
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-E"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        }
+      ],
+      "model_calls": 1,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "08",
+      "title": "A newly related sixth document",
+      "passed": true,
+      "expected_outcome": "Old completeness refused; eligible units reused",
+      "lesson": "Scope membership and per-unit evidence need different dependency sets.",
+      "checks": [
+        {
+          "check": "five-document review initially complete",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "old document digests have not changed",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "new member invalidates whole-scope completeness",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "six documents require fifteen unordered pairs",
+          "passed": true,
+          "actual": 15,
+          "expected": 15
+        },
+        {
+          "check": "ten unit reports remain reusable under this policy",
+          "passed": true,
+          "actual": 5,
+          "expected": 5
+        },
+        {
+          "check": "new scope and additional work establish current coverage",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-B"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "D-E"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 2
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "refused",
+          "reason": "incomplete-or-stale-scope",
+          "missing": []
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 6
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-2"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-2"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-F"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-F"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-F"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "D-F"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "E-F"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        }
+      ],
+      "model_calls": 2,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "09",
+      "title": "Model/harness switch and CLI-only use",
+      "passed": true,
+      "expected_outcome": "Supported work admitted; strict unsupported work blocked",
+      "lesson": "Capabilities belong to operations; changing host need not discard the KB.",
+      "checks": [
+        {
+          "check": "eligible prior reports survive model/host switch",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "different unconstrained model/host can admit a fresh invocation",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "exact-context requirement is not silently downgraded",
+          "passed": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "check": "explicit tool-only contract remains useful",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-B"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "D-E"
+        },
+        {
+          "actor": "adapter",
+          "operation": "switch-or-compact",
+          "outcome": "new-context",
+          "reason": "",
+          "epoch": 1,
+          "host": "adapter-B",
+          "model": "model-B"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-2"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-2"
+        },
+        {
+          "actor": "adapter",
+          "operation": "switch-or-compact",
+          "outcome": "new-context",
+          "reason": "",
+          "epoch": 2,
+          "host": "CLI-only",
+          "model": "opaque-model"
+        },
+        {
+          "actor": "Writfold",
+          "operation": "prepare-admission",
+          "outcome": "refused",
+          "reason": "missing-observation-capability"
+        },
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-2"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        }
+      ],
+      "model_calls": 2,
+      "protected_effects": 0,
+      "unmediated_effects": 0
+    },
+    {
+      "id": "10",
+      "title": "Forged evidence, altered draft and bypass",
+      "passed": true,
+      "expected_outcome": "Protected path refuses; raw bypass remains possible",
+      "lesson": "Only the effect owner can enforce; a receiver cannot undo earlier outside effects.",
+      "checks": [
+        {
+          "check": "self-authored issuer string is not trusted submission evidence",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "changed outgoing bytes require a new check",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "unchanged checked bytes can pass the protected sender",
+          "passed": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "check": "adapter cannot claim an unsupported effect interception",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "check": "an uncontrolled external path can act without consulting Writfold",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "check": "independent receiver refuses unchecked output; it cannot undo prior effects",
+          "passed": true,
+          "actual": false,
+          "expected": false
+        }
+      ],
+      "events": [
+        {
+          "actor": "adapter",
+          "operation": "bind-task",
+          "outcome": "created",
+          "reason": "",
+          "run": "run-1"
+        },
+        {
+          "actor": "source",
+          "operation": "set-snapshot",
+          "outcome": "changed",
+          "reason": "",
+          "generation": 1
+        },
+        {
+          "actor": "KB enumerator",
+          "operation": "enumerate",
+          "outcome": "complete",
+          "reason": "",
+          "members": 5
+        },
+        {
+          "actor": "adapter",
+          "operation": "prepare-request",
+          "outcome": "admitted",
+          "reason": "",
+          "request": "prepared-1"
+        },
+        {
+          "actor": "harness observer",
+          "operation": "request-submitted",
+          "outcome": "recorded",
+          "reason": "",
+          "invocation": "inv-1"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-B"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "A-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-C"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "B-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-D"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "C-E"
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "recorded",
+          "reason": "",
+          "unit": "D-E"
+        },
+        {
+          "actor": "Writfold graph",
+          "operation": "advance",
+          "outcome": "advanced",
+          "reason": "",
+          "missing": []
+        },
+        {
+          "actor": "report validator",
+          "operation": "record-report",
+          "outcome": "refused",
+          "reason": "missing-or-mismatched-submission",
+          "unit": "A-B"
+        },
+        {
+          "actor": "delivery checker",
+          "operation": "check-exact-artifact",
+          "outcome": "passed",
+          "reason": "",
+          "mode": "pr-comment"
+        },
+        {
+          "actor": "harness effect owner",
+          "operation": "publish",
+          "outcome": "refused",
+          "reason": "unbound-unsupported-stale-or-unchecked"
+        },
+        {
+          "actor": "harness effect owner",
+          "operation": "publish",
+          "outcome": "allowed",
+          "reason": ""
+        },
+        {
+          "actor": "adapter",
+          "operation": "switch-or-compact",
+          "outcome": "new-context",
+          "reason": "",
+          "epoch": 1,
+          "host": "unguarded-host",
+          "model": "model-A"
+        },
+        {
+          "actor": "harness effect owner",
+          "operation": "publish",
+          "outcome": "refused",
+          "reason": "unbound-unsupported-stale-or-unchecked"
+        },
+        {
+          "actor": "uncontrolled host",
+          "operation": "outside-protected-path",
+          "outcome": "effect-occurred",
+          "reason": "Writfold was never consulted; no prevention claim applies"
+        },
+        {
+          "actor": "protected receiver",
+          "operation": "publish",
+          "outcome": "refused",
+          "reason": "unbound-unsupported-stale-or-unchecked"
+        }
+      ],
+      "model_calls": 1,
+      "protected_effects": 1,
+      "unmediated_effects": 1
+    }
+  ]
+}
