@@ -1,0 +1,120 @@
+TLC trace for spec/Invocation.probe-MergeAfterDone.cfg (reachable, as intended): clone a is done on report p; clone b delivers q for the same invocation; after the merge the step is stale and still done.
+
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ bad = FALSE
+/\ done = [a |-> {}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "none", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {}, b |-> {}]
+/\ pending = [a |-> {}, b |-> {}]
+/\ last = "init"
+/\ sent = 0
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [a |-> {}, b |-> {}]
+
+State 2: <Prepare("i1","s1") line 83, col 3 to line 86, col 82 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {}, b |-> {}]
+/\ pending = [a |-> {}, b |-> {}]
+/\ last = "prepare"
+/\ sent = 0
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [a |-> {}, b |-> {}]
+
+State 3: <Deliver("a",[inv |-> "i1", step |-> "s1", payload |-> "p"]) line 90, col 3 to line 98, col 70 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {}, b |-> {}]
+/\ pending = [a |-> {}, b |-> {}]
+/\ last = "deliver"
+/\ sent = 1
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+
+State 4: <Check("a",[inv |-> "i1", step |-> "s1", payload |-> "p"]) line 101, col 3 to line 105, col 79 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ pending = [a |-> {}, b |-> {}]
+/\ last = "check"
+/\ sent = 1
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+
+State 5: <Decide("a",[inv |-> "i1", step |-> "s1", payload |-> "p"]) line 121, col 3 to line 126, col 79 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ pending = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ last = "decide"
+/\ sent = 1
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+
+State 6: <Deliver("b",[inv |-> "i1", step |-> "s1", payload |-> "q"]) line 90, col 3 to line 98, col 70 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ pending = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ last = "deliver"
+/\ sent = 2
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [ a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]},
+  b |-> {[inv |-> "i1", step |-> "s1", payload |-> "q"]} ]
+
+State 7: <Publish("a") line 130, col 3 to line 137, col 68 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ pending = [a |-> {}, b |-> {}]
+/\ last = "advance"
+/\ sent = 2
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [ a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]},
+  b |-> {[inv |-> "i1", step |-> "s1", payload |-> "q"]} ]
+
+State 8: <Merge("b","a") line 147, col 3 to line 158, col 46 of module Invocation>
+/\ bad = FALSE
+/\ done = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ prep = [ a |-> [i1 |-> [step |-> "s1", digest |-> 0]],
+  b |-> [i1 |-> [step |-> "none", digest |-> 0]] ]
+/\ gone = [a |-> {}, b |-> {}]
+/\ checked = [a |-> {[inv |-> "i1", step |-> "s1", payload |-> "p"]}, b |-> {}]
+/\ pending = [a |-> {}, b |-> {}]
+/\ last = "merge"
+/\ sent = 2
+/\ crashes = 0
+/\ closure = [a |-> 0, b |-> 0]
+/\ live = [ a |->
+      { [inv |-> "i1", step |-> "s1", payload |-> "p"],
+        [inv |-> "i1", step |-> "s1", payload |-> "q"] },
+  b |-> {[inv |-> "i1", step |-> "s1", payload |-> "q"]} ]
+
