@@ -152,6 +152,19 @@ theorem pin_one_unpinned_iff (p n : Option (alloc.vec.Vec U8)) :
   rcases p with _ | a <;> rcases n with _ | b <;> simp
   all_goals split <;> simp
 
+/-- An entry pinned with some bytes reads moved when the present has other
+bytes or nothing loads: whatever the entry names, a gate, a delivery mode
+or an agent's closure (#161). -/
+theorem pinned_change_is_moved (a : alloc.vec.Vec U8) (n : Option (alloc.vec.Vec U8))
+    (h : ∀ b, n = some b → a.val ≠ b.val) :
+    policy.pin_one (some a) n ⦃ r => r = .Moved ⦄ := by
+  apply WP.spec_mono (pin_one_spec (some a) n)
+  intro r hr
+  subst hr
+  rcases n with _ | b
+  · rfl
+  · simp [h b rfl]
+
 theorem is_moved_spec (x : policy.Pin) : policy.is_moved x ⦃ b => b = true ↔ x = .Moved ⦄ := by
   unfold policy.is_moved
   cases x <;> simp
@@ -273,6 +286,7 @@ theorem pin_all_spec (ps : Slice policy.Pin) :
         · exact absurd hp hnu
         · rfl
         · exact absurd hp hno
+
 
 /-- One moved pin moves the run. -/
 theorem pin_all_moved_iff (ps : Slice policy.Pin) :

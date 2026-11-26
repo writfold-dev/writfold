@@ -250,6 +250,7 @@ def claims : List Name := [
   ``Writfold.Core.Policy.pin_one_spec,
   ``Writfold.Core.Policy.pin_one_same_iff,
   ``Writfold.Core.Policy.pin_one_unpinned_iff,
+  ``Writfold.Core.Policy.pinned_change_is_moved,
   ``Writfold.Core.Policy.pin_all_spec,
   ``Writfold.Core.Policy.any_moved_loop_spec,
   -- named by the skips-last mutants (docs/writfold/tauten-adoption.md)

@@ -1987,6 +1987,7 @@ theorems = [
   "Writfold.Core.Policy.pin_one_same_iff",
   "Writfold.Core.Policy.pin_one_spec",
   "Writfold.Core.Policy.pin_one_unpinned_iff",
+  "Writfold.Core.Policy.pinned_change_is_moved",
 ]
 total = "Writfold.Core.Policy.pin_one_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
