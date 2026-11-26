@@ -27,6 +27,17 @@ pub fn of_gate(found: bool, standing: Standing) -> Grounding {
     }
 }
 
+/// `delivery:<candidate>` (#156): grounded exactly when the candidate is
+/// found in this run, is ready, and passes `invocation.bound`; anything
+/// else grounds nothing. What the report says is never judged.
+pub fn of_delivery(found: bool, ready: bool, bound: bool) -> Grounding {
+    if found && ready && bound {
+        Grounding::Grounded
+    } else {
+        Grounding::Ungrounded
+    }
+}
+
 /// What a cited gate receipt of this run is, compared with the present.
 pub struct ReceiptFacts {
     /// It is about this subject repository.

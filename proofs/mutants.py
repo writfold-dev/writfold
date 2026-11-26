@@ -275,6 +275,41 @@ MUTANTS = (
            "        return Outcome::Unknown;",
            "        return Outcome::Pass;",
            ("Writfold.Core.Invoke.bound_spec",)),
+    # invoke (#154): a need not met refuses prepare
+    Mutant("prepare-skips-needs", "invoke.rs",
+           "            Some(index) => Err(PrepareRefusal::Needs(index)),",
+           "            Some(_) => Ok(()),",
+           ("Writfold.Core.Invoke.prepare_spec",)),
+    # invoke (#154): a need that could not be judged is owed
+    Mutant("needs-unknown-met", "invoke.rs",
+           "            Fact::Met => {}\n            Fact::Unmet | Fact::Unknown => return Some(index),",
+           "            Fact::Met | Fact::Unknown => {}\n            Fact::Unmet => return Some(index),",
+           ("Writfold.Core.Invoke.first_unmet_loop_spec",)),
+    # units (#156): the last member pairs too
+    Mutant("pairs-drops-last", "units.rs",
+           "        while b < n {",
+           "        while b + 1 < n {",
+           ("Writfold.Core.Units.pairs_inner_spec",)),
+    # units (#156): a member never pairs with itself
+    Mutant("pairs-keeps-diagonal", "units.rs",
+           "        let mut b = a + 1;",
+           "        let mut b = a;",
+           ("Writfold.Core.Units.pairs_outer_spec",)),
+    # units (#156): an absent universe is never covered
+    Mutant("generated-absent-covered", "units.rs",
+           "    let universe = present && (count > 0 || allow_empty);",
+           "    let universe = count > 0 || allow_empty;",
+           ("Writfold.Core.Units.generated_covered_iff",)),
+    # units (#156): an empty universe needs allow_empty
+    Mutant("generated-empty-covered", "units.rs",
+           "    let universe = present && (count > 0 || allow_empty);",
+           "    let universe = present;",
+           ("Writfold.Core.Units.generated_covered_iff",)),
+    # ground (#156): an unready report grounds nothing
+    Mutant("delivery-unready-grounds", "ground.rs",
+           "    if found && ready && bound {",
+           "    if found && bound {",
+           ("Writfold.Core.Ground.of_delivery_grounded_iff",)),
     # vale (#131): only the pinned executable's run is read
     Mutant("vale-absent-usable", "vale.rs",
            "        Tool::Absent | Tool::Other => return false,",

@@ -24,6 +24,7 @@
 //! `proofs/Writfold/Invoke.lean` proves it for every input
 //! (docs/writfold/aeneas.md).
 use crate::gate::Outcome;
+use crate::guard::Fact;
 
 /// What `agent prepare` found, each fact classified by the caller.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -54,6 +55,8 @@ pub enum PrepareRefusal {
     PlanNotInRun,
     InputUnread,
     PacketIncomplete,
+    /// The `needs` gate at this index is not met now (#154).
+    Needs(usize),
 }
 
 /// The first of the six facts that does not hold, or admitted.
@@ -77,6 +80,32 @@ pub fn prepare_check(facts: &Prepare) -> Result<(), PrepareRefusal> {
         return Err(PrepareRefusal::PacketIncomplete);
     }
     Ok(())
+}
+
+/// The least index of a need that is not [`Fact::Met`]: an unmet or an
+/// unknown gate is owed.
+pub fn first_unmet(needs: &[Fact]) -> Option<usize> {
+    let mut index = 0;
+    while index < needs.len() {
+        match needs[index] {
+            Fact::Met => {}
+            Fact::Unmet | Fact::Unknown => return Some(index),
+        }
+        index += 1;
+    }
+    None
+}
+
+/// [`prepare_check`], then each gate the skills and profile `need`, in
+/// order (#154): with no needs it is [`prepare_check`].
+pub fn prepare(facts: &Prepare, needs: &[Fact]) -> Result<(), PrepareRefusal> {
+    match prepare_check(facts) {
+        Err(refusal) => Err(refusal),
+        Ok(()) => match first_unmet(needs) {
+            Some(index) => Err(PrepareRefusal::Needs(index)),
+            None => Ok(()),
+        },
+    }
 }
 
 /// What `invocation.bound` found for one delivery candidate.
@@ -245,6 +274,31 @@ mod tests {
             ..ALL
         };
         assert_eq!(prepare_check(&both), Err(PrepareRefusal::NotCurrentStep));
+    }
+
+    #[test]
+    fn needs_are_judged_after_the_six_facts() {
+        use super::{first_unmet, prepare};
+        use crate::guard::Fact;
+        assert_eq!(prepare(&ALL, &[]), prepare_check(&ALL));
+        assert_eq!(prepare(&ALL, &[Fact::Met, Fact::Met]), Ok(()));
+        assert_eq!(
+            prepare(&ALL, &[Fact::Met, Fact::Unknown]),
+            Err(PrepareRefusal::Needs(1))
+        );
+        assert_eq!(
+            prepare(&ALL, &[Fact::Unmet, Fact::Unknown]),
+            Err(PrepareRefusal::Needs(0))
+        );
+        let closed = Prepare {
+            run_open: false,
+            ..ALL
+        };
+        assert_eq!(
+            prepare(&closed, &[Fact::Unmet]),
+            Err(PrepareRefusal::RunClosed)
+        );
+        assert_eq!(first_unmet(&[Fact::Met, Fact::Met, Fact::Unmet]), Some(2));
     }
 
     #[test]

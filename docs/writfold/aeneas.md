@@ -1271,6 +1271,22 @@ exactly when the record is of this run, at the step judged, for the mode's
 agent, under the present closure, with no second report; two different
 reports never pass). Mutants `bound-ignores-closure`, `bound-ignores-step`,
 `bound-ignores-single`, `bound-unread-passes`.
+`writfold_core::invoke::prepare` (v0.6.0-dev.23, #154) is `prepare_check`
+then each gate a skill or profile `needs`, in order (`Invoke.lean`:
+`first_unmet` is the least need not met, an unknown one included;
+admitted exactly when the six facts hold and every need is met; a need
+that could not be judged is never admitted; with no needs the decision is
+`prepare_check`'s). Mutants `prepare-skips-needs`, `needs-unknown-met`.
+
+Generated review units (v0.6.0-dev.23, #156): `writfold_core::units`
+(`Units.lean`: `pairs n` is exactly the pairs `a < b < n` row by row up to
+64 members and `None` over it, strictly increasing in lexicographic order,
+`n (n - 1) / 2` of them; `generated` is covered exactly when the universe
+is present, has a unit or allows none, and every unit is covered) and
+`ground::of_delivery` (grounded exactly when the report is found, ready
+and bound). Mutants `pairs-drops-last`, `pairs-keeps-diagonal`,
+`generated-absent-covered`, `generated-empty-covered`,
+`delivery-unready-grounds`.
 
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition

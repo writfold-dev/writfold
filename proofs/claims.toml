@@ -3061,3 +3061,84 @@ mutants = [
   "bound-ignores-single",
   "bound-unread-passes",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/invoke.rs"
+function = "first_unmet"
+lean = "writfold_core.invoke.first_unmet"
+theorems = [
+  "Writfold.Core.Invoke.first_unmet_loop_spec",
+  "Writfold.Core.Invoke.first_unmet_spec",
+]
+total = "Writfold.Core.Invoke.first_unmet_spec"
+mutants = [
+  "needs-unknown-met",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/invoke.rs"
+function = "prepare"
+lean = "writfold_core.invoke.prepare"
+theorems = [
+  "Writfold.Core.Invoke.prepare_spec",
+  "Writfold.Core.Invoke.firstRefusal_not_needs",
+  "Writfold.Core.Invoke.prepare_needs_ok_iff",
+  "Writfold.Core.Invoke.needs_unknown_refused",
+  "Writfold.Core.Invoke.needs_first",
+  "Writfold.Core.Invoke.no_needs_unchanged",
+]
+total = "Writfold.Core.Invoke.prepare_spec"
+mutants = [
+  "prepare-skips-needs",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/units.rs"
+function = "pairs"
+lean = "writfold_core.units.pairs"
+theorems = [
+  "Writfold.Core.Units.pairs_inner_spec",
+  "Writfold.Core.Units.pairs_outer_spec",
+  "Writfold.Core.Units.pairs_spec",
+  "Writfold.Core.Units.over_cap_refused",
+  "Writfold.Core.Units.pairs_mem",
+  "Writfold.Core.Units.pairs_sorted",
+  "Writfold.Core.Units.pairs_len",
+]
+total = "Writfold.Core.Units.pairs_spec"
+mutants = [
+  "pairs-drops-last",
+  "pairs-keeps-diagonal",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/units.rs"
+function = "generated"
+lean = "writfold_core.units.generated"
+theorems = [
+  "Writfold.Core.Units.generated_covered_iff",
+  "Writfold.Core.Units.absent_universe_never_covered",
+  "Writfold.Core.Units.empty_universe_needs_allow",
+]
+total = "Writfold.Core.Units.generated_covered_iff"
+mutants = [
+  "generated-absent-covered",
+  "generated-empty-covered",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/ground.rs"
+function = "of_delivery"
+lean = "writfold_core.ground.of_delivery"
+theorems = [
+  "Writfold.Core.Ground.of_delivery_grounded_iff",
+]
+total = "Writfold.Core.Ground.of_delivery_grounded_iff"
+mutants = [
+  "delivery-unready-grounds",
+]

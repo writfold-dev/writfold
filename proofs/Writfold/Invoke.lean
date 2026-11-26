@@ -20,6 +20,12 @@ Theorems over the Aeneas translation of `writfold_core::invoke`.
   failure.
 - `conflict_never_passes`: two different reports for one invocation never
   pass, whichever is newer.
+- `first_unmet_spec` (#154): the least index of a need that is not met.
+- `prepare_spec`, `prepare_needs_ok_iff`: `prepare` is `prepare_check`, then
+  the needs in order; admitted exactly when the six facts hold and every
+  need is met. `needs_unknown_refused`: a need that could not be judged is
+  never admitted. `needs_first`: the refusal names the least unmet need.
+  `no_needs_unchanged`: with no needs the decision is `prepare_check`'s.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -125,5 +131,138 @@ theorem conflict_never_passes (n : invoke.Named) (hs : n.single = false) :
   have := (hiff.mp hp).2.2.2.2.2.2
   rw [hs] at this
   cases this
+
+/-- Every need is met. -/
+def AllMet (needs : List guard.Fact) : Prop :=
+  ∀ j (hj : j < needs.length), needs[j] = .Met
+
+def FirstUnmet (needs : List guard.Fact) : Option Usize → Prop
+  | none => AllMet needs
+  | some i => ∃ h : i.val < needs.length, needs[i.val] ≠ .Met ∧
+      ∀ j (hj : j < i.val), (needs[j]'(by omega)) = .Met
+
+theorem first_unmet_loop_spec (needs : Slice guard.Fact) (i : Usize)
+    (hi : i.val ≤ needs.val.length)
+    (hmet : ∀ j (_ : j < i.val) (hj' : j < needs.val.length), needs.val[j] = .Met) :
+    invoke.first_unmet_loop needs i ⦃ r => FirstUnmet needs.val r ⦄ := by
+  unfold invoke.first_unmet_loop
+  apply loop.spec_decr_nat (fun i : Usize => needs.val.length - i.val)
+    (fun i : Usize => i.val ≤ needs.val.length ∧
+      ∀ j (hj : j < i.val) (hj' : j < needs.val.length), needs.val[j] = .Met)
+  · intro i ⟨hi, hmet⟩
+    unfold invoke.first_unmet_loop.body
+    dsimp only
+    split
+    · rename_i hlt
+      step as ⟨ x, hx ⟩
+      split
+      · apply WP.spec_bind (Usize.add_spec (by scalar_tac))
+        intro i' hi'
+        simp only [WP.spec_ok]
+        refine ⟨by scalar_tac, ?_, by scalar_tac⟩
+        intro j hj hj'
+        by_cases hji : j < i.val
+        · exact hmet j hji hj'
+        · have : j = i.val := by scalar_tac
+          subst this
+          exact hx.symm
+      all_goals
+        simp only [WP.spec_ok, FirstUnmet]
+        exact ⟨by scalar_tac, by rw [← hx]; simp, fun j hj => hmet j hj _⟩
+    · simp only [WP.spec_ok, FirstUnmet, AllMet]
+      intro j hj
+      exact hmet j (by scalar_tac) hj
+  · exact ⟨hi, hmet⟩
+
+theorem first_unmet_spec (needs : Slice guard.Fact) :
+    invoke.first_unmet needs ⦃ r => FirstUnmet needs.val r ⦄ := by
+  unfold invoke.first_unmet
+  apply first_unmet_loop_spec
+  · simp
+  · intro j hj; simp at hj
+
+theorem firstRefusal_not_needs (f : invoke.Prepare) (k : Usize) :
+    firstRefusal f ≠ some (.Needs k) := by
+  rcases f with ⟨a, b, c, d, g, p, q⟩
+  cases a <;> cases b <;> cases c <;> cases d <;> cases g <;> cases p <;> cases q <;>
+    simp [firstRefusal]
+
+/-- What `prepare` decides. -/
+def PrepareSpec (f : invoke.Prepare) (needs : List guard.Fact) :
+    core.result.Result Unit invoke.PrepareRefusal → Prop
+  | .Ok () => firstRefusal f = none ∧ AllMet needs
+  | .Err (.Needs i) => firstRefusal f = none ∧ FirstUnmet needs (some i)
+  | .Err e => firstRefusal f = some e
+
+theorem prepare_spec (f : invoke.Prepare) (needs : Slice guard.Fact) :
+    invoke.prepare f needs ⦃ r => PrepareSpec f needs.val r ⦄ := by
+  unfold invoke.prepare
+  step with prepare_check_spec as ⟨ r, hr ⟩
+  cases hf : firstRefusal f with
+  | none =>
+    rw [hf] at hr
+    subst hr
+    simp only
+    step with first_unmet_spec as ⟨ o, ho ⟩
+    cases o with
+    | none => simp only [WP.spec_ok, PrepareSpec]; exact ⟨hf, ho⟩
+    | some i => simp only [WP.spec_ok, PrepareSpec]; exact ⟨hf, ho⟩
+  | some e =>
+    rw [hf] at hr
+    subst hr
+    simp only [WP.spec_ok]
+    cases e with
+    | Needs k => exact absurd hf (firstRefusal_not_needs f k)
+    | _ => simp [PrepareSpec, hf]
+
+/-- Admitted exactly when the six facts hold and every need is met. -/
+theorem prepare_needs_ok_iff (f : invoke.Prepare) (needs : Slice guard.Fact) :
+    invoke.prepare f needs ⦃ r => r = .Ok () ↔ Admitted f ∧ AllMet needs.val ⦄ := by
+  apply WP.spec_mono (prepare_spec f needs)
+  intro r hr
+  rw [← firstRefusal_none_iff]
+  constructor
+  · intro h; subst h; exact hr
+  · intro ⟨h1, h2⟩
+    rcases r with ⟨⟩ | e
+    · rfl
+    · cases e with
+      | Needs i =>
+        obtain ⟨_, hne, _⟩ := hr.2
+        exact absurd (h2 _ _) hne
+      | _ => simp_all [PrepareSpec]
+
+/-- A need that could not be judged is never admitted. -/
+theorem needs_unknown_refused (f : invoke.Prepare) (needs : Slice guard.Fact)
+    (j : Nat) (hj : j < needs.val.length) (hu : needs.val[j] = .Unknown) :
+    invoke.prepare f needs ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (prepare_needs_ok_iff f needs)
+  intro r hiff hok
+  have := (hiff.mp hok).2 j hj
+  rw [hu] at this
+  cases this
+
+/-- The refusal names the least need that is not met. -/
+theorem needs_first (f : invoke.Prepare) (needs : Slice guard.Fact) :
+    invoke.prepare f needs ⦃ r => ∀ i, r = .Err (.Needs i) →
+      ∃ h : i.val < needs.val.length, needs.val[i.val] ≠ .Met ∧
+        ∀ j (hj : j < i.val), (needs.val[j]'(by omega)) = .Met ⦄ := by
+  apply WP.spec_mono (prepare_spec f needs)
+  intro r hr i hi
+  subst hi
+  exact hr.2
+
+/-- With no needs, `prepare` decides as `prepare_check`. -/
+theorem no_needs_unchanged (f : invoke.Prepare) (needs : Slice guard.Fact)
+    (h0 : needs.val = []) :
+    invoke.prepare f needs ⦃ r => r = match firstRefusal f with
+      | none => .Ok ()
+      | some e => .Err e ⦄ := by
+  apply WP.spec_mono (prepare_spec f needs)
+  intro r hr
+  rw [h0] at hr
+  rcases r with ⟨⟩ | e
+  · simp [PrepareSpec] at hr; simp [hr.1]
+  · cases e <;> simp_all [PrepareSpec, FirstUnmet]
 
 end Writfold.Core.Invoke

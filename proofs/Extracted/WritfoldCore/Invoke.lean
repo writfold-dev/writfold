@@ -22,7 +22,7 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::invoke::Prepare]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 30:0-45:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 31:0-46:1
     Visibility: public -/
 structure invoke.Prepare where
   run_open : Bool
@@ -34,7 +34,7 @@ structure invoke.Prepare where
   packet_complete : Bool
 
 /-- [writfold_core::invoke::prepare_check]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 60:0-80:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 63:0-83:1
     Visibility: public -/
 def invoke.prepare_check
   (facts : invoke.Prepare) :
@@ -64,8 +64,64 @@ def invoke.prepare_check
     else ok (core.result.Result.Err invoke.PrepareRefusal.NotCurrentStep)
   else ok (core.result.Result.Err invoke.PrepareRefusal.RunClosed)
 
+/-- [writfold_core::invoke::first_unmet]: loop body 0:
+    Source: 'crates/writfold-core/src/invoke.rs', lines 89:4-97:1
+    Visibility: public -/
+@[rust_loop_body]
+def invoke.first_unmet_loop.body
+  (needs : Slice guard.Fact) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := Slice.len needs
+  if index < i
+  then
+    let f ← Slice.index_usize needs index
+    match f with
+    | guard.Fact.Met => let index1 ← index + 1#usize
+                        ok (cont index1)
+    | guard.Fact.Unmet => ok (done (some index))
+    | guard.Fact.Unknown => ok (done (some index))
+  else ok (done none)
+
+/-- [writfold_core::invoke::first_unmet]: loop 0:
+    Source: 'crates/writfold-core/src/invoke.rs', lines 89:4-97:1
+    Visibility: public -/
+@[rust_loop]
+def invoke.first_unmet_loop
+  (needs : Slice guard.Fact) (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => invoke.first_unmet_loop.body needs index1)
+    index
+
+/-- [writfold_core::invoke::first_unmet]:
+    Source: 'crates/writfold-core/src/invoke.rs', lines 87:0-97:1
+    Visibility: public -/
+@[reducible]
+def invoke.first_unmet
+  (needs : Slice guard.Fact) : Result (Option Std.Usize) := do
+  invoke.first_unmet_loop needs 0#usize
+
+/-- [writfold_core::invoke::prepare]:
+    Source: 'crates/writfold-core/src/invoke.rs', lines 101:0-109:1
+    Visibility: public -/
+def invoke.prepare
+  (facts : invoke.Prepare) (needs : Slice guard.Fact) :
+  Result (core.result.Result Unit invoke.PrepareRefusal)
+  := do
+  let r ← invoke.prepare_check facts
+  match r with
+  | core.result.Result.Ok _ =>
+    let o ← invoke.first_unmet needs
+    match o with
+    | none => ok (core.result.Result.Ok ())
+    | some index =>
+      ok (core.result.Result.Err (invoke.PrepareRefusal.Needs index))
+  | core.result.Result.Err _ => ok r
+
 /-- [writfold_core::invoke::Named]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 84:0-99:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 113:0-128:1
     Visibility: public -/
 structure invoke.Named where
   names : Bool
@@ -77,7 +133,7 @@ structure invoke.Named where
   single : Bool
 
 /-- [writfold_core::invoke::bound]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 104:0-121:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 133:0-150:1
     Visibility: public -/
 def invoke.bound (named : invoke.Named) : Result gate.Outcome := do
   if named.names
