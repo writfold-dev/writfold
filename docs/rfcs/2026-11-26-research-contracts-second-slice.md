@@ -2,13 +2,13 @@
 rfc: "2026-11-26-research-contracts-second-slice"
 title: "Research contracts, second slice"
 status: accepted
-implementation: not-started
+implementation: complete
 authors:
   - tknawara
 created: 2026-11-26
 updated: 2026-11-26
 issue: https://github.com/writfold-dev/writfold/issues/163
-milestone: Later
+milestone: v0.6.0-dev.24
 supersedes: []
 superseded_by: []
 blocked_on: []
@@ -408,3 +408,46 @@ records are members; whether the seed's bytes belong to a unit.
   Implementation is not started and is the main session's. The defaults
   taken: the seed's bytes are part of every unit; the seed is not a
   member; KB documents that are not records stay in `others`.
+- 2026-11-26: Built in v0.6.0-dev.24 (#164 to #168), with every theorem and
+  mutant above. As built, where it differs from the body or adds to it:
+  - `spec/Invocation.tla` derives the current step from the done records
+    (`Cur`), records it on prepare and on delivery, and adds the constant
+    `RecordedStep`; `Invocation.mutant-CurrentStep.cfg` (the current step
+    judged) fails `CheckIsStable`. The worker still delivers any payload
+    for any invocation, at the step current where it delivers.
+  - `inside` covers the seed's path as well as each member's, since the
+    seed's bytes are part of every unit; the manifest records them as
+    `seed_path` and `seed_digest`.
+  - A unit row records `unit: {seed, first, second}` digests and the
+    static definition digest; it is judged by `unit_moved` alone, not by
+    the checklist's scope content digest (which any member's edit moves).
+    A row without `unit` keeps the earlier rule, with the joined digest now
+    made from the members' ids, paths and digests rather than the kept
+    file's bytes.
+  - `universe` adds the lemmas `universeOf_none_iff` and `passing_iff`;
+    `unchecked_scope_never_present` is stated over `passing` (a
+    `Checked(Satisfied)` standing), which `passing_iff` ties to the
+    standing.
+  - The narrow-scope advice is the warning `policy.narrow-scope`.
+  - Each mutant breaks the function's spec theorem, which the others are
+    derived from: `prepare-skips-out` and `prepare-skips-for` break
+    `prepare_check_spec`; the four `universe-*` mutants break
+    `universe_first`; the three `unit-ignores-*` break `unit_first_moved`
+    and `unit_current_iff`. The calibration runs the theorems the table
+    names as consequences. The existing `waiver-grounds` now also breaks
+    `universe_first`, since `universe` grounds its scope gate through
+    `ground::of_gate`.
+  - `needs` entries in the invocation record are `{gate, on}`, where `on`
+    is the receipt, attestation or waiver path the need stood on; a waived
+    need stands as the gate's `accept` says.
+  - `invocation.bound`'s `another-run` finding is unreachable from files: a
+    record of another run does not read under this run, so the check is
+    `unknown`. The guide's row is removed; the kernel fact stays.
+  - `plan status` now applies `invocation.bound`'s re-check, so a done step
+    bound to a report whose closure moved shows `!stale`, as the guide
+    said.
+  - Found and filed: `handoff check` names `no-evidence` instead of
+    `statement` for a checklist gate that stands on reports (#169).
+  - TLC runs stay manual; `docs/guide/assurance.md` says so and gives the
+    command. The crash between the invocation record and the package is
+    not modelled.

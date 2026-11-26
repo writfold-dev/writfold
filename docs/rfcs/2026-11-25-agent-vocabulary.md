@@ -636,3 +636,10 @@ Read as design inputs on 25 November 2026:
   moves the closure. #161 is the only thing between the body's "an edited
   profile reads `policy moved`" and the truth, and is proposed as the next
   piece of this RFC to build. Tests the slice left out are listed in #168.
+- 2026-11-26: The second slice (v0.6.0-dev.24, #163) built #164 and #167.
+  As built, calculus §5.2's #154 row reads "`prepare_check_spec` and
+  `prepare_ok_iff` restated": `needs` is a new function, `invoke::prepare`,
+  that wraps `prepare_check`, and #148's theorems stood unchanged until
+  #167 added two facts (`--out` outside the KB, `--for` known), when
+  `prepare_check_spec`, `firstRefusal_none_iff` and `prepare_ok_iff` were
+  restated over eight facts.

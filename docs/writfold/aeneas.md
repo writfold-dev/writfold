@@ -1259,11 +1259,14 @@ Its protocol is `spec/Invocation.tla` (#145).
 
 Preparing an agent invocation (v0.6.0-dev.22, #147, #148):
 `writfold_core::invoke::prepare_check` (`Invoke.lean`: it names the first of
-six classified facts that does not hold, in a fixed order: the run is open,
+eight classified facts that does not hold, in a fixed order: the run is open,
 the step is current, the closure is admitted, every skill's plan template is
-in the run, the input was read, a required packet is complete; admitted
-exactly when all hold; a missing plan or an incomplete required packet is
-never admitted). Mutants `prepare-skips-packet`, `prepare-skips-plan`.
+in the run, the input was read, a required packet is complete, and (since
+v0.6.0-dev.24, #167) `--out` is outside the KB and `--for` names an item the
+checklist has now; admitted exactly when all hold; a missing plan, an
+incomplete required packet, `--out` inside the KB or `--for` an unknown item
+is never admitted). Mutants `prepare-skips-packet`, `prepare-skips-plan`,
+`prepare-skips-out`, `prepare-skips-for`.
 `writfold_core::invoke::bound` (#149) is the built-in check
 `invocation.bound` (`Invoke.lean`: `Fail` when the candidate names no
 invocation, `Unknown` when the named record does not read, else `Pass`
@@ -1283,10 +1286,30 @@ Generated review units (v0.6.0-dev.23, #156): `writfold_core::units`
 64 members and `None` over it, strictly increasing in lexicographic order,
 `n (n - 1) / 2` of them; `generated` is covered exactly when the universe
 is present, has a unit or allows none, and every unit is covered) and
-`ground::of_delivery` (grounded exactly when the report is found, ready
-and bound). Mutants `pairs-drops-last`, `pairs-keeps-diagonal`,
+`ground::of_delivery` (grounded exactly when the report is found, live,
+ready and bound; since #164 a withdrawn report grounds nothing whatever
+else holds). Mutants `pairs-drops-last`, `pairs-keeps-diagonal`,
 `generated-absent-covered`, `generated-empty-covered`,
-`delivery-unready-grounds`.
+`delivery-unready-grounds`, `delivery-withdrawn-grounds`. The step
+`invocation.bound` judges is the one the candidate recorded when it was
+prepared (#164); `spec/Invocation.tla`'s `CheckIsStable` says a passing
+check still passes after `plan advance`, and its mutant configuration
+`Invocation.mutant-CurrentStep.cfg` (the current step judged instead) fails
+it.
+
+The research contracts' second slice (v0.6.0-dev.24, #165, #166):
+`units::universe` (`Units.lean`: `universe_first` names the first of eight
+facts that does not hold: the scope gate is defined, stands satisfied by a
+check (`ground::of_gate` grounds it), its kept file reads, is a manifest,
+says `complete`, lists no member outside the scopes, makes no two units of
+one name, and has at most 64 members; `universe_ok_iff`;
+`unchecked_scope_never_present`, `partial_manifest_never_present`,
+`member_outside_scope_never_present`) and `units::unit_moved` (`unit_first_moved`,
+`unit_current_iff`: a unit's row is current exactly when the definition, the
+seed and its two members are unchanged; no other member is an input).
+Mutants `universe-attested-scope`, `universe-partial-present`,
+`universe-outside-scope-present`, `universe-over-cap-present`,
+`unit-ignores-second`, `unit-ignores-seed`, `unit-ignores-definition`.
 
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition

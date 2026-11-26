@@ -182,3 +182,49 @@ fn init_writes_the_delivery_example() -> TestResult {
     let _ = std::fs::remove_dir_all(&dir);
     Ok(())
 }
+
+/// Pins: `kb init --example agent` writes the eight definition files with
+/// the bytes of `fixtures/kb/agent-review/` (and not its test-only
+/// `worker.sh`), and is create-new only: a second run keeps every file,
+/// including one the person edited.
+#[test]
+fn init_writes_the_agent_example_and_keeps_what_exists() -> TestResult {
+    let dir = scratch("agent")?;
+    let (text, exit) = init(&dir, Some("agent"), false)?;
+    assert_eq!(exit, 0, "{text}");
+    assert!(
+        text.contains("wrote .writfold/agents/reviewer.toml"),
+        "{text}"
+    );
+    let fixture = support::fixture("agent-review");
+    let files = [
+        ".writfold/tools/repo.read.toml",
+        ".writfold/tools/git.diff.toml",
+        ".writfold/skills/verify-claims.toml",
+        ".writfold/skills/summarise.toml",
+        ".writfold/skills/summarise.md",
+        ".writfold/agents/reviewer.toml",
+        ".writfold/plans/claims-review.toml",
+        ".writfold/deliveries/claims-report.toml",
+    ];
+    for file in files {
+        assert_eq!(
+            std::fs::read(dir.join(file))?,
+            std::fs::read(fixture.join(file))?,
+            "{file}"
+        );
+    }
+    assert!(!dir.join("worker.sh").exists());
+    let mine = "schema = \"writfold-agent-profile/1\"\nid = \"reviewer\"\n# mine\n";
+    std::fs::write(dir.join(".writfold/agents/reviewer.toml"), mine)?;
+    let (text, exit) = init(&dir, Some("agent"), false)?;
+    assert_eq!(exit, 0, "{text}");
+    assert!(!text.contains("wrote .writfold"), "{text}");
+    assert!(text.contains("kept=9"), "{text}");
+    assert_eq!(
+        std::fs::read_to_string(dir.join(".writfold/agents/reviewer.toml"))?,
+        mine
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+    Ok(())
+}

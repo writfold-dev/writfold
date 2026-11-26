@@ -9,12 +9,14 @@
 //! The items are not written in the definition: they are made from the
 //! manifest the scope gate's current passing receipt kept, one per
 //! unordered pair of members ([`writfold_core::units::pairs`]), named
-//! `<id>~<id>` with the ids in byte order. Without a current pass of the
-//! scope gate, or with a manifest that does not read or has more than 64
-//! members, there are no items and the checklist is not covered
-//! ([`writfold_core::units::generated`]). The manifest's digest joins the
-//! definition digest, so when the scope runs again over other members every
-//! earlier row is stale. Each unit takes evidence of its own: a report
+//! `<id>~<id>` with the ids in byte order. Whether there is a universe at
+//! all is [`writfold_core::units::universe`] (#165): the scope gate passes
+//! by a check, its kept file reads as a complete `writfold-manifest/1`,
+//! every member is inside both scopes, no two members make one unit name,
+//! within 64 members. Without one there are no items and the checklist is
+//! not covered ([`writfold_core::units::generated`]). The members' digest
+//! joins the definition digest in rows ([`rows_digest`]), so when the scope
+//! runs again over other members every earlier row is stale. Each unit takes evidence of its own: a report
 //! prepared `--for` it. Reading the manifest and naming units are tested
 //! here; the decisions are the kernel's.
 use super::spec::Item;
@@ -23,6 +25,7 @@ use crate::gate::def::Definition;
 use crate::gate::status::Report;
 use writfold_core::bind::Need;
 use writfold_core::gate::{Standing, State};
+use writfold_core::units::{Absent, Scope};
 
 /// The keys only a generated checklist uses.
 pub const KEYS: [&str; 3] = ["items_from", "units", "empty"];
@@ -104,52 +107,211 @@ pub fn check(c: &mut Check<'_>) -> Option<Option<From>> {
     }))
 }
 
+/// One member of a kept manifest.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct Member {
+    pub id: String,
+    pub path: String,
+    pub digest: String,
+}
+
 /// A generated checklist's universe, as found for one run and subject.
 #[derive(Clone, Debug, Default)]
 pub struct Universe {
-    /// The scope gate passes now and its manifest read, within the cap.
+    /// [`writfold_core::units::universe`] holds: the scope gate passes
+    /// now and its manifest is judged usable.
     pub present: bool,
     pub units: usize,
     /// Why there are no items, when there are none.
     pub why: Option<String>,
+    /// The members, sorted by id, when the manifest read (#166).
+    pub members: Vec<Member>,
+    /// The digest of the seed's bytes, when the manifest records it (#166).
+    pub seed: Option<String>,
 }
 
-/// The member ids of a manifest's bytes, sorted, each once.
-fn members(bytes: &[u8]) -> Result<Vec<String>, String> {
+/// What a kept file says, read as `writfold-manifest/1`.
+struct Read {
+    complete: bool,
+    members: Vec<Member>,
+    seed: Option<String>,
+    seed_path: Option<String>,
+}
+
+fn text(v: &serde_json::Value, key: &str) -> Option<String> {
+    v.get(key).and_then(|t| t.as_str()).map(str::to_owned)
+}
+
+/// The manifest in `bytes`, its members sorted by id.
+fn manifest(bytes: &[u8]) -> Result<Read, String> {
     let v: serde_json::Value =
         serde_json::from_slice(bytes).map_err(|e| format!("not JSON ({e})"))?;
-    let list = (v.get("members").and_then(|m| m.as_array())).ok_or("no members list")?;
-    let mut ids: Vec<String> = (list.iter())
-        .map(|m| m.get("id").and_then(|i| i.as_str()).map(str::to_owned))
-        .collect::<Option<Vec<String>>>()
-        .ok_or("a member has no id")?;
-    ids.sort();
-    ids.dedup();
-    Ok(ids)
-}
-
-/// The kept file of the scope gate's deciding receipt, when it passes now.
-fn kept(root: &std::path::Path, plain: &Report<'_>, from: &From) -> Result<Vec<u8>, String> {
-    let Some(j) = plain.gates.iter().find(|j| j.definition.id == from.gate) else {
-        return Err(format!("no scope gate {} on this subject", from.gate));
-    };
-    if j.standing != Standing::Checked(State::Satisfied) {
+    if text(&v, "schema").as_deref() != Some(crate::verbs::impact_manifest::SCHEMA) {
         return Err(format!(
-            "the scope gate {} is {}: writfold kb gate run {}",
-            from.gate,
-            j.standing.name(),
-            from.gate
+            "its schema is not {}",
+            crate::verbs::impact_manifest::SCHEMA
         ));
     }
-    let (filed, _) = j.receipt.ok_or("the scope gate has no receipt")?;
-    let stem = filed.path.strip_suffix(".json").unwrap_or(&filed.path);
-    let (run_dir, name) = stem.split_once("/gates/").ok_or("not a receipt path")?;
-    let path = format!(
-        "{run_dir}/{}/{name}/{}",
-        crate::gate::retain::DIR,
-        from.file
-    );
-    std::fs::read(root.join(&path)).map_err(|e| format!("{path} does not read ({e})"))
+    let list = (v.get("members").and_then(|m| m.as_array())).ok_or("no members list")?;
+    let mut members: Vec<Member> = (list.iter())
+        .map(|m| {
+            Some(Member {
+                id: text(m, "id")?,
+                path: text(m, "path")?,
+                digest: text(m, "digest")?,
+            })
+        })
+        .collect::<Option<Vec<Member>>>()
+        .ok_or("a member has no id, path or digest")?;
+    members.sort_by(|x, y| x.id.cmp(&y.id));
+    Ok(Read {
+        complete: text(&v, "coverage").as_deref() == Some("complete"),
+        members,
+        seed: text(&v, "seed_digest"),
+        seed_path: text(&v, "seed_path"),
+    })
+}
+
+/// The scope gate's judgment and the path of its kept file.
+fn kept<'r>(
+    plain: &'r Report<'_>,
+    from: &From,
+) -> Option<(&'r crate::gate::status::Judged<'r>, Option<String>)> {
+    let j = plain.gates.iter().find(|j| j.definition.id == from.gate)?;
+    let path = j.receipt.and_then(|(filed, _)| {
+        let stem = filed.path.strip_suffix(".json").unwrap_or(&filed.path);
+        let (run_dir, name) = stem.split_once("/gates/")?;
+        Some(format!(
+            "{run_dir}/{}/{name}/{}",
+            crate::gate::retain::DIR,
+            from.file
+        ))
+    });
+    Some((j, path))
+}
+
+/// The first path, of the members and the seed, outside the scope gate's
+/// or the checklist's scope: a change to it would move no standing.
+fn outside<'m>(paths: impl Iterator<Item = &'m str>, scopes: [&[&str]; 2]) -> Option<&'m str> {
+    let mut paths = paths;
+    paths.find(|path| {
+        !scopes
+            .iter()
+            .all(|p| writfold_core::scope::in_scope(p, path))
+    })
+}
+
+/// The first unit name two members would share: an id with `~`, or an id
+/// listed twice.
+fn same_name(members: &[Member]) -> Option<String> {
+    let tilde = members.iter().find(|m| m.id.contains('~'));
+    let twice = (members.windows(2)).find_map(|w| match w {
+        [x, y] if x.id == y.id => Some(x),
+        _ => None,
+    });
+    tilde.or(twice).map(|m| m.id.clone())
+}
+
+/// Why there is no universe, in words.
+fn why(a: Absent, from: &From, found: &Found<'_>) -> String {
+    let (g, file) = (&from.gate, &from.file);
+    match a {
+        Absent::NoGate => format!("no scope gate {g} on this subject"),
+        Absent::NotChecked => format!(
+            "the scope gate {g} is {}, not satisfied by a check: writfold kb gate run {g}",
+            found.standing.name()
+        ),
+        Absent::Unreadable => format!("the scope's {file} does not read: {}", found.error),
+        Absent::NotManifest => format!(
+            "the scope's {file} does not read as a manifest: {}",
+            found.error
+        ),
+        Absent::Partial => format!(
+            "the scope's {file} says coverage partial: the walk did not read every link; writfold kb gate run {g}"
+        ),
+        Absent::OutsideScope => format!(
+            "{g}'s manifest lists {}, which is outside the scope of {g} or of this checklist; a change to it would not make the scope stale",
+            found.outside
+        ),
+        Absent::SameName => format!(
+            "two members of {g}'s manifest make one unit name ({}): an id holds ~ or is listed twice",
+            found.same
+        ),
+        Absent::OverCap => format!(
+            "the scope has {} members; pair units take at most {}",
+            found.count,
+            writfold_core::units::MAX_MEMBERS
+        ),
+    }
+}
+
+/// What was found, for [`why`].
+struct Found<'a> {
+    standing: Standing,
+    error: String,
+    outside: &'a str,
+    same: String,
+    count: usize,
+}
+
+/// The universe of a generated checklist `d` (scope `checklist_scope`):
+/// the facts classified, the decision the kernel's.
+fn universe(
+    root: &std::path::Path,
+    plain: &Report<'_>,
+    from: &From,
+    checklist_scope: &[&str],
+) -> Universe {
+    let (judged, path) = kept(plain, from).map_or((None, None), |(j, p)| (Some(j), p));
+    let standing = judged.map_or(Standing::Checked(State::Open), |j| j.standing);
+    let bytes = match path {
+        None => Err("the scope gate has no receipt".to_owned()),
+        Some(p) => std::fs::read(root.join(&p)).map_err(|e| format!("{p} ({e})")),
+    };
+    let read = bytes
+        .as_ref()
+        .map_err(Clone::clone)
+        .and_then(|b| manifest(b));
+    let members = read.as_ref().map_or(&[][..], |r| r.members.as_slice());
+    let scope_gate = judged.map_or_else(Vec::new, |j| j.definition.patterns());
+    let seed_path = read.as_ref().ok().and_then(|r| r.seed_path.as_deref());
+    let paths = (members.iter().map(|m| m.path.as_str())).chain(seed_path);
+    let out = outside(paths, [&scope_gate, checklist_scope]);
+    let same = same_name(members);
+    let facts = Scope {
+        defined: judged.is_some(),
+        standing,
+        reads: bytes.is_ok(),
+        manifest: read.is_ok(),
+        complete: read.as_ref().is_ok_and(|r| r.complete),
+        inside: out.is_none(),
+        distinct: same.is_none(),
+        members: members.len(),
+    };
+    let error = match (&bytes, &read) {
+        (Err(e), _) | (_, Err(e)) => e.clone(),
+        _ => String::new(),
+    };
+    let words = Found {
+        standing,
+        error,
+        outside: out.unwrap_or_default(),
+        same: same.unwrap_or_default(),
+        count: members.len(),
+    };
+    match writfold_core::units::universe(&facts) {
+        Err(a) => Universe {
+            why: Some(why(a, from, &words)),
+            ..Universe::default()
+        },
+        Ok(()) => Universe {
+            present: true,
+            units: 0,
+            why: None,
+            members: members.to_vec(),
+            seed: read.ok().and_then(|r| r.seed),
+        },
+    }
 }
 
 /// One unit per pair of members.
@@ -193,64 +355,33 @@ pub fn expand(
     let Some(from) = d.checklist.as_ref().and_then(|s| s.generated.clone()) else {
         return (d, None);
     };
-    let bytes = match kept(root, plain, &from) {
-        Ok(bytes) => bytes,
-        Err(why) => {
-            return (
-                d,
-                Some(Universe {
-                    why: Some(why),
-                    ..Universe::default()
-                }),
-            );
-        }
-    };
-    let ids = match members(&bytes) {
-        Ok(ids) => ids,
-        Err(why) => {
-            let why = Some(format!("the scope's {} does not read: {why}", from.file));
-            return (
-                d,
-                Some(Universe {
-                    why,
-                    ..Universe::default()
-                }),
-            );
-        }
-    };
-    let Some(pairs) = writfold_core::units::pairs(ids.len()) else {
-        let why = Some(format!(
-            "the scope has {} members; pair units take at most {}",
-            ids.len(),
-            writfold_core::units::MAX_MEMBERS
-        ));
-        return (
-            d,
-            Some(Universe {
-                why,
-                ..Universe::default()
-            }),
-        );
-    };
+    let mut u = universe(root, plain, &from, &d.patterns());
+    if !u.present {
+        return (d, Some(u));
+    }
+    let ids: Vec<&str> = u.members.iter().map(|m| m.id.as_str()).collect();
+    let pairs = writfold_core::units::pairs(ids.len()).unwrap_or_default();
     let items: Vec<Item> = (pairs.iter())
         .filter_map(|(a, b)| Some(unit(ids.get(*a)?, ids.get(*b)?)))
         .collect();
-    let units = items.len();
-    let manifest = crate::deliver::candidate::sha(&bytes);
+    u.units = items.len();
+    let manifest = members_digest(&u.members);
     if let Some(spec) = d.checklist.as_mut() {
         spec.items = items;
         if let Some(g) = spec.generated.as_mut() {
             g.manifest = Some(manifest);
         }
     }
-    let why = (units == 0 && !from.allow_empty)
+    u.why = (u.units == 0 && !from.allow_empty)
         .then(|| "the scope has fewer than two members, and empty is not allowed".to_owned());
-    (
-        d,
-        Some(Universe {
-            present: true,
-            units,
-            why,
-        }),
-    )
+    (d, Some(u))
+}
+
+/// The digest of the members a checklist's items were made from: their
+/// ids, paths and digests, in order.
+fn members_digest(members: &[Member]) -> String {
+    let text: String = (members.iter())
+        .map(|m| format!("{}\t{}\t{}\n", m.id, m.path, m.digest))
+        .collect();
+    crate::deliver::candidate::sha(text.as_bytes())
 }

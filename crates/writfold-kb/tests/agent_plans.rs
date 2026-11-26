@@ -12,6 +12,7 @@ use agent_support::{AGENT, invocations, outcome, prepare, setup, use_plan};
 use helpers::{RUN, put, set, status};
 use support::TestResult;
 use writfold_kb::Verb;
+use writfold_kb::plan::PlanVerb;
 use writfold_kb::write::Step;
 
 #[test]
@@ -129,5 +130,56 @@ fn a_crash_before_the_package_leaves_a_prepared_invocation() -> TestResult {
     let (text, exit) = prepare(&w, "pkg2")?;
     assert_eq!(exit, 0, "{text}");
     assert_eq!(invocations(&w).len(), 2);
+    Ok(())
+}
+
+/// Pins: a skill's plan counts only when spliced at the current step or
+/// an ancestor of it. The template spliced under step `a` does not count
+/// once `b`, its sibling, is current: prepare is refused with the
+/// missing-plan refusal, and splicing it at `b` admits it.
+#[test]
+fn a_template_spliced_at_a_sibling_step_does_not_count() -> TestResult {
+    let w = setup()?;
+    let outer =
+        "schema = \"writfold-plan/1\"\nname = \"outer\"\nsteps = [\n  \"a:\",\n  \"b:\",\n]\n";
+    put(&w, ".writfold/plans/outer.toml", outer)?;
+    set(&w, "outer")?;
+    use_plan(&w, "claims-review")?;
+    let (text, exit) = prepare(&w, "pkg")?;
+    assert_eq!(exit, 0, "{text}");
+    assert!(
+        text.contains("at outer#1/a/claims-review#1/review"),
+        "{text}"
+    );
+    // Leave `a` by skipping its spliced step, so its sibling `b` is current.
+    let skip = Verb::Plan(PlanVerb::Skip {
+        reason: "not needed".into(),
+        by: "owner".into(),
+        run: Some(RUN.into()),
+        repo: Some(w.code.clone()),
+    });
+    assert_eq!(helpers::call(&w, skip)?.1, 0);
+    assert_eq!(helpers::advance(&w)?.1, 0);
+    let (text, _) = status(&w, false)?;
+    assert!(text.contains("step outer#1/b [current]"), "{text}");
+    let (text, exit) = prepare(&w, "pkg2")?;
+    assert_eq!(exit, 3, "{text}");
+    assert!(
+        text.contains("skill verify-claims names plan claims-review, which is not in this run"),
+        "{text}"
+    );
+    assert!(
+        text.contains("next: writfold kb plan use claims-review"),
+        "{text}"
+    );
+    assert!(!w.base.join("pkg2").exists());
+    // Spliced at `b`, it counts.
+    use_plan(&w, "claims-review")?;
+    let (text, exit) = prepare(&w, "pkg2")?;
+    assert_eq!(exit, 0, "{text}");
+    assert!(
+        text.contains("at outer#1/b/claims-review#1/review"),
+        "{text}"
+    );
     Ok(())
 }

@@ -1,7 +1,9 @@
 //! The built-in check `invocation.bound` (#149): a worker's report is a
 //! delivery candidate that names its invocation (`deliver prepare
 //! --invocation`). It passes only while the candidate names an invocation
-//! of this run, prepared at the step that owes this mode, for the mode's
+//! of this run, prepared at the step that owes this mode (the step the
+//! candidate recorded when it was prepared, #164, so the answer does not
+//! change when the plan moves on), for the mode's
 //! `agent`, under the closure as it is now, with no second report for it
 //! ([`writfold_core::invoke::bound`]). An unreadable record is `unknown`.
 //! It judges records, never what the report says.
@@ -51,10 +53,16 @@ fn single(session: &Session<'_>, c: &Candidate, id: &str, run: &str) -> bool {
     invocation::single(&invocation::naming(&cands, &withdrawn, id))
 }
 
-/// The step that owes `deliver:<mode>` now: the current step, when it does.
+/// The step that owes `deliver:<mode>` for this candidate, when it does:
+/// the step recorded in the candidate (#164), or, for a candidate written
+/// before it recorded one, the run's current step.
 fn owing(session: &Session<'_>, c: &Candidate, run: &str, mode: &str) -> Option<String> {
     let graph = crate::plan::fold::read(&session.ws.root, run_dir(c), run);
-    let step = graph.current().and_then(|i| graph.steps.get(i))?;
+    let recorded = c.manifest.as_ref().ok().and_then(|m| m.step.as_deref());
+    let step = match recorded {
+        Some(at) => graph.steps.iter().find(|s| s.path == at),
+        None => graph.current().and_then(|i| graph.steps.get(i)),
+    }?;
     let word = format!("deliver:{mode}");
     step.gates.contains(&word).then(|| step.path.clone())
 }
@@ -117,10 +125,21 @@ fn finding(rule: &str, detail: String) -> Finding {
     }
 }
 
+/// What `another-step` says: both steps when the candidate recorded one.
+fn other_step(r: Option<&Record>, step: Option<&str>) -> String {
+    let at = r.map_or("", |r| r.step.as_str());
+    match step {
+        Some(s) if s != at => format!(
+            "the invocation was prepared at {at}, and this report at {s}; a report binds only at its invocation's step"
+        ),
+        Some(s) => format!("the report was prepared at {s}, which does not owe this mode"),
+        None => format!("the invocation was prepared at {at}, not at the step that owes this mode"),
+    }
+}
+
 /// One finding per fact that does not hold.
-fn findings(n: &Named, r: Option<&Record>) -> Vec<Finding> {
+fn findings(n: &Named, r: Option<&Record>, step: Option<&str>) -> Vec<Finding> {
     let mut findings = Vec::new();
-    let at = |r: Option<&Record>| r.map_or_else(String::new, |r| r.step.clone());
     for (holds, rule, detail) in [
         (
             n.names,
@@ -140,10 +159,7 @@ fn findings(n: &Named, r: Option<&Record>) -> Vec<Finding> {
         (
             !n.readable || n.this_step,
             "another-step",
-            format!(
-                "the invocation was prepared at {}, not at the step that owes this mode",
-                at(r)
-            ),
+            other_step(r, step),
         ),
         (
             !n.readable || n.this_agent,
@@ -176,7 +192,8 @@ fn findings(n: &Named, r: Option<&Record>) -> Vec<Finding> {
 pub fn evaluate(session: &Session<'_>, rec: &Rec, c: &Candidate, agent: Option<&str>) -> Evaluated {
     let (n, found) = named(session, rec, c, agent);
     let r = found.as_ref();
-    let findings = findings(&n, r);
+    let step = c.manifest.as_ref().ok().and_then(|m| m.step.as_deref());
+    let findings = findings(&n, r, step);
     let outcome = bound(&n);
     let note = r.map(|r| format!("invocation {} of {} at {}", r.id, r.agent, r.step));
     let (findings, note) = match outcome {

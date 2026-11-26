@@ -53,9 +53,13 @@ fn digest(w: &World) -> TestResult<String> {
 }
 
 fn lint(w: &World) -> TestResult<(Vec<String>, u8)> {
+    lint_in(w, None)
+}
+
+fn lint_in(w: &World, repo: Option<std::path::PathBuf>) -> TestResult<(Vec<String>, u8)> {
     let mut request = w.request(Verb::Lint {
         paths: Vec::new(),
-        repo: None,
+        repo,
         deny_warnings: false,
         records: false,
     });
@@ -197,5 +201,113 @@ fn each_file_fault_is_at_its_line() -> TestResult {
     ] {
         assert!(found.contains(&want.to_owned()), "{want} not in {found:?}");
     }
+    Ok(())
+}
+
+/// Pins: a skill or profile with neither `instructions` nor
+/// `instructions_file` is a `key.missing` fault at its file, and
+/// `agent inspect` refuses the closure.
+#[test]
+fn a_definition_with_neither_instruction_key_is_a_fault() -> TestResult {
+    let w = world(&[])?;
+    setup(&w)?;
+    put(
+        &w,
+        ".writfold/skills/verify-claims.toml",
+        "schema = \"writfold-skill/1\"\nid = \"verify-claims\"\ntools = [\"repo.read\"]\n",
+    )?;
+    let (found, exit) = lint(&w)?;
+    assert_eq!(exit, 2, "{found:?}");
+    assert!(
+        found
+            .iter()
+            .any(|f| f.starts_with("key.missing .writfold/skills/verify-claims.toml")),
+        "{found:?}"
+    );
+    assert_eq!(inspect(&w)?.1, 3);
+    setup(&w)?;
+    let bare = AGENT.replace(
+        "instructions = \"\"\"\nReview only the supplied change.\n\"\"\"\n",
+        "",
+    );
+    assert_ne!(bare, AGENT);
+    put(&w, ".writfold/agents/reviewer.toml", &bare)?;
+    let (found, exit) = lint(&w)?;
+    assert_eq!(exit, 2, "{found:?}");
+    assert!(
+        found
+            .iter()
+            .any(|f| f.starts_with("key.missing .writfold/agents/reviewer.toml")),
+        "{found:?}"
+    );
+    assert_eq!(inspect(&w)?.1, 3);
+    Ok(())
+}
+
+/// Pins: an id defined in the KB root and in the repository under review
+/// is `file.twice` for each kind, reported at the repository's file, and
+/// `agent inspect --repo` refuses the profile that is in both.
+#[test]
+fn an_id_in_both_roots_is_file_twice_for_each_kind() -> TestResult {
+    let w = world(&[])?;
+    setup(&w)?;
+    let both = [
+        (".writfold/tools/repo.read.toml", TOOL),
+        (".writfold/skills/verify-claims.toml", SKILL_A),
+        (".writfold/agents/reviewer.toml", AGENT),
+    ];
+    for (rel, text) in both {
+        let path = w.code.join(rel);
+        std::fs::create_dir_all(path.parent().ok_or("parent")?)?;
+        std::fs::write(path, text)?;
+    }
+    let (found, exit) = lint_in(&w, Some(w.code.clone()))?;
+    assert_eq!(exit, 2, "{found:?}");
+    for (rel, _) in both {
+        let want = format!("file.twice demo-service:{rel}");
+        assert!(
+            found.iter().any(|f| f.starts_with(&want)),
+            "{want} in {found:?}"
+        );
+    }
+    let mut request = w.request(Verb::Agent(writfold_kb::agents::AgentVerb::Inspect(
+        writfold_kb::agents::Inspect {
+            id: "reviewer".into(),
+            repo: Some(w.code.clone()),
+        },
+    )));
+    request.json = true;
+    let out = writfold_kb::run(&request)?;
+    assert_eq!(out.exit, 3, "{}", out.text);
+    assert!(
+        out.text
+            .contains("defined in both the KB root and the repository"),
+        "{}",
+        out.text
+    );
+    Ok(())
+}
+
+/// Pins: a skill's `plan` naming no template is `ref.undefined` at the
+/// skill's `plan` line, and defining the template clears it.
+#[test]
+fn a_skill_plan_naming_no_template_is_undefined() -> TestResult {
+    let w = world(&[])?;
+    setup(&w)?;
+    let planned = SKILL_A.replace("tools =", "plan = \"nowhere\"\ntools =");
+    put(&w, ".writfold/skills/verify-claims.toml", &planned)?;
+    let (found, exit) = lint(&w)?;
+    assert_eq!(exit, 2, "{found:?}");
+    assert!(
+        found.contains(&"ref.undefined .writfold/skills/verify-claims.toml:3".to_owned()),
+        "{found:?}"
+    );
+    put(
+        &w,
+        ".writfold/plans/nowhere.toml",
+        "schema = \"writfold-plan/1\"\nname = \"nowhere\"\nsteps = [\"a:\"]\n",
+    )?;
+    let (found, exit) = lint(&w)?;
+    assert_eq!((found.len(), exit), (0, 0), "{found:?}");
     Ok(())
 }

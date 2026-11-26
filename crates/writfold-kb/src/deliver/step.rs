@@ -192,6 +192,9 @@ pub fn view(session: &Session<'_>, mode: &str, c: Option<&Candidate>, run: &str)
     let filings = Filings::read(root, c, run);
     let mut judged = status::judge(obligations, c, &filings);
     recheck::apply(session, c, &mut judged);
+    // A moved closure or a second report stales a bound report here too,
+    // so a done step bound to it shows `!stale` (#168).
+    super::bound::recheck(session, c, &mut judged);
     let owed: Vec<&Judged<'_>> = judged.iter().filter(|j| j.unmet()).collect();
     let next = super::next::next(root, c, &judged);
     let read = owed

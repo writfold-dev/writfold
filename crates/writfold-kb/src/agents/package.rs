@@ -117,6 +117,9 @@ pub(super) fn build(
                 ))
             })?),
         },
+        needs: (g.needs.iter())
+            .map(|n| (n.gate.clone(), n.basis.clone()))
+            .collect(),
         recorded: crate::time::stamp(now),
     };
     Ok((record, files))

@@ -113,6 +113,12 @@ pub fn wanted(gate: &str, item: &Item) -> String {
     let gates: Vec<String> = item.from.iter().map(|g| format!("gate:{g}")).collect();
     match item.need {
         Need::Any => "any grounded evidence".to_owned(),
+        // A generated unit (#156): only a worker's report prepared for it,
+        // since no look can be recorded --for a name holding `~` (#168).
+        Need::Own if gates.is_empty() && item.id.contains('~') => format!(
+            "its own evidence (a report prepared with agent prepare --for {gate}.{})",
+            item.id
+        ),
         Need::Own if gates.is_empty() => {
             format!(
                 "its own evidence (a look recorded --for {gate}.{})",

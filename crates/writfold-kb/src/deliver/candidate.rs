@@ -57,6 +57,10 @@ pub struct Manifest {
     pub seq: u64,
     /// The agent invocation it reports, when prepared with `--invocation`.
     pub invocation: Option<String>,
+    /// The run's current step when it was prepared with `--invocation`
+    /// (#164): `invocation.bound` judges this step, not whichever is
+    /// current when the check runs. Absent on older candidates.
+    pub step: Option<String>,
 }
 
 fn manifest_bytes(m: &Manifest, size: usize, rendering: &str) -> Vec<u8> {
@@ -76,6 +80,9 @@ fn manifest_bytes(m: &Manifest, size: usize, rendering: &str) -> Vec<u8> {
     let mut value = value;
     if let (Some(id), Some(map)) = (&m.invocation, value.as_object_mut()) {
         map.insert("invocation".into(), json!(id));
+    }
+    if let (Some(step), Some(map)) = (&m.step, value.as_object_mut()) {
+        map.insert("step".into(), json!(step));
     }
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
@@ -114,6 +121,10 @@ pub fn parse(text: &str, run: &str, id: &str) -> std::result::Result<Manifest, S
         invocation: match value.get("invocation") {
             None => None,
             Some(_) => Some(field(&value, "/invocation")?),
+        },
+        step: match value.get("step") {
+            None => None,
+            Some(_) => Some(field(&value, "/step")?),
         },
     };
     if m.id != id || m.run != run {
@@ -175,12 +186,13 @@ pub fn list(root: &Path, run_dir: &str, run: &str) -> Vec<Candidate> {
 }
 
 /// Check the request and plan the candidate directory. Returns the
-/// operation and the candidate's ID.
+/// operation and the candidate's ID. `step` is the run's current step,
+/// recorded only with `--invocation` (#164).
 pub fn plan(
     root: &Path,
     cwd: &Path,
     p: &Prepare,
-    run: (&str, &str),
+    (run, step): ((&str, &str), Option<&str>),
     now: i64,
 ) -> Result<(Op, String)> {
     let (run_id, run_dir) = run;
@@ -231,6 +243,7 @@ pub fn plan(
         recorded: crate::time::stamp(now),
         seq: super::step::next_seq(root, run_dir, run_id, &p.mode),
         invocation: invoked(root, run, p.invocation.as_deref())?,
+        step: p.invocation.as_ref().and(step.map(str::to_owned)),
     };
     let op = Op::CreateDir {
         path: format!("{run_dir}/{DIR}/{id}"),

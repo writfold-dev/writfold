@@ -56,6 +56,17 @@ rm .writfold/gates/slow-scope.toml && git add -A && git commit -qm "drop the slo
 say "scope read in full again"
 run
 
+say "what the manifest holds"
+kept=$(ls -td runs/"$RUN"/evidence/related-scope-* | head -1)/manifest.json
+ids=$(sed -n 's/^ *"id": "\(.*\)",*$/\1/p' "$kept")
+if [ "$ids" = "$(printf '%s\n' "$ids" | LC_ALL=C sort)" ]; then echo "sorted=yes"; else echo "sorted=no"; fi
+path=$(sed -n 's/^ *"path": "\(.*\)",*$/\1/p' "$kept" | head -n 1)
+digest=$(sed -n 's/^ *"digest": "sha256:\(.*\)",*$/\1/p' "$kept" | head -n 1)
+if [ "$digest" = "$(sha256sum "$path" | cut -c1-64)" ]; then echo "digest=matches"; else echo "digest=differs"; fi
+grep -o '"others": [0-9]*' "$kept"
+grep -o '"seed_path": "[^"]*"' "$kept"
+printf 'coverage words:'; for f in runs/"$RUN"/evidence/related-scope-*/manifest.json; do grep -o '"coverage": "[a-z]*"' "$f" | cut -d'"' -f4; done | sort -u | tr '\n' ' '; echo
+
 say "a record added that references the seed"
 writfold kb record decision --title "Decision f" --target-source src/f.rs --references SEED-1 >/dev/null
 status

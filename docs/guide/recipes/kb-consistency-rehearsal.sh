@@ -99,9 +99,16 @@ say "a report prepared at another step"
 printf 'Early.\n' > "$DIR/report-early.md"
 STEPPED=$(first writfold kb deliver prepare --mode pair-report --from "$DIR/report-early.md" --invocation "$EARLY" --run "$RUN")
 show writfold kb deliver check "$STEPPED" --run "$RUN"
+cover "$(unit 9)" "$STEPPED"
 
 say "a report prepared for another unit"
 cover "$(unit 9)" "$(cand 1)"
+
+say "--out inside the KB"
+show writfold kb agent prepare consistency-reviewer --input "$DIR/input-x" --out "$KB/pkg-in" --for "pair-review.$(unit 1)" $(at)
+
+say "--for an unknown unit"
+show writfold kb agent prepare consistency-reviewer --input "$DIR/input-x" --out "$DIR/pkg-unknown" --for "pair-review.nope~nada" $(at)
 
 say "the skill edited after prepare"
 printf '%s\n' "$(unit 9)" > "$DIR/input-edit"
@@ -129,15 +136,44 @@ WRONG=$(first writfold kb deliver prepare --mode pair-report --from "$DIR/report
 show writfold kb deliver check "$WRONG" --run "$RUN"
 cover "$(unit 9)" "$WRONG"
 
+say "one unit, both harnesses"
+A=$(prepare "$(unit 1)" 21 reads-record)
+B=$(prepare "$(unit 1)" 22 reads-text)
+for c in "$A" "$B"; do
+    writfold kb deliver status "$c" --run "$RUN" 2>&1 | grep -E "^delivery|invocation.bound" | sed -e "s/$c/CAND/" -e 's/ (invocation [^)]*)//' -e 's/ for [0-9a-f]*//' -e 's/ candidate=[0-9a-f]*//' -e 's/ bytes=[0-9]*//' -e 's/ @.*//'
+done
+
 say "all covered, the findings disposed of, the plan complete"
 cover "$(unit 10)" "$(cand 10)" >/dev/null
 show writfold kb plan advance $(at)
+status
 show writfold kb gate attest findings-disposition --statement "no inconsistency found; nothing to fix" --by owner $(at)
 show writfold kb plan advance $(at)
 show writfold kb plan status $(at)
+
+say "a report checked again after its step is done"
+show writfold kb deliver check "$(cand 1)" --run "$RUN"
+status
+
+say "a report withdrawn after it covered a unit"
+show writfold kb deliver withdraw "$(cand 2)" --reason superseded --by owner --run "$RUN"
+status
+cover "$(unit 2)" "$(cand 2)"
 
 say "a record added that references the seed"
 writfold kb record decision --title "Decision f" --target-source src/f.rs --references SEED-1 >/dev/null
 status
 show writfold kb gate run related-scope $(at)
 status
+
+say "one member edited"
+for f in proposals/decision/*-decision-a/proposal.md; do printf '\nOne sentence added.\n' >> "$f"; done
+status
+show writfold kb gate run related-scope $(at)
+status
+
+say "the seed edited"
+for f in ktlo/2026/seed-1-*.md; do printf '\nThe budget is now 5 ms.\n' >> "$f"; done
+show writfold kb gate run related-scope $(at)
+status
+

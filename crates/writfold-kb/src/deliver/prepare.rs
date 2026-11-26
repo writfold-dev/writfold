@@ -6,6 +6,7 @@ use super::{open_run, step, withdraw};
 use crate::Request;
 use crate::error::Result;
 use crate::index::query::Rec;
+use crate::plan::recheck::{Decided, guard};
 use crate::runs;
 use crate::session::Session;
 use crate::write::atomic;
@@ -20,16 +21,34 @@ pub(super) fn prepare(
     let root = session.ws.root.clone();
     let rec = open_run(&session, p.run.as_deref(), true)?;
     let run_dir = runs::dir(&rec);
-    let (op, id) = candidate::plan(&root, &request.cwd, p, (&rec.id, &run_dir), session.now)?;
+    let step = p
+        .invocation
+        .as_ref()
+        .and_then(|_| current(&root, &run_dir, &rec.id));
+    let at = ((rec.id.as_str(), run_dir.as_str()), step.as_deref());
+    let (op, id) = candidate::plan(&root, &request.cwd, p, at, session.now)?;
     let older = older(&root, &rec, &p.mode);
     drop(session);
-    atomic::apply(&root, state, &[op], request.probe)?;
+    // The recorded step must still be current when the candidate is
+    // published, re-checked under the lock, as `agent prepare` does (#164).
+    let ops: Vec<_> = (step.map(|s| guard(&run_dir, &rec.id, Decided::Current(s))))
+        .into_iter()
+        .chain([op])
+        .collect();
+    atomic::apply(&root, state, &ops, request.probe)?;
     let notes = vec![format!(
         "prepared {run_dir}/{}/{id}/{}: the exact payload; nothing is sent",
         candidate::DIR,
         candidate::PAYLOAD
     )];
     Ok((rec, id, notes.into_iter().chain(older).collect()))
+}
+
+/// The run's current step, when it has one.
+fn current(root: &std::path::Path, run_dir: &str, run: &str) -> Option<String> {
+    let graph = crate::plan::fold::read(root, run_dir, run);
+    let i = graph.current()?;
+    graph.steps.get(i).map(|s| s.path.clone())
 }
 
 /// The note `deliver prepare` adds when the run already has a live,

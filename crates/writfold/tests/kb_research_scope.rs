@@ -56,6 +56,12 @@ fn the_scope_gate_holds_only_a_complete_kept_walk() -> Result {
             "[failed] mechanical fail exit=2",
         ),
         ("walk timed out", "[unknown] mechanical unknown timeout"),
+        // #168: what the kept manifest holds.
+        ("what the manifest holds", "sorted=yes"),
+        ("what the manifest holds", "digest=matches"),
+        ("what the manifest holds", "\"others\": 0"),
+        ("what the manifest holds", "\"seed_path\": \"ktlo/"),
+        ("what the manifest holds", "coverage words:complete partial"),
         ("a record added", "[stale]"),
         (
             "a record added",

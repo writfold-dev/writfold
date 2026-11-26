@@ -6,6 +6,16 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.24
+
+- **fix** A cover row that cites a withdrawn report (`delivery:<candidate>`) reads stale, and `gate cover` refuses to cite one (`is not grounded (withdrawn)`) ([#164](https://github.com/writfold-dev/writfold/issues/164)).
+- **fix** `deliver prepare --invocation` records the run's current step in the candidate (`step`), and `invocation.bound` judges that step. Checking an unchanged report again after `plan advance` now passes instead of failing as `another-step`. A candidate written earlier has no `step` and is judged as before.
+- **fix** A generated checklist has units only when its scope's kept manifest says `coverage` `complete`, has schema `writfold-manifest/1`, lists every member with an id, path and digest, names no member (and no seed) outside the scope gate's or the checklist's `scope`, and makes no two units of one name ([#165](https://github.com/writfold-dev/writfold/issues/165)). A manifest that read before and fails one of these now gives no units, with a `why:` naming it; `gate cover` refuses the same way. A scope gate that stands on a waiver gives none either.
+- `kb lint` reports an `items_from` gate that is undefined (`ref.undefined`), not mechanical or not retaining the file (`ref.wrong-kind`), and warns when the scope gate's `scope` is narrower than `**` (`policy.narrow-scope`).
+- A generated checklist's new cover rows record the digests of the seed and of their two members (`unit`), and stay current while those and the definition are unchanged ([#166](https://github.com/writfold-dev/writfold/issues/166)): editing one member stales only its units, and a member added leaves earlier units covered. Rows written before keep the earlier rule. `impact --manifest` writes `seed_path` and `seed_digest` when the seed is a record.
+- `agent prepare` refuses `--out` inside the KB and `--for` a gate or item the checklist does not have now; both exit 3 and write nothing ([#167](https://github.com/writfold-dev/writfold/issues/167)). An invocation record of a profile with `needs` gains `needs`, the gate and the receipt or statement each stood on; a record without needs is byte-for-byte as before.
+- The refusal for a report prepared for another unit now says the unit takes `a report prepared with agent prepare --for …` ([#168](https://github.com/writfold-dev/writfold/issues/168)).
+
 ## v0.6.0-dev.23
 
 - **Research contracts** ([#153](https://github.com/writfold-dev/writfold/issues/153), [research](research.md)): `kb impact --manifest FILE`; checklist keys `items_from`, `units` and `empty`; `delivery:<candidate>` as a cover reference; `agent prepare --for GATE.ITEM`; `needs` on skills and agent profiles. A definition without the new keys keeps its digest, and `impact` without `--manifest` answers as before.

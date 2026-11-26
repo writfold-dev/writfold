@@ -4,6 +4,7 @@
 //! scope, with every cited reference re-grounded now
 //! ([`crate::gate::ground`]); then the kernel's [`item`] and [`rollup`].
 use super::cover::Cover;
+use super::generated::Universe;
 use super::{Filed, rows_of};
 use crate::error::Result;
 use crate::gate::def::Definition;
@@ -58,7 +59,7 @@ pub struct View<'a> {
     pub commit: String,
     pub content: String,
     /// A generated checklist's universe ([`super::generated`]).
-    pub universe: Option<super::generated::Universe>,
+    pub universe: Option<Universe>,
 }
 
 impl View<'_> {
@@ -179,17 +180,17 @@ pub(super) fn short(reference: &str) -> String {
     }
 }
 
-/// One item's standing, and why its row is stale when it is.
-fn entry<'a>(
+/// Whether a row is about the present and, when not, why: a unit row by
+/// its own digests (#166), any other by the definition and the content in
+/// scope.
+fn currency(
     d: &Definition,
-    spec: &super::spec::Item,
-    content: &str,
-    newest: Option<(&'a Filed, &'a Cover)>,
-    present: &mut Present<'_, '_, '_>,
-) -> Result<(Item, Option<String>)> {
-    let Some((_, c)) = newest else {
-        return Ok((item(None), None));
-    };
+    (content, universe): (&str, Option<&Universe>),
+    c: &Cover,
+) -> (bool, Option<String>) {
+    if let Some(unit) = super::unit::currency(d, universe, c) {
+        return unit;
+    }
     let digest = super::generated::rows_digest(d);
     let same_definition = c.definition == digest;
     let current = about(
@@ -198,6 +199,29 @@ fn entry<'a>(
         digest.as_bytes(),
         content.as_bytes(),
     );
+    let why = match (current, same_definition) {
+        (true, _) => None,
+        (false, false) if digest != d.digest => {
+            Some("the scope's members or the definition changed since this row".to_owned())
+        }
+        (false, false) => Some("the definition changed since this row".to_owned()),
+        (false, true) => Some("the content in scope changed since this row".into()),
+    };
+    (current, why)
+}
+
+/// One item's standing, and why its row is stale when it is.
+fn entry<'a>(
+    d: &Definition,
+    spec: &super::spec::Item,
+    against: (&str, Option<&Universe>),
+    newest: Option<(&'a Filed, &'a Cover)>,
+    present: &mut Present<'_, '_, '_>,
+) -> Result<(Item, Option<String>)> {
+    let Some((_, c)) = newest else {
+        return Ok((item(None), None));
+    };
+    let (current, unwhy) = currency(d, against, c);
     let moved = match (current, c.outcome) {
         (true, Outcome::Supported) => present.moved(c)?,
         (true, Outcome::NoneFound) => super::looks::moved(present.cx, c)?,
@@ -218,13 +242,7 @@ fn entry<'a>(
     };
     let got = writfold_core::bind::item_under(Some(row), answered);
     let why = match (got, moved) {
-        (Item::Stale, _) if !same_definition && digest != d.digest => {
-            Some("the scope's members or the definition changed since this row".to_owned())
-        }
-        (Item::Stale, _) if !same_definition => {
-            Some("the definition changed since this row".to_owned())
-        }
-        (Item::Stale, _) if !current => Some("the content in scope changed since this row".into()),
+        (Item::Stale, _) if !current => unwhy,
         (Item::Stale, Some((reference, then, now))) => Some(format!(
             "cited evidence moved: {} was {then}, now {now}",
             short(&reference)
@@ -241,7 +259,7 @@ fn entry<'a>(
 /// Each item of `d` as it stands on `subject`, with its newest row.
 fn entries<'a>(
     d: &Definition,
-    content: &str,
+    against: (&str, Option<&Universe>),
     (subject, filings): (&Subject, &'a Filings),
     present: &mut Present<'_, '_, '_>,
 ) -> Result<Vec<Entry<'a>>> {
@@ -249,7 +267,7 @@ fn entries<'a>(
     for spec in d.checklist.iter().flat_map(|s| &s.items) {
         let rows = rows_of(&filings.covers, &d.id, &spec.id, &subject.name);
         let newest = rows.last().copied();
-        let (item, mut why) = entry(d, spec, content, newest, present)?;
+        let (item, mut why) = entry(d, spec, against, newest, present)?;
         let unsnapped = spec.snapshot && newest.is_some_and(|(_, c)| !present.snapshotted(c));
         if unsnapped && item == Item::Supported {
             why = Some(
@@ -302,7 +320,8 @@ pub fn judge<'a>(
     for d in definitions {
         let (d, universe) = super::generated::expand(&session.ws.root, plain, d);
         let content = plain.snapshot.scoped(&d.patterns()).digest;
-        let entries = entries(&d, &content, (subject, filings), &mut present)?;
+        let against = (content.as_str(), universe.as_ref());
+        let entries = entries(&d, against, (subject, filings), &mut present)?;
         let cells: Vec<checklist::Entry> = (entries.iter())
             .map(|e| checklist::Entry {
                 item: e.item,

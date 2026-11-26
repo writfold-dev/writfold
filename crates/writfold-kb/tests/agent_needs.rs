@@ -61,6 +61,11 @@ fn a_needed_gate_open_failed_met_then_stale() -> TestResult {
     assert_eq!(run_gate(&w)?, 0);
     let (text, exit) = prepare(&w, "pkg")?;
     assert_eq!(exit, 0, "{text}");
+    // The record keeps what each need stood on (#167).
+    let record = std::fs::read_to_string(w.base.join("pkg/invocation.json"))?;
+    assert!(record.contains("\"needs\""), "{record}");
+    assert!(record.contains("\"gate\": \"unit\""), "{record}");
+    assert!(record.contains("/gates/unit-"), "{record}");
     // The subject moves under the gate's scope: the pass is stale.
     std::fs::create_dir_all(w.code.join("src"))?;
     std::fs::write(w.code.join("src/new.rs"), "pub fn new() {}\n")?;
@@ -123,6 +128,12 @@ fn no_needs_keeps_the_closure_digest() -> TestResult {
     // A file without `needs` adds no field to the digest: removing the
     // key returns the digest it had.
     let before = digest(&w)?;
+    // The digest the same files had before `needs` existed, recorded with
+    // the tree at 90c3ba40 (#168): an always-written marker would move it.
+    assert_eq!(
+        before,
+        "sha256:48cb46fc65ec25471f74004309e9062854195630af17f303ea2b3fa94cf4efc6"
+    );
     put(&w, ".writfold/gates/unit.toml", &gate("[\"true\"]"))?;
     put(
         &w,
@@ -158,5 +169,51 @@ fn a_need_that_cannot_be_judged_is_refused() -> TestResult {
         "{text}"
     );
     assert!(invocations(&w).is_empty());
+    Ok(())
+}
+
+/// A profile's own need naming no gate is a lint error, as a skill's is.
+#[test]
+fn a_profile_need_no_gate_defines_is_reported() -> TestResult {
+    let w = setup()?;
+    put(
+        &w,
+        ".writfold/agents/reviewer.toml",
+        &AGENT.replace("model =", "needs = [\"ghost\"]\nmodel ="),
+    )?;
+    let mut lint = w.request(Verb::Lint {
+        paths: Vec::new(),
+        repo: None,
+        deny_warnings: false,
+        records: false,
+    });
+    lint.json = true;
+    let out = writfold_kb::run(&lint)?;
+    assert_eq!(out.exit, 2, "{}", out.text);
+    assert!(out.text.contains("no gate \\\"ghost\\\""), "{}", out.text);
+    Ok(())
+}
+
+/// A waived need stands as the gate's `accept` says: the default accepts a
+/// waiver, so prepare is admitted, and the record keeps the waiver it
+/// stood on.
+#[test]
+fn a_waived_need_stands_as_accept_says() -> TestResult {
+    let w = needing()?;
+    run_gate(&w)?;
+    refused(&w, "pkg", "[failed]")?;
+    let say = GateVerb::Say(writfold_kb::gate::Say {
+        kind: writfold_kb::gate::statement::Kind::Waived,
+        id: "unit".into(),
+        text: "the suite is known broken upstream".into(),
+        by: "owner".into(),
+        run: Some(RUN.into()),
+        repo: Some(w.code.clone()),
+    });
+    writfold_kb::run(&w.request(Verb::Gate(say)))?;
+    let (text, exit) = prepare(&w, "pkg")?;
+    assert_eq!(exit, 0, "{text}");
+    let record = std::fs::read_to_string(w.base.join("pkg/invocation.json"))?;
+    assert!(record.contains("/statements/unit-"), "{record}");
     Ok(())
 }

@@ -47,6 +47,10 @@ pub struct Record {
     /// `--for GATE.ITEM`: the checklist item this invocation's report
     /// answers (#156); written only when given.
     pub for_item: Option<(String, String)>,
+    /// Each gate the profile or a skill `needs`, with the receipt or
+    /// statement it stood on at prepare (#167); written only when there
+    /// are needs.
+    pub needs: Vec<(String, Option<String>)>,
     pub recorded: String,
 }
 
@@ -74,6 +78,12 @@ pub fn bytes(r: &Record) -> Vec<u8> {
     let mut value = value;
     if let (Some((gate, item)), Some(map)) = (&r.for_item, value.as_object_mut()) {
         map.insert("for".into(), json!(format!("{gate}.{item}")));
+    }
+    if let (false, Some(map)) = (r.needs.is_empty(), value.as_object_mut()) {
+        let needs: Vec<Value> = (r.needs.iter())
+            .map(|(gate, on)| json!({"gate": gate, "on": on}))
+            .collect();
+        map.insert("needs".into(), json!(needs));
     }
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
@@ -104,6 +114,17 @@ fn optional(v: &Value, pointer: &str) -> Result<Option<String>, String> {
 fn number(v: &Value, pointer: &str) -> Result<u64, String> {
     (v.pointer(pointer).and_then(Value::as_u64))
         .ok_or_else(|| format!("{pointer} is not a non-negative integer"))
+}
+
+/// `needs`, when present: each gate and what it stood on.
+fn needs(v: &Value) -> Result<Vec<(String, Option<String>)>, String> {
+    let Some(list) = v.get("needs") else {
+        return Ok(Vec::new());
+    };
+    let list = list.as_array().ok_or("/needs is not a list")?;
+    (list.iter())
+        .map(|n| Ok((text(n, "/gate")?, optional(n, "/on")?)))
+        .collect()
 }
 
 fn definitions(v: &Value) -> Result<Vec<Used>, String> {
@@ -157,6 +178,7 @@ pub fn parse(text_: &str, run: &str, id: &str) -> Result<Record, String> {
             None => None,
             Some(f) => Some(for_item(&f).ok_or("/for is not GATE.ITEM")?),
         },
+        needs: needs(&v)?,
         recorded: text(&v, "/recorded")?,
     };
     if r.id != id || r.run != run {

@@ -241,3 +241,108 @@ fn a_step_that_moved_under_the_lock_is_refused() -> TestResult {
     assert!(!w.base.join("pkg").exists());
     Ok(())
 }
+
+/// `agent prepare reviewer` with `--retry-of`.
+fn retry(w: &World, out: &str, of: &str) -> (String, u8) {
+    let verb = Verb::Agent(AgentVerb::Prepare(Prepare {
+        id: "reviewer".into(),
+        input: "task.md".into(),
+        out: out.into(),
+        retry_of: Some(of.into()),
+        by: None,
+        run: Some(RUN.into()),
+        repo: Some(w.code.clone()),
+        for_item: None,
+    }));
+    outcome(&w.request(verb))
+}
+
+/// Pins: `--retry-of ID` with an existing invocation records the link in
+/// the new record and its package copy, and the first reads `retried`
+/// (no report names it) in `resume` and its run row, while the retry is
+/// `prepared`.
+#[test]
+fn a_retry_links_the_records_and_the_first_reads_retried() -> TestResult {
+    let w = setup()?;
+    set(&w, "change")?;
+    use_plan(&w, "claims-review")?;
+    assert_eq!(prepare(&w, "pkg")?.1, 0);
+    let first = invocations(&w)[0].trim_end_matches(".json").to_owned();
+    let (text, exit) = retry(&w, "pkg2", &first);
+    assert_eq!(exit, 0, "{text}");
+    assert_eq!(invocations(&w).len(), 2);
+    let copy = std::fs::read_to_string(w.base.join("pkg2/invocation.json"))?;
+    let v: serde_json::Value = serde_json::from_str(&copy)?;
+    assert_eq!(v["retry_of"], first.as_str(), "{copy}");
+    let (text, _) = outcome(&w.request(Verb::Resume {
+        run: Some(RUN.into()),
+    }));
+    assert!(
+        text.contains("1 retried") && text.contains("1 prepared"),
+        "{text}"
+    );
+    let row = (text.lines()).find(|l| l.starts_with(&format!("invocation {first} ")));
+    assert!(row.is_some_and(|r| r.contains("[retried]")), "{text}");
+    Ok(())
+}
+
+/// Pins: `--retry-of` naming an invocation the run does not have is
+/// refused (a usage error) before anything is recorded or written.
+#[test]
+fn a_retry_of_no_such_invocation_is_refused() -> TestResult {
+    let w = setup()?;
+    set(&w, "change")?;
+    use_plan(&w, "claims-review")?;
+    let (text, exit) = retry(&w, "pkg", "nope");
+    assert_eq!(exit, 1, "{text}");
+    assert!(text.contains("has no such invocation"), "{text}");
+    assert!(text.contains("nope"), "{text}");
+    assert!(invocations(&w).is_empty());
+    assert!(!w.base.join("pkg").exists());
+    Ok(())
+}
+
+/// Pins: definitions that live in the repository under review (not the KB
+/// root) are found by `agent inspect --repo` and `agent prepare`, and the
+/// record names them as `<repo>:<path>`.
+#[test]
+fn definitions_in_the_repository_are_found() -> TestResult {
+    let w = setup()?;
+    for rel in [
+        ".writfold/tools/repo.read.toml",
+        ".writfold/skills/verify-claims.toml",
+        ".writfold/agents/reviewer.toml",
+    ] {
+        let to = w.code.join(rel);
+        std::fs::create_dir_all(to.parent().ok_or("parent")?)?;
+        std::fs::rename(w.kb.join(rel), to)?;
+    }
+    set(&w, "change")?;
+    use_plan(&w, "claims-review")?;
+    let inspect = Verb::Agent(AgentVerb::Inspect(writfold_kb::agents::Inspect {
+        id: "reviewer".into(),
+        repo: Some(w.code.clone()),
+    }));
+    let (text, exit) = outcome(&w.request(inspect));
+    assert_eq!(exit, 0, "{text}");
+    assert!(
+        text.contains("demo-service:.writfold/agents/reviewer.toml"),
+        "{text}"
+    );
+    let (text, exit) = prepare(&w, "pkg")?;
+    assert_eq!(exit, 0, "{text}");
+    let copy = std::fs::read_to_string(w.base.join("pkg/invocation.json"))?;
+    let v: serde_json::Value = serde_json::from_str(&copy)?;
+    let paths: Vec<&str> = (v["definitions"].as_array().ok_or("definitions")?.iter())
+        .filter_map(|d| d["path"].as_str())
+        .collect();
+    assert_eq!(
+        paths,
+        [
+            "demo-service:.writfold/agents/reviewer.toml",
+            "demo-service:.writfold/skills/verify-claims.toml",
+            "demo-service:.writfold/tools/repo.read.toml",
+        ]
+    );
+    Ok(())
+}

@@ -10,13 +10,14 @@ use crate::runs;
 use crate::session::Session;
 use writfold_core::guard::Fact;
 
-/// Each needed gate's fact, with what is owed when it is not met.
+/// Each needed gate's fact, with what is owed when it is not met and the
+/// receipt or statement it stood on (#167).
 pub(crate) fn judge_needs(
     session: &Session<'_>,
     rec: &Rec,
     subject: Option<Subject>,
     ids: &[String],
-) -> Vec<(Fact, String)> {
+) -> Vec<(Fact, String, Option<String>)> {
     if ids.is_empty() {
         return Vec::new();
     }
@@ -31,7 +32,13 @@ pub(crate) fn judge_needs(
     ids.iter()
         .map(|id| {
             let owed = fact(&facts, &Require::Gate(id.clone()));
-            (owed.fact, owed.text)
+            let basis = match &facts.gates {
+                Some(Ok((lines, ..))) => (lines.iter())
+                    .find(|g| &g.id == id)
+                    .and_then(|g| g.basis.clone()),
+                _ => None,
+            };
+            (owed.fact, owed.text, basis)
         })
         .collect()
 }

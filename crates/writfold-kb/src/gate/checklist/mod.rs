@@ -26,6 +26,7 @@ mod judge;
 mod looks;
 mod show;
 pub mod spec;
+mod unit;
 pub mod write;
 
 pub use batch::{Batch, Rows};

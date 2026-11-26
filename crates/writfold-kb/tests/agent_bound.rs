@@ -291,3 +291,78 @@ fn an_unready_report_holds_back_the_lenient_rule() -> TestResult {
     );
     Ok(())
 }
+
+/// Pins: two live reports with other bytes naming one invocation make it
+/// read `conflicting` in `resume` and the run row; withdrawing one makes
+/// it `delivered` again.
+#[test]
+fn two_reports_with_other_bytes_read_conflicting() -> TestResult {
+    let (w, id) = ready("review")?;
+    let first = report(&w, Some(&id), REPORT, NOW + 10)?;
+    let resume = || {
+        outcome(&w.request(Verb::Resume {
+            run: Some(RUN.into()),
+        }))
+        .0
+    };
+    assert!(resume().contains("1 delivered"), "{}", resume());
+    report(&w, Some(&id), "Two claims hold.\n", NOW + 30)?;
+    let text = resume();
+    assert!(text.contains("1 conflicting"), "{text}");
+    assert!(
+        text.lines()
+            .any(|l| l.starts_with(&format!("invocation {id} [conflicting]"))),
+        "{text}"
+    );
+    let withdraw = DeliverVerb::Withdraw {
+        candidate: Some(first),
+        reason: "superseded".into(),
+        by: "owner".into(),
+        run: Some(RUN.into()),
+        mode: None,
+    };
+    assert_eq!(helpers::deliver(&w, withdraw, NOW + 50)?.1, 0);
+    let text = resume();
+    assert!(text.contains("1 delivered"), "{text}");
+    assert!(!text.contains("conflicting"), "{text}");
+    Ok(())
+}
+
+/// Pins: once the closure moves, the candidate bound to a done step reads
+/// `[stale]` in `deliver status`, the done step shows `!stale` in `plan
+/// status` (#168), and the current step stays where it is: the plan does
+/// not move back to the done step.
+#[test]
+fn a_moved_closure_does_not_move_the_current_step_back() -> TestResult {
+    let w = setup()?;
+    put(&w, ".writfold/deliveries/review.toml", MODE)?;
+    let three = PLAN.replace(
+        "\"prep:\",\n  \"review: deliver:review\",",
+        "\"review: deliver:review\",\n  \"after:\",",
+    );
+    assert_ne!(three, PLAN);
+    put(&w, ".writfold/plans/claims-review.toml", &three)?;
+    set(&w, "claims-review")?;
+    assert_eq!(prepare(&w, "pkg")?.1, 0);
+    let id = invocations(&w)[0].trim_end_matches(".json").to_owned();
+    let c = report(&w, Some(&id), REPORT, NOW + 10)?;
+    assert!(outcome_of(&w, &c, NOW + 20)?.starts_with("(pass)"));
+    let (text, exit) = helpers::advance(&w)?;
+    assert_eq!(exit, 0, "{text}");
+    let (text, _) = helpers::status(&w, true)?;
+    assert!(!text.contains("!stale"), "{text}");
+    put(
+        &w,
+        ".writfold/skills/verify-claims.toml",
+        &SKILL.replace("against the diff", "line by line"),
+    )?;
+    let (text, _) = helpers::deliver_status(&w)?;
+    assert!(text.contains("invocation.bound [stale]"), "{text}");
+    let (text, _) = helpers::status(&w, true)?;
+    assert!(text.contains("/review [done]"), "{text}");
+    let done = text.lines().find(|l| l.contains("/review [done]"));
+    assert!(done.is_some_and(|l| l.contains("!stale")), "{text}");
+    let current = text.lines().find(|l| l.contains("[current]"));
+    assert!(current.is_some_and(|l| l.contains("/after ")), "{text}");
+    Ok(())
+}

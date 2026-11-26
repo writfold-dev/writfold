@@ -176,7 +176,7 @@ fn rows(
     let (plain, _) = status::judge_plain(session, subject, &filings)?;
     // A generated checklist's items and digest come from its scope now.
     let (expanded, universe) = super::generated::expand(&session.ws.root, &plain, d.clone());
-    if let Some(why) = universe.and_then(|u| u.why).filter(|_| {
+    if let Some(why) = universe.as_ref().and_then(|u| u.why.clone()).filter(|_| {
         expanded
             .checklist
             .as_ref()
@@ -223,6 +223,7 @@ fn rows(
             }
             let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);
             let seq = rows.iter().map(|(_, r)| r.seq).max().unwrap_or(0) + 1;
+            let unit = (universe.as_ref()).and_then(|u| super::unit::digests(u, &c.item));
             Ok(cover::bytes(&cover::Cover {
                 gate: c.gate.clone(),
                 item: c.item.clone(),
@@ -234,10 +235,14 @@ fn rows(
                 repo: subject.name.clone(),
                 commit: commit.clone(),
                 content: content.clone(),
-                definition: super::generated::rows_digest(d),
+                definition: match &unit {
+                    Some(_) => d.digest.clone(),
+                    None => super::generated::rows_digest(d),
+                },
                 evidence,
                 seq,
                 recorded: time::stamp(now),
+                unit,
             }))
         };
         out.push(one().map_err(|e| blame(index, e))?);

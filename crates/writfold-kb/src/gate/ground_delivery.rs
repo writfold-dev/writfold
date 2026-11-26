@@ -1,12 +1,12 @@
 //! `delivery:<candidate>` as a cover reference (#156): a worker's report
 //! cited for a checklist item. Grounded exactly when the candidate is found
-//! in this run, is ready, and passes `invocation.bound` now, re-checked on
+//! in this run, is not withdrawn (#164), is ready, and passes `invocation.bound` now, re-checked on
 //! read ([`writfold_core::ground::of_delivery`]). What the report says is
 //! never judged. The reference's path is the invocation record the report
 //! names, so binding ([`super::checklist::bound`]) reads which item it was
 //! prepared `--for`. Finding and judging the candidate is tested IO.
 use super::ground::{Context, Resolved};
-use crate::deliver::{candidate, config::BOUND, recheck, status};
+use crate::deliver::{candidate, config::BOUND, recheck, status, withdraw};
 use writfold_core::gate::{Standing, State};
 use writfold_core::ground::of_delivery;
 
@@ -15,6 +15,7 @@ pub fn resolve(cx: &Context<'_, '_>, reference: &str, id: &str) -> Resolved {
     let run = cx.run_dir.rsplit('/').next().unwrap_or_default();
     let cands = candidate::list(root, cx.run_dir, run);
     let c = cands.iter().find(|c| c.id == id);
+    let live = c.is_some_and(|c| withdraw::of(root, c, run).is_none());
     let (ready, bound, path) = match c {
         None => (false, false, None),
         Some(c) => {
@@ -29,15 +30,16 @@ pub fn resolve(cx: &Context<'_, '_>, reference: &str, id: &str) -> Resolved {
             (status::ready(&judged), bound, invocation)
         }
     };
-    let standing = match (c.is_some(), ready, bound) {
-        (false, _, _) => "no such candidate",
-        (true, _, false) => "unbound",
-        (true, false, true) => "not ready",
-        (true, true, true) => "ready",
+    let standing = match (c.is_some(), live, ready, bound) {
+        (false, _, _, _) => "no such candidate",
+        (true, false, _, _) => "withdrawn",
+        (true, true, _, false) => "unbound",
+        (true, true, false, true) => "not ready",
+        (true, true, true, true) => "ready",
     };
     Resolved {
         reference: reference.to_owned(),
-        grounding: of_delivery(c.is_some(), ready, bound),
+        grounding: of_delivery(c.is_some(), live, ready, bound),
         standing: standing.to_owned(),
         path,
         recorded: false,

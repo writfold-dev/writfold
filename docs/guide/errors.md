@@ -315,7 +315,7 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `value.conflict` | two settings that cannot stand together: a mode gate named in a mode's `waivable` (its own `accept` decides), a guard route with `field` and `body`/`file`, a route with none of them, a route for a command or tool also under `commands` or `tools` |
 | `value.no-exit` | a plan step loops (`loop=`) with no gate and `min=1`: nothing of its own ends it (from v0.6.0-dev.15) |
 | `ref.undefined` | a name that should be defined elsewhere and is not: a gate, a template, a mode, a checklist item |
-| `ref.wrong-kind` | defined, but not usable here (a candidate gate in a plan step) |
+| `ref.wrong-kind` | defined, but not usable here (a candidate gate in a plan step; an `items_from` gate that is not mechanical or does not retain the file) |
 | `ref.cycle` | templates that include each other, or nesting past the bound |
 | `file.name` | `id` or `name` does not equal the file name |
 | `file.twice` | the same name defined in the KB root and the repository |
@@ -326,5 +326,6 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |
 | `policy.never-ages` | a warning: `no-data` or `not-found` looks of a source kind with no declaration in `.writfold/sources/`, which never age (built in v0.6.0-dev.11) |
 | `policy.self-exit` | warning: a loop step (`loop=`) ends only on gates its walker can meet with a statement (attested or checklist class, or accepting a waiver) (from v0.6.0-dev.15) |
+| `policy.narrow-scope` | warning: a generated checklist's scope gate (`items_from`) has a `scope` narrower than `**`, so a related record added outside it leaves the scope current (from v0.6.0-dev.24) |
 | `alias.collides` | a warning from `kb lint --records`: every word of an alias in a Markdown record's front matter is in another record's ID, title or alias, so phrases using it may find that record (built in v0.6.0-dev.12) |
 

@@ -52,6 +52,9 @@ pub struct Cover {
     pub evidence: Vec<Cited>,
     pub seq: u64,
     pub recorded: String,
+    /// A generated checklist's unit row (#166): the digests of the seed and
+    /// of its two members it is about, in that order. Written only then.
+    pub unit: Option<[String; 3]>,
 }
 
 /// The order rows are judged in, oldest first: by `seq`, then by file
@@ -110,6 +113,12 @@ pub fn bytes(c: &Cover) -> Vec<u8> {
         "seq": c.seq,
         "recorded": c.recorded,
     });
+    if let (Some([seed, first, second]), Value::Object(map)) = (&c.unit, &mut value) {
+        map.insert(
+            "unit".into(),
+            json!({"seed": seed, "first": first, "second": second}),
+        );
+    }
     let digest = sha(canonical(&value).as_bytes());
     if let Value::Object(map) = &mut value {
         map.insert("digest".into(), Value::String(digest));
@@ -227,6 +236,14 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Cover, String> {
             .filter(|n| *n > 0)
             .ok_or("seq is not a count")?,
         recorded: s(&value, &["recorded"])?,
+        unit: match value.get("unit") {
+            None => None,
+            Some(_) => Some([
+                s(&value, &["unit", "seed"])?,
+                s(&value, &["unit", "first"])?,
+                s(&value, &["unit", "second"])?,
+            ]),
+        },
         gate,
         item,
     };
@@ -259,6 +276,7 @@ mod tests {
             }],
             seq: 1,
             recorded: "2026-11-11T00:00:00Z".into(),
+            unit: None,
         }
     }
 

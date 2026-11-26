@@ -1,6 +1,6 @@
 # Agents: skills, profiles and invocations
 
-> **Status:** built in v0.6.0-dev.22 ([#143](https://github.com/writfold-dev/writfold/issues/143), [RFC](../rfcs/2026-11-25-agent-vocabulary.md)): tool, skill and agent profile files, `kb lint` over them, `agent inspect`, `agent prepare`, `deliver prepare --invocation` and the built-in check `invocation.bound`. Built in v0.6.0-dev.23 ([#153](https://github.com/writfold-dev/writfold/issues/153)): requirements at prepare (`needs`) and `agent prepare --for`, with [research contracts](research.md). Writfold starts no model: an external harness runs the worker. Planned: tool schemas, effects and harness bindings ([#146](https://github.com/writfold-dev/writfold/issues/146)); a harness adapter ([#150](https://github.com/writfold-dev/writfold/issues/150)); budgets and delegation ([#159](https://github.com/writfold-dev/writfold/issues/159)); pinning delivery modes and the definitions they name ([#161](https://github.com/writfold-dev/writfold/issues/161)). Known faults: [#164](https://github.com/writfold-dev/writfold/issues/164), [#167](https://github.com/writfold-dev/writfold/issues/167).
+> **Status:** built in v0.6.0-dev.22 ([#143](https://github.com/writfold-dev/writfold/issues/143), [RFC](../rfcs/2026-11-25-agent-vocabulary.md)): tool, skill and agent profile files, `kb lint` over them, `agent inspect`, `agent prepare`, `deliver prepare --invocation` and the built-in check `invocation.bound`. Built in v0.6.0-dev.23 ([#153](https://github.com/writfold-dev/writfold/issues/153)): requirements at prepare (`needs`) and `agent prepare --for`, with [research contracts](research.md). Writfold starts no model: an external harness runs the worker. Planned: tool schemas, effects and harness bindings ([#146](https://github.com/writfold-dev/writfold/issues/146)); a harness adapter ([#150](https://github.com/writfold-dev/writfold/issues/150)); budgets and delegation ([#159](https://github.com/writfold-dev/writfold/issues/159)); pinning delivery modes and the definitions they name ([#161](https://github.com/writfold-dev/writfold/issues/161)). Built in v0.6.0-dev.24 ([#163](https://github.com/writfold-dev/writfold/issues/163)): a report judged at the step it recorded, `--out` and `--for` checked at prepare, and the needs a record stood on.
 
 Writfold records and judges agent work; it does not run it. You describe a worker in three kinds of file. `agent prepare` records exactly what a worker is handed, at the run's current step. The worker's report comes back as a delivery candidate bound to that record. A plan step that owes the report cannot be done until the binding holds.
 
@@ -101,7 +101,7 @@ needs = ["unit"]
 instructions = "Review only the change you are given."
 ```
 
-Each need is judged for the run and its subject repository exactly as a guard rule's `gate:<id>` requirement is. `prepare` refuses, after its six facts, at the first need that is not met. It names who needs the gate, the gate's standing and the next step; when the gates cannot be judged (no subject repository, for example) it says `cannot be judged`. `kb lint` reports a need that no gate defines (`ref.undefined`). `needs` joins the closure digest only when it is written, so a file without it keeps the digest it had.
+Each need is judged for the run and its subject repository exactly as a guard rule's `gate:<id>` requirement is. `prepare` refuses, after its eight facts, at the first need that is not met. It names who needs the gate, the gate's standing and the next step; when the gates cannot be judged (no subject repository, for example) it says `cannot be judged`. `kb lint` reports a need that no gate defines (`ref.undefined`). `needs` joins the closure digest only when it is written, so a file without it keeps the digest it had.
 
 ### Where evidence is consulted
 
@@ -153,7 +153,7 @@ invocation 20261126T072714Z-73b989 reviewer at claims-review#1/review
 # coverage=complete answer=prepared
 ```
 
-`prepare` judges six facts in a fixed order and refuses at the first that does not hold. A refusal writes nothing and exits 3:
+`prepare` judges eight facts in a fixed order and refuses at the first that does not hold. A refusal writes nothing and exits 3:
 
 | Fact | Refusal ends with |
 |---|---|
@@ -163,17 +163,19 @@ invocation 20261126T072714Z-73b989 reviewer at claims-review#1/review
 | every plan a listed skill names is in the run, at the current step or an ancestor (a `use=` include counts) | `next: writfold kb plan use <plan>` |
 | the input file was read (non-empty, at most 1 MiB) | `next: pass a readable, non-empty file …` |
 | a required packet is complete | `next: writfold kb resume <run> --packet, with a larger --budget-tokens` |
+| `--out` is outside the KB, after `..` and symbolic links are resolved (from v0.6.0-dev.24) | `next: name a directory outside <kb>` |
+| `--for GATE.ITEM`, when given, names a defined checklist and an item it has now; for a generated checklist, a unit made from its scope now (from v0.6.0-dev.24) | `next: writfold kb gate status <gate>` |
 
-When it is admitted, `prepare` writes the record `runs/<run>/invocations/<id>.json` (schema `writfold-invocation/1`) as one create-new file. The write is guarded: if another session moved the plan since `prepare` read it, the record is refused and not written at a stale step. The record holds paths and digests, never copies: the step path (a loop round is part of it), the agent, the closure digest, each definition file with its digest, the input's name, size and digest, the packet's digest, the package's digest, `retry_of`, `by`, `model` and the time. It writes no absolute path.
+When it is admitted, `prepare` writes the record `runs/<run>/invocations/<id>.json` (schema `writfold-invocation/1`) as one create-new file. The write is guarded: if another session moved the plan since `prepare` read it, the record is refused and not written at a stale step. The record holds paths and digests, never copies: the step path (a loop round is part of it), the agent, the closure digest, each definition file with its digest, the input's name, size and digest, the packet's digest, the package's digest, `retry_of`, `by`, `model` and the time; `for` when `--for` was given; and, when the profile or a skill has `needs`, one entry per need with the gate and the receipt or statement it stood on (`"needs": [{"gate": "related-scope", "on": "runs/…/gates/related-scope-….json"}]`, from v0.6.0-dev.24). It writes no absolute path.
 
-Then it writes the package into `--out`, which must be new or empty. Name a directory outside the KB: one inside it is not refused yet ([#167](https://github.com/writfold-dev/writfold/issues/167)), and its files would be indexed and would move any gate whose scope covers them:
+Then it writes the package into `--out`, which must be new or empty and outside the KB (a package inside it would be indexed and would move any gate whose scope covers it):
 
 - `invocation.json`, a copy of the record;
 - `instructions.md`, the profile's instructions and then each skill's, in listed order;
 - `input`, the input's exact bytes;
 - `packet.md`, the run's context packet, when the profile requires one.
 
-A crash after the record and before the package leaves a readable invocation; preparing again records another. Two prepares with the same input are two invocations.
+A crash after the record and before the package leaves a readable invocation; preparing again records another. That crash is not in `spec/Invocation.tla`; the kill tests of the write protocol cover the record's own write. Two prepares with the same input are two invocations.
 
 ## Deliver: the report, bound to its invocation
 
@@ -211,15 +213,14 @@ $ writfold kb deliver check
 | Finding | Why |
 |---|---|
 | `no-invocation` | the candidate names no invocation |
-| `another-run` | the invocation is of another run |
 | `another-step` | it was prepared at another step than the one that owes this mode |
 | `another-agent` | it is of another agent than the mode's `agent` |
 | `closure-moved` | the profile's closure changed since it was prepared |
 | `two-reports` | another live candidate names it with other bytes (withdraw one) |
 
-It is `unknown` when the named record does not read. Delivering the same bytes twice changes nothing. `deliver prepare --invocation` refuses an id the run has no record of, and writes no plan record.
+It is `unknown` when the named record does not read. A record of another run is not filed under this run, so it does not read here: it is `unknown`, never a pass. The kernel keeps a `this_run` fact, which the files do not reach today. Delivering the same bytes twice changes nothing. `deliver prepare --invocation` refuses an id the run has no record of, and writes no plan record.
 
-The step is judged when `deliver check` runs, against the run's current step. So check a report while its step is current: checking an unchanged report again after `plan advance` fails it as `another-step`, and a cover row that cites it goes stale. This is a fault, not a rule ([#164](https://github.com/writfold-dev/writfold/issues/164)).
+The step is the one the report recorded: `deliver prepare --invocation` writes the run's current step into the candidate as `step`, re-checked under the write lock. So the answer does not change when the plan moves on: checking an unchanged report again after `plan advance` passes as before ([#164](https://github.com/writfold-dev/writfold/issues/164)). A report prepared while another step was current fails as `another-step`, and the finding names both steps. A candidate written before v0.6.0-dev.24 has no `step` and is judged against the run's current step.
 
 A passed receipt is judged again on every read. If the closure moves (an edited profile, skill, tool or instructions file) or a second report appears, it reads `stale`, and a done step bound to the candidate shows `!stale`:
 
@@ -238,9 +239,10 @@ Binding is not correctness: a report that says the wrong thing passes `invocatio
 The decisions are kernels in `writfold-core`, proved in Lean ([assurance](assurance.md)):
 
 - `compose::closure`: whether the closure holds;
-- `invoke::prepare_check`: the six facts, in order;
-- `invoke::bound`: `invocation.bound`, including that two different reports never pass.
+- `invoke::prepare_check`: the eight facts, in order, and `invoke::prepare`: then each need;
+- `invoke::bound`: `invocation.bound`, including that two different reports never pass;
+- `ground::of_delivery`: a `delivery:` reference, which a withdrawn report never grounds.
 
-The protocol (prepare, deliver, check, advance, merge, with crashes) is the TLA+ model `spec/Invocation.tla`. Reading the files, resolving references, the digests, the record's codec, the package bytes and rendering are tested, not proved.
+The protocol (prepare, deliver, check, advance, merge, with crashes and a retry) is the TLA+ model `spec/Invocation.tla`. Its `CheckIsStable` says a passing check still passes after `plan advance`. TLC runs are manual ([assurance](assurance.md#model-checked)). Reading the files, resolving references, the digests, the record's codec, the package bytes and rendering are tested, not proved.
 
 Limits: on a re-check the definitions are read from the KB root and the run's repository. A worker that edits the KB can write a record, but every record is in Git, where you can see it. Writfold cannot see whether a harness actually gave the package to a model.

@@ -53,9 +53,25 @@ pub(super) struct Gathered<'a> {
     pub input: std::result::Result<Vec<u8>, String>,
     /// The packet's text and whether it is complete, when required.
     pub packet: Option<(Vec<u8>, bool)>,
-    /// Each needed gate (#154): who named it, its id, its fact and what is
-    /// owed, in order (the profile's, then each skill's).
-    pub needs: Vec<(String, String, writfold_core::guard::Fact, String)>,
+    /// Each needed gate (#154), in order (the profile's, then each skill's).
+    pub needs: Vec<Need>,
+    /// `--out` resolves outside the KB (#167).
+    pub out_outside: bool,
+    /// The KB root, for the refusal.
+    pub kb: PathBuf,
+    /// What `--for` names, and why when it names nothing now (#167).
+    pub for_item: (kernel::ForItem, String),
+}
+
+/// One needed gate: who named it, its id, its fact, what is owed, and the
+/// receipt or statement it stood on.
+#[derive(Clone, Debug)]
+pub struct Need {
+    pub who: String,
+    pub gate: String,
+    pub fact: writfold_core::guard::Fact,
+    pub owed: String,
+    pub basis: Option<String>,
 }
 
 /// The template names spliced or included at `step` or an ancestor.
@@ -124,11 +140,7 @@ fn wanted(t: &Table, p: &Def) -> Vec<(String, String)> {
 }
 
 /// Each needed gate judged for the run and its subject (#154).
-fn needs(
-    session: &Session<'_>,
-    loaded: &Loaded,
-    wanted: Vec<(String, String)>,
-) -> Vec<(String, String, writfold_core::guard::Fact, String)> {
+fn needs(session: &Session<'_>, loaded: &Loaded, wanted: Vec<(String, String)>) -> Vec<Need> {
     let ids: Vec<String> = wanted.iter().map(|(_, g)| g.clone()).collect();
     let judged = crate::guard::require::needs::judge_needs(
         session,
@@ -137,7 +149,13 @@ fn needs(
         &ids,
     );
     (wanted.into_iter().zip(judged))
-        .map(|((who, gate), (fact, owed))| (who, gate, fact, owed))
+        .map(|((who, gate), (fact, owed, basis))| Need {
+            who,
+            gate,
+            fact,
+            owed,
+            basis,
+        })
         .collect()
 }
 
@@ -161,6 +179,9 @@ pub(super) fn gather<'a>(
     let wanted = profile.map_or_else(Vec::new, |p| wanted(t, p));
     Ok(Gathered {
         needs: needs(session, loaded, wanted),
+        out_outside: super::target::out_outside(&session.ws.root, &request.cwd, &a.out),
+        kb: session.ws.root.clone(),
+        for_item: super::target::for_item(session, loaded, a.for_item.as_deref()),
         profile,
         closure,
         missing_plan: profile.and_then(|p| missing_plan(t, p, &spliced)),
@@ -197,15 +218,27 @@ fn refusal(r: PrepareRefusal, g: &Gathered<'_>, a: &Prepare, run: &str) -> Strin
         PrepareRefusal::PacketIncomplete => format!(
             "agent {id} requires a context packet and run {run}'s is partial; next: writfold kb resume {run} --packet, with a larger --budget-tokens"
         ),
+        PrepareRefusal::OutInsideKb => format!(
+            "--out {} is inside the KB; next: name a directory outside {}",
+            a.out.display(),
+            g.kb.display()
+        ),
+        PrepareRefusal::ForUnknown => format!(
+            "--for {}: {}",
+            a.for_item.as_deref().unwrap_or_default(),
+            g.for_item.1
+        ),
         PrepareRefusal::Needs(i) => {
-            let (who, gate, fact, owed) = g.needs.get(i).cloned().unwrap_or_else(|| {
-                (
-                    String::new(),
-                    String::new(),
-                    writfold_core::guard::Fact::Unknown,
-                    String::new(),
-                )
-            });
+            let Some(Need {
+                who,
+                gate,
+                fact,
+                owed,
+                ..
+            }) = g.needs.get(i).cloned()
+            else {
+                return format!("need {i} is not met");
+            };
             let word = match fact {
                 writfold_core::guard::Fact::Unknown => "cannot be judged",
                 _ => "is not met",
@@ -219,7 +252,7 @@ fn refusal(r: PrepareRefusal, g: &Gathered<'_>, a: &Prepare, run: &str) -> Strin
     }
 }
 
-/// The six facts, judged.
+/// The eight facts and the needs, judged.
 pub(super) fn judge(g: &Gathered<'_>, a: &Prepare, (run, open): (&str, bool)) -> Result<()> {
     let facts = kernel::Prepare {
         run_open: open,
@@ -229,8 +262,10 @@ pub(super) fn judge(g: &Gathered<'_>, a: &Prepare, (run, open): (&str, bool)) ->
         input_read: g.input.is_ok(),
         packet_required: g.packet.is_some(),
         packet_complete: g.packet.as_ref().is_some_and(|(_, whole)| *whole),
+        out_outside: g.out_outside,
+        for_item: g.for_item.0,
     };
-    let needs: Vec<writfold_core::guard::Fact> = g.needs.iter().map(|(_, _, f, _)| *f).collect();
+    let needs: Vec<writfold_core::guard::Fact> = g.needs.iter().map(|n| n.fact).collect();
     kernel::prepare(&facts, &needs).map_err(|r| KbError::Refused(refusal(r, g, a, run)))
 }
 

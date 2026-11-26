@@ -11,131 +11,13 @@ mod agent_support;
 mod helpers;
 mod support;
 
-use agent_support::{AGENT, outcome, setup};
-use helpers::{RUN, put, set};
-use support::{NOW, TestResult, World};
-use writfold_core::checklist::Outcome;
+mod units_support;
+
+use agent_support::outcome;
+use helpers::RUN;
+use support::{TestResult, World};
+use units_support::{SCOPE, UNITS, cover, members, report, scope, status, world};
 use writfold_kb::Verb;
-use writfold_kb::agents::AgentVerb;
-use writfold_kb::agents::prepare::Prepare;
-use writfold_kb::deliver::DeliverVerb;
-use writfold_kb::gate::GateVerb;
-
-const SCOPE: &str = "schema = \"writfold-gate/1\"\nid = \"related-scope\"\nversion = 1\nclass = \"mechanical\"\nargv = [\"sh\", \"{gate}/scope.sh\", \"{artifacts}\"]\ntimeout_seconds = 30\nscope = [\"src/**\"]\nretain = [\"manifest.json\"]\n";
-/// Writes a manifest of the members listed in `{gate}/members.txt`.
-const SCRIPT: &str = "set -eu\nout=$1/manifest.json\nfirst=1\nprintf '{\"schema\": \"writfold-manifest/1\", \"coverage\": \"complete\", \"members\": [' > \"$out\"\nwhile read -r id; do\n  [ $first = 1 ] || printf ', ' >> \"$out\"\n  first=0\n  printf '{\"id\": \"%s\"}' \"$id\" >> \"$out\"\ndone < \"$(dirname \"$0\")/members.txt\"\nprintf ']}\\n' >> \"$out\"\n";
-const UNITS: &str = "schema = \"writfold-gate/1\"\nid = \"pair-review\"\nversion = 1\nclass = \"checklist\"\nscope = [\"src/**\"]\nitems_from = \"related-scope/manifest.json\"\nunits = \"pairs\"\n";
-const MODE: &str = "schema = \"writfold-delivery-mode/1\"\nmode = \"review\"\nchecks = [\"invocation.bound\"]\nagent = \"reviewer\"\n";
-const PLAN: &str = "schema = \"writfold-plan/1\"\nname = \"claims-review\"\nsteps = [\n  \"review: deliver:review pair-review\",\n]\n";
-
-fn members(w: &World, ids: &[&str]) -> TestResult {
-    put(
-        w,
-        ".writfold/gates/members.txt",
-        &format!("{}\n", ids.join("\n")),
-    )
-}
-
-fn world() -> TestResult<World> {
-    let w = setup()?;
-    put(&w, ".writfold/gates/related-scope.toml", SCOPE)?;
-    put(&w, ".writfold/gates/scope.sh", SCRIPT)?;
-    put(&w, ".writfold/gates/pair-review.toml", UNITS)?;
-    put(&w, ".writfold/deliveries/review.toml", MODE)?;
-    put(&w, ".writfold/plans/claims-review.toml", PLAN)?;
-    put(&w, ".writfold/agents/reviewer.toml", AGENT)?;
-    members(&w, &["a", "b", "c", "d", "e"])?;
-    set(&w, "claims-review")?;
-    Ok(w)
-}
-
-fn gate(w: &World, verb: GateVerb) -> (String, u8) {
-    let mut request = w.request(Verb::Gate(verb));
-    request.now = Some(NOW + 100);
-    outcome(&request)
-}
-
-fn scope(w: &World) -> TestResult {
-    let (text, exit) = gate(
-        w,
-        GateVerb::Run {
-            id: "related-scope".into(),
-            run: Some(RUN.into()),
-            repo: Some(w.code.clone()),
-        },
-    );
-    assert_eq!(exit, 0, "{text}");
-    Ok(())
-}
-
-fn status(w: &World) -> String {
-    gate(
-        w,
-        GateVerb::Status {
-            run: Some(RUN.into()),
-            repo: Some(w.code.clone()),
-        },
-    )
-    .0
-}
-
-/// Prepare `reviewer` for `unit`, deliver `text` as its report and check
-/// it; returns the candidate.
-fn report(w: &World, unit: &str, text: &str, n: i64) -> TestResult<String> {
-    let before = agent_support::invocations(w);
-    let verb = Verb::Agent(AgentVerb::Prepare(Prepare {
-        id: "reviewer".into(),
-        input: "task.md".into(),
-        out: format!("pkg-{n}").into(),
-        retry_of: None,
-        by: None,
-        run: Some(RUN.into()),
-        repo: Some(w.code.clone()),
-        for_item: Some(format!("pair-review.{unit}")),
-    }));
-    let (text_, exit) = outcome(&w.request(verb));
-    assert_eq!(exit, 0, "{text_}");
-    let id = (agent_support::invocations(w).into_iter())
-        .find(|i| !before.contains(i))
-        .ok_or("no invocation")?
-        .trim_end_matches(".json")
-        .to_owned();
-    let from = w.base.join(format!("report-{n}.md"));
-    std::fs::write(&from, text)?;
-    let cands = helpers::ids(w)?;
-    let p = writfold_kb::deliver::candidate::Prepare {
-        mode: "review".into(),
-        from,
-        audience: None,
-        destination: None,
-        run: Some(RUN.into()),
-        invocation: Some(id),
-    };
-    assert_eq!(helpers::deliver(w, DeliverVerb::Prepare(p), NOW + n)?.1, 0);
-    let c = (helpers::ids(w)?.into_iter())
-        .find(|c| !cands.contains(c))
-        .ok_or("no candidate")?;
-    let (text, _) = helpers::check(w, &c, NOW + n)?;
-    assert!(text.contains("invocation.bound [satisfied]"), "{text}");
-    Ok(c)
-}
-
-fn cover(w: &World, unit: &str, candidate: &str) -> (String, u8) {
-    gate(
-        w,
-        GateVerb::Cover(writfold_kb::gate::checklist::Cover {
-            gate: "pair-review".into(),
-            item: unit.into(),
-            outcome: Outcome::Supported,
-            references: vec![format!("delivery:{candidate}")],
-            reason: None,
-            note: None,
-            by: "agent".into(),
-            run: Some(RUN.into()),
-            repo: Some(w.code.clone()),
-        }),
-    )
-}
 
 const PAIRS: [&str; 10] = [
     "a~b", "a~c", "a~d", "a~e", "b~c", "b~d", "b~e", "c~d", "c~e", "d~e",
@@ -202,5 +84,96 @@ fn over_sixty_four_members_is_refused_with_the_count() -> TestResult {
         "{text}"
     );
     assert!(text.contains("gate pair-review [open]"), "{text}");
+    Ok(())
+}
+
+/// `delivery:` references (#168): no such candidate and a bound report
+/// that is not ready ground nothing; a covered row is judged again on
+/// read, so a moved closure stales it.
+#[test]
+fn a_delivery_reference_is_judged_when_cited_and_on_read() -> TestResult {
+    let w = world()?;
+    scope(&w)?;
+    let (text, exit) = cover(&w, "a~b", "20261111T000000Z-000000");
+    assert_eq!(exit, 3, "{text}");
+    assert!(
+        text.contains("is not grounded (no such candidate)"),
+        "{text}"
+    );
+    let c = report(&w, "a~b", "The two records agree.\n", 10)?;
+    assert_eq!(cover(&w, "a~b", &c).1, 0);
+    // The profile edited: the closure moves, the report is unbound, and
+    // the row that cites it reads stale.
+    helpers::put(
+        &w,
+        ".writfold/agents/reviewer.toml",
+        &agent_support::AGENT.replace("Review only", "Review just"),
+    )?;
+    let text = status(&w);
+    assert!(text.contains("a~b [stale]"), "{text}");
+    assert!(text.contains("cited evidence moved: delivery:"), "{text}");
+    // A mode that also asks for a statement: bound, but not ready.
+    let attest = format!("{}attest = [\"report.read\"]\n", units_support::MODE);
+    helpers::put(&w, ".writfold/deliveries/review.toml", &attest)?;
+    helpers::put(&w, ".writfold/agents/reviewer.toml", agent_support::AGENT)?;
+    let c = report(&w, "a~c", "The two records agree.\n", 11)?;
+    let (text, exit) = cover(&w, "a~c", &c);
+    assert_eq!(exit, 3, "{text}");
+    assert!(text.contains("is not grounded (not ready)"), "{text}");
+    Ok(())
+}
+
+/// Commit `files` to the subject repository; its new HEAD.
+fn commit(w: &World, files: &[(&str, &str)], message: &str) -> TestResult<String> {
+    for (path, text) in files {
+        let file = w.code.join(path);
+        std::fs::create_dir_all(file.parent().ok_or("parent")?)?;
+        std::fs::write(file, text)?;
+    }
+    support::git(&w.code, &["add", "-A"])?;
+    support::git(&w.code, &["commit", "-q", "--allow-empty", "-m", message])?;
+    Ok(support::git(&w.code, &["rev-parse", "HEAD"])?
+        .trim()
+        .to_owned())
+}
+
+/// Pins: `handoff check` refuses a required gate that stands on workers'
+/// reports. Every unit covered by a report bound to its invocation reads
+/// `attested` (a statement), and a receiver accepts only a mechanical
+/// pass. The reason shown is `no-evidence` (a checklist gate has no
+/// receipt to find), not `statement`; that is reported on #168, so the
+/// reason word is not pinned here.
+#[test]
+fn handoff_refuses_a_gate_that_stands_on_reports() -> TestResult {
+    let w = world()?;
+    scope(&w)?;
+    for (n, unit) in PAIRS.iter().enumerate() {
+        let c = report(&w, unit, "The two records agree.\n", 10 + n as i64)?;
+        assert_eq!(cover(&w, unit, &c).1, 0);
+    }
+    let text = status(&w);
+    assert!(text.contains("gate pair-review [attested]"), "{text}");
+    let required = "schema = \"writfold-handoff/1\"\nrequired = [\"pair-review\"]\n";
+    let rev = commit(
+        &w,
+        &[
+            (".writfold/handoff.toml", required),
+            (".writfold/gates/pair-review.toml", UNITS),
+            (".writfold/gates/related-scope.toml", SCOPE),
+        ],
+        "policy",
+    )?;
+    let mut request = w.request(Verb::Handoff {
+        policy: rev,
+        candidate: "HEAD".into(),
+        run: Some(RUN.into()),
+        repo: Some(w.code.clone()),
+    });
+    request.cwd = w.code.clone();
+    let (text, exit) = outcome(&request);
+    assert_eq!(exit, 2, "{text}");
+    assert!(text.contains("handoff pair-review [refused] "), "{text}");
+    assert!(text.contains("handoff=refused"), "{text}");
+    assert!(!text.contains("[accepted]"), "{text}");
     Ok(())
 }

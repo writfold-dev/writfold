@@ -65,6 +65,8 @@ struct GateLine {
     met: bool,
     line: String,
     waived: Option<Waived>,
+    /// The receipt or statement its standing rests on, when one does.
+    basis: Option<String>,
 }
 
 /// The gate lines, the gates the plan owes (`None` without a plan), the
@@ -274,12 +276,23 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
                 line: format!("gate {id} [{}]{next}", super::super::gate::policy::shown(j)),
                 met: j.met(),
                 waived: super::waived::of(j),
+                basis: basis(j),
                 id,
             }
         })
         .collect();
     let invalid = filings.invalid() + report.problems.len();
     Ok((lines, owed.gates, invalid, owed.deliveries))
+}
+
+/// The receipt or statement a judged gate stands on.
+fn basis(j: &crate::gate::status::Judged<'_>) -> Option<String> {
+    use writfold_core::gate::Standing;
+    match j.standing {
+        Standing::Attested => j.statements.attested.map(|(f, _)| f.path.clone()),
+        Standing::Waived => j.statements.waived.map(|(f, _)| f.path.clone()),
+        Standing::Checked(_) => j.receipt.map(|(f, _)| f.path.clone()),
+    }
 }
 
 /// The plan's current step: met when it owes nothing (or there is no

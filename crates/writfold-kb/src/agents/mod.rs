@@ -21,6 +21,7 @@ pub mod package;
 pub mod prepare;
 pub mod refs;
 pub mod shown;
+mod target;
 
 use std::path::PathBuf;
 
