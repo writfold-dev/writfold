@@ -6,7 +6,7 @@ implementation: complete
 authors:
   - tknawara
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 issue: https://github.com/writfold-dev/writfold/issues/153
 milestone: v0.6.0-dev.23
 supersedes: []
@@ -392,3 +392,17 @@ None blocks acceptance.
   judged by the code a guard rule's `gate:<id>` uses, so the two agree; a
   need with no subject repository reads `cannot be judged`. The use-site
   table in the agents guide names the tests behind each row.
+- 2026-11-26: Reviewed after landing. Two statements in the body are not
+  true of what shipped and are left as accepted, corrected here. Under
+  [Trust](#trust) and in the conformance table, "an agent that edits its
+  own profile makes the run read `policy moved`" is #161: delivery modes
+  and the definitions they name are not pinned, and an edited profile is
+  caught per report by `invocation.bound` (`closure-moved`), not at the
+  run. The refusal shown under [Behaviour](#behaviour) reads, as built,
+  `<who> needs gate <id>, which is not met: gate <id> [stale] …; next: …`.
+  Also recorded: needs are judged before the write lock and only the step
+  is re-checked under it, which is within the recorded tier; the
+  invocation record keeps no trace of what each need stood on (#167); the
+  "stale" and "unknown" refusals are tested in `agent_needs.rs`, not in
+  the fixture as [Evidence and tests](#evidence-and-tests) says. The
+  untested items are listed in #168.

@@ -6,7 +6,7 @@ implementation: partial
 authors:
   - tknawara
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 issue: https://github.com/writfold-dev/writfold/issues/143
 milestone: v0.6.0-dev.22
 supersedes: []
@@ -621,3 +621,18 @@ Read as design inputs on 25 November 2026:
 - 2026-11-26: The v0.6.0-dev.22 milestone landed on main and gated (#143
   closed). Implementation is `partial` because #161 (pinning modes and
   the definitions they name), split from #148's scope, is in Later.
+- 2026-11-26: Reviewed after both milestones landed. Found, with a
+  reproduction on the binary: `invocation.bound` judges "the step that
+  owes the mode" against the run's current step, so an unchanged report
+  checked again after `plan advance` fails as `another-step` and any cover
+  row citing it goes stale; the entry above records the rule and not this
+  consequence. `agent prepare` accepts `--out` inside the KB, which the
+  guide said it never does. Both are in
+  [the second slice](2026-11-26-research-contracts-second-slice.md)
+  (#164, #167). Corrections to the body, left as accepted: a run with no
+  current step is refused at prepare, it does not get a record with no
+  step; `[limits]` is not a key, so the vocabulary table's "limit hints"
+  is `model` only; `model` is part of the closure digest, so editing it
+  moves the closure. #161 is the only thing between the body's "an edited
+  profile reads `policy moved`" and the truth, and is proposed as the next
+  piece of this RFC to build. Tests the slice left out are listed in #168.

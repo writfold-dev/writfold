@@ -6,7 +6,7 @@ implementation: partial
 authors:
   - tknawara
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 issue: https://github.com/writfold-dev/writfold/issues/155
 milestone: v0.6.0-dev.23
 supersedes: []
@@ -52,6 +52,12 @@ the assessments and the disposition.
 New: `kb impact --manifest FILE`; three checklist keys (`items_from`,
 `units`, `allow_empty`); a `delivery:<id>` reference in a cover row; and
 `agent prepare --for GATE.ITEM`.
+
+> **As built (26 November 2026).** The key written `allow_empty = false`
+> below is `empty = "refused"` (or `"allowed"`); the fixture's gates and
+> steps are named as in `fixtures/kb/kb-consistency/`, not as in the
+> examples here. The [decision log](#decision-log) has every deviation,
+> and the review of each. The body is left as accepted.
 
 ## Proof obligations
 
@@ -389,3 +395,22 @@ None blocks acceptance.
   only against the scope's current manifest. Implementation is `partial`:
   unit-local reuse, other unit rules and `gate cover --from` remain, as
   #156 records.
+- 2026-11-26: Reviewed after landing, with each recorded deviation judged
+  against the binary. Kept: the `runs/` edge filter under `--manifest`
+  (noting that `complete_within` is then a statement about the filtered
+  edges, and that a scope stays current only through its gate's `scope`
+  patterns: the manifest's member digests and its `coverage` word are
+  written and never judged); `empty = "allowed"`; the static definition
+  digest, so the run's pin holds; `_` for `/` in a row's file name, which
+  cannot confuse two items because rows are matched by the `item` they
+  record and the name carries a hash of it; `invoke::prepare` wrapping
+  `prepare_check`. Changed: `--for` is to be checked against the items a
+  checklist has now, not for its form only. Found: a withdrawn report
+  still grounds its row; a report checked again after its step is done
+  fails `invocation.bound`; the universe is decided in IO code; one edited
+  member makes every row stale, so a disposition that fixes a finding
+  invalidates the review; unit names are distinct only while no id holds
+  `~`. All are
+  [the second slice](2026-11-26-research-contracts-second-slice.md)
+  (#163 to #167). Unit-local reuse moved from #162 to #166 and is no
+  longer treated as an optimization.

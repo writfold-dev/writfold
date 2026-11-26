@@ -1,6 +1,6 @@
 # Agents: skills, profiles and invocations
 
-> **Status:** built in v0.6.0-dev.22 ([#143](https://github.com/writfold-dev/writfold/issues/143), [RFC](../rfcs/2026-11-25-agent-vocabulary.md)): tool, skill and agent profile files, `kb lint` over them, `agent inspect`, `agent prepare`, `deliver prepare --invocation` and the built-in check `invocation.bound`. Writfold starts no model: an external harness runs the worker. Planned: tool schemas, effects and harness bindings ([#146](https://github.com/writfold-dev/writfold/issues/146)); a harness adapter ([#150](https://github.com/writfold-dev/writfold/issues/150)); budgets and delegation ([#159](https://github.com/writfold-dev/writfold/issues/159)); requirements at prepare, `needs` ([#154](https://github.com/writfold-dev/writfold/issues/154)); research contracts ([#155](https://github.com/writfold-dev/writfold/issues/155), [#156](https://github.com/writfold-dev/writfold/issues/156)).
+> **Status:** built in v0.6.0-dev.22 ([#143](https://github.com/writfold-dev/writfold/issues/143), [RFC](../rfcs/2026-11-25-agent-vocabulary.md)): tool, skill and agent profile files, `kb lint` over them, `agent inspect`, `agent prepare`, `deliver prepare --invocation` and the built-in check `invocation.bound`. Built in v0.6.0-dev.23 ([#153](https://github.com/writfold-dev/writfold/issues/153)): requirements at prepare (`needs`) and `agent prepare --for`, with [research contracts](research.md). Writfold starts no model: an external harness runs the worker. Planned: tool schemas, effects and harness bindings ([#146](https://github.com/writfold-dev/writfold/issues/146)); a harness adapter ([#150](https://github.com/writfold-dev/writfold/issues/150)); budgets and delegation ([#159](https://github.com/writfold-dev/writfold/issues/159)); pinning delivery modes and the definitions they name ([#161](https://github.com/writfold-dev/writfold/issues/161)). Known faults: [#164](https://github.com/writfold-dev/writfold/issues/164), [#167](https://github.com/writfold-dev/writfold/issues/167).
 
 Writfold records and judges agent work; it does not run it. You describe a worker in three kinds of file. `agent prepare` records exactly what a worker is handed, at the run's current step. The worker's report comes back as a delivery candidate bound to that record. A plan step that owes the report cannot be done until the binding holds.
 
@@ -74,7 +74,7 @@ Review only the change you are given. Do not edit files.
 """
 ```
 
-`packet` is `none` (the default) or `required`. `model` is recorded and exported, never judged.
+`packet` is `none` (the default) or `required`. `model` is recorded and exported. Nothing judges the name by itself, but it is part of the closure digest, so editing it makes an earlier report read `closure-moved`.
 
 ### Needs: gates that must be met when a worker is set up
 
@@ -166,7 +166,7 @@ invocation 20261126T072714Z-73b989 reviewer at claims-review#1/review
 
 When it is admitted, `prepare` writes the record `runs/<run>/invocations/<id>.json` (schema `writfold-invocation/1`) as one create-new file. The write is guarded: if another session moved the plan since `prepare` read it, the record is refused and not written at a stale step. The record holds paths and digests, never copies: the step path (a loop round is part of it), the agent, the closure digest, each definition file with its digest, the input's name, size and digest, the packet's digest, the package's digest, `retry_of`, `by`, `model` and the time. It writes no absolute path.
 
-Then it writes the package into `--out`, which must be new or empty and is never inside the KB:
+Then it writes the package into `--out`, which must be new or empty. Name a directory outside the KB: one inside it is not refused yet ([#167](https://github.com/writfold-dev/writfold/issues/167)), and its files would be indexed and would move any gate whose scope covers them:
 
 - `invocation.json`, a copy of the record;
 - `instructions.md`, the profile's instructions and then each skill's, in listed order;
@@ -218,6 +218,8 @@ $ writfold kb deliver check
 | `two-reports` | another live candidate names it with other bytes (withdraw one) |
 
 It is `unknown` when the named record does not read. Delivering the same bytes twice changes nothing. `deliver prepare --invocation` refuses an id the run has no record of, and writes no plan record.
+
+The step is judged when `deliver check` runs, against the run's current step. So check a report while its step is current: checking an unchanged report again after `plan advance` fails it as `another-step`, and a cover row that cites it goes stale. This is a fault, not a rule ([#164](https://github.com/writfold-dev/writfold/issues/164)).
 
 A passed receipt is judged again on every read. If the closure moves (an edited profile, skill, tool or instructions file) or a second report appears, it reads `stale`, and a done step bound to the candidate shows `!stale`:
 

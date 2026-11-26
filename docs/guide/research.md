@@ -1,6 +1,6 @@
 # Research contracts: scopes, review units and dispositions
 
-> **Status:** built in v0.6.0-dev.23 ([#153](https://github.com/writfold-dev/writfold/issues/153), [RFC](../rfcs/2026-11-25-kb-research-contracts.md)): `kb impact --manifest`, a research scope as a mechanical gate, checklists generated from its manifest (`items_from`), `delivery:` cover references, `agent prepare --for` and `needs`. Planned: unit rules other than all pairs, keeping earlier reviews of unchanged pairs when a member is added, and `gate cover --from` for many rows at once ([#156](https://github.com/writfold-dev/writfold/issues/156)).
+> **Status:** built in v0.6.0-dev.23 ([#153](https://github.com/writfold-dev/writfold/issues/153), [RFC](../rfcs/2026-11-25-kb-research-contracts.md)): `kb impact --manifest`, a research scope as a mechanical gate, checklists generated from its manifest (`items_from`), `delivery:` cover references, `agent prepare --for` and `needs`. Planned: keeping earlier reviews of unchanged pairs ([#166](https://github.com/writfold-dev/writfold/issues/166)); unit rules other than all pairs and `gate cover --from` for many rows at once ([#162](https://github.com/writfold-dev/writfold/issues/162)). See [Known limits](#known-limits).
 
 "Inspect all related records for inconsistencies" is a prose instruction an agent can skip. A research contract turns it into three things Writfold can hold, each with its own standing:
 
@@ -69,7 +69,7 @@ The items are not written in the file. They are made, on every read, from the ma
 - **No universe:** without a current pass of the scope gate, or when its manifest does not read, there are no units and the checklist is not covered. A `why:` line names the scope gate.
 - **Too many members:** a manifest of more than 64 members is refused with the count.
 - **Fewer than two members:** this leaves no unit, which is not covered unless the checklist says `empty = "allowed"`.
-- **New members:** when the scope runs again over other members, every earlier row is stale ("the scope's members or the definition changed since this row"). Reviews of unchanged pairs are not kept yet.
+- **New members, or one edited:** when the scope runs again and its manifest differs, in its members or in one member's bytes, every earlier row is stale ("the scope's members or the definition changed since this row"). Reviews of unchanged pairs are not kept yet.
 
 Each unit takes evidence of its own: a worker's report prepared for that unit. Prepare the worker with `--for`, deliver its report bound to the invocation, then cover the unit with the report:
 
@@ -109,3 +109,14 @@ scope = ["proposals/**", "decisions/**", "ktlo/**", "investigations/**"]
 - **A statement a harness cannot make:** one such as `context.submitted` stays open, and the report is not ready. Nothing turns a statement into a check.
 - **Harness shape:** no judgment depends on which harness ran the worker. A harness that reads only `instructions.md` and `input` gives the same standings as one that reads `invocation.json`.
 - **Forged records:** these, and a bypassed hook, are not resisted inside a run. The boundary that resists a worker that does not cooperate is a receiver ([`handoff check`](policy.md), [#64](https://github.com/writfold-dev/writfold/issues/64)). Whether an effect outside Writfold happened once is not something Writfold knows.
+
+## Known limits
+
+Each of these is how the binary behaves today, with the issue that changes it ([RFC](../rfcs/2026-11-26-research-contracts-second-slice.md)).
+
+- **A scope is current through its `scope` patterns only.** The manifest's member digests are written and not compared with anything. A member whose path the scope gate's `scope` does not cover can change, and a record can be added outside it, without the scope reading `stale`. Write a `scope` that covers every directory a related record can live in ([#165](https://github.com/writfold-dev/writfold/issues/165)).
+- **The seed is not a member.** No unit compares the seed with anything.
+- **`others` is more than code locators.** A KB document that is not a record (a note that mentions the seed) is counted there and is not a member.
+- **Any edit makes every review stale.** One changed member moves the manifest, and every row was written against the manifest. Reviews of pairs that did not change are not kept ([#166](https://github.com/writfold-dev/writfold/issues/166)).
+- **A withdrawn report still covers its unit**, and a report checked again after its step is done fails `invocation.bound` ([#164](https://github.com/writfold-dev/writfold/issues/164)).
+- **`--for` is checked for its form.** `agent prepare --for` accepts a gate or a unit that does not exist; the mistake shows at `gate cover` ([#167](https://github.com/writfold-dev/writfold/issues/167)).
