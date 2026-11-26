@@ -42,12 +42,14 @@ fn adopted(root: &Path, loaded: &Loaded) -> Adopted {
     let top = loaded.subject.as_ref().map(|s| s.top.as_path());
     let mut out = Adopted::default();
     let steps = &loaded.graph.steps;
-    for gate in steps.iter().flat_map(|s| &s.gates) {
+    let words = super::agent_pins::with_agents(root, steps.iter().flat_map(|s| &s.gates));
+    for gate in &words {
         if out.gates.iter().any(|(g, _)| g == gate) {
             continue;
         }
-        let delivery = crate::deliver::step::is_delivery_word(gate);
-        let naming = || steps.iter().filter(|s| s.gates.contains(gate));
+        let delivery =
+            crate::deliver::step::is_delivery_word(gate) || super::agent_pins::is_agent_word(gate);
+        let naming = || (steps.iter()).filter(|s| super::agent_pins::names(root, &s.gates, gate));
         // What each done step's record names for the gate.
         let mut done: Vec<(&str, Option<&str>)> = Vec::new();
         for (step, record) in naming().filter_map(|s| Some((s, &s.done.as_ref()?.1))) {

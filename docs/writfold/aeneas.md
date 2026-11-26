@@ -1311,6 +1311,12 @@ Mutants `universe-attested-scope`, `universe-partial-present`,
 `universe-outside-scope-present`, `universe-over-cap-present`,
 `unit-ignores-second`, `unit-ignores-seed`, `unit-ignores-definition`.
 
+Pinned agent closures (v0.6.0-dev.25, #161): no kernel changes. An
+`agent:<id>` pin entry is compared by `policy::pin_one` like any other
+entry (`Policy.lean`: `pinned_change_is_moved`, an entry pinned with some
+bytes is moved when the present has other bytes or none, whatever it names;
+with `pin_all_moved_iff`, one moved entry moves the run).
+
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition
 parsing, digests, Git and file reads, the write protocol

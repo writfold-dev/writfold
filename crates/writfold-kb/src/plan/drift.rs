@@ -2,7 +2,8 @@
 //! every read. An open step's gate is compared with its definition digest
 //! now (a gate that no longer loads counts as different); a done step's
 //! with the definition its done record names (a delivery is not compared
-//! once done: its own `!stale` covers a changed mode); the pinned
+//! once done: its own `!stale` covers a changed mode, and so is an
+//! `agent:<id>` entry, [`super::agent_pins`]); the pinned
 //! required file with that file's digest now. What is pinned is the entry
 //! in force ([`pin::gate_in_force`], [`pin::required_in_force`]): the
 //! newest pin naming the gate, so a `plan repin` replaces what earlier
@@ -91,14 +92,16 @@ pub fn judge(root: &Path, loaded: &Loaded) -> Drift {
     let mut checks: Vec<Same> = invalid.iter().map(|_| compare("pin", None)).collect();
     let mut now_of = std::collections::BTreeMap::new();
     for gate in pinned(&pins) {
-        let naming =
-            (loaded.graph.steps.iter().enumerate()).filter(|(_, s)| s.gates.contains(&gate));
+        let naming = (loaded.graph.steps.iter().enumerate())
+            .filter(|(_, s)| super::agent_pins::names(root, &s.gates, &gate));
         for (i, step) in naming {
             let Some((digest, pin)) = pin::gate_in_force(&pins, &gate, Some(&step.path)) else {
                 continue;
             };
             let path = &pin.path;
-            let delivery = crate::deliver::step::is_delivery_word(&gate);
+            // An agent entry is compared as its mode is: not once done.
+            let delivery = crate::deliver::step::is_delivery_word(&gate)
+                || super::agent_pins::is_agent_word(&gate);
             // A skipped step owes nothing: its gates are not compared.
             if step.done.is_none() && step.skipped.is_some() {
                 continue;

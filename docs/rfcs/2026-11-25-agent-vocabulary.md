@@ -643,3 +643,6 @@ Read as design inputs on 25 November 2026:
   #167 added two facts (`--out` outside the KB, `--for` known), when
   `prepare_check_spec`, `firstRefusal_none_iff` and `prepare_ok_iff` were
   restated over eight facts.
+- 2026-11-26: The scope line "the definitions a run's modes name join the
+  run's policy pins" is built in v0.6.0-dev.25 (#161,
+  [RFC](2026-11-26-pinned-agent-closures.md)) as `agent:<id>` pin entries.

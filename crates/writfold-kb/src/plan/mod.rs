@@ -17,6 +17,7 @@
 //! is shown `!template-moved` ([`moved`]). `plan repin` adopts a policy
 //! that moved since the run pinned it ([`repin`]).
 mod again;
+pub mod agent_pins;
 pub(crate) mod delivery;
 mod delivery_mark;
 mod delivery_posted;

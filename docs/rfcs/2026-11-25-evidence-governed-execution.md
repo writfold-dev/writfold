@@ -406,3 +406,8 @@ None blocks acceptance.
   "stale" and "unknown" refusals are tested in `agent_needs.rs`, not in
   the fixture as [Evidence and tests](#evidence-and-tests) says. The
   untested items are listed in #168.
+- 2026-11-26: #161 built in v0.6.0-dev.25
+  ([RFC](2026-11-26-pinned-agent-closures.md)): the Trust row's "an agent
+  that edits its own profile makes the run read `policy moved`" now holds
+  while the step owing the mode is open; once it is done, the done step's
+  `!stale` shows it. Delivery modes were already pinned for open steps.

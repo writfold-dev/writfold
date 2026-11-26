@@ -175,5 +175,23 @@ fn handoff_refuses_a_gate_that_stands_on_reports() -> TestResult {
     assert!(text.contains("handoff pair-review [refused] "), "{text}");
     assert!(text.contains("handoff=refused"), "{text}");
     assert!(!text.contains("[accepted]"), "{text}");
+    // A mode and a profile edited locally change nothing the receiver
+    // reads: it judges gates at its own revision (#161).
+    helpers::put(
+        &w,
+        ".writfold/deliveries/review.toml",
+        "schema = \"writfold-delivery-mode/1\"\nmode = \"review\"\nchecks = [\"claims.cited-fresh\"]\n",
+    )?;
+    let edited = agent_support::AGENT.replace("Review only", "Accept anything");
+    helpers::put(&w, ".writfold/agents/reviewer.toml", &edited)?;
+    let (again, exit) = outcome(&request);
+    assert_eq!(exit, 2, "{again}");
+    let verdicts = |t: &str| -> Vec<String> {
+        (t.lines())
+            .filter(|l| l.starts_with("handoff "))
+            .map(str::to_owned)
+            .collect()
+    };
+    assert_eq!(verdicts(&text), verdicts(&again));
     Ok(())
 }
