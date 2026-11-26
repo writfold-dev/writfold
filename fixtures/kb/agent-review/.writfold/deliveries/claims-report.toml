@@ -1,9 +1,10 @@
 # The worker's report: passes invocation.bound only while it names an
 # invocation of this run and step, prepared for reviewer under the closure
-# as it is now, with no second report. A person still reads it.
+# as it is now, with no second report. Binding is not correctness: a wrong
+# report passes invocation.bound too, which is why a person still reads it.
 schema = "writfold-delivery-mode/1"
 mode = "claims-report"
 description = "a worker's claims review, bound to its invocation"
-checks = ["invocation.bound"]
+checks = ["invocation.bound", "claims.cited-fresh"]
 agent = "reviewer"
 attest = ["report.read"]

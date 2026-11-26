@@ -1,10 +1,22 @@
 # Agents: skills, profiles and invocations
 
-> **Status:** built in v0.6.0-dev.22 ([#143](https://github.com/writfold-dev/writfold/issues/143), [RFC](../rfcs/2026-11-25-agent-vocabulary.md)): tool, skill and agent profile files, `kb lint` over them, `agent inspect`, `agent prepare`, `deliver prepare --invocation` and the built-in check `invocation.bound`. Writfold starts no model: an external harness runs the worker. Budgets, delegation and requirements at prepare (`needs`) are planned ([#159](https://github.com/writfold-dev/writfold/issues/159), [#154](https://github.com/writfold-dev/writfold/issues/154)).
+> **Status:** built in v0.6.0-dev.22 ([#143](https://github.com/writfold-dev/writfold/issues/143), [RFC](../rfcs/2026-11-25-agent-vocabulary.md)): tool, skill and agent profile files, `kb lint` over them, `agent inspect`, `agent prepare`, `deliver prepare --invocation` and the built-in check `invocation.bound`. Writfold starts no model: an external harness runs the worker. Planned: tool schemas, effects and harness bindings ([#146](https://github.com/writfold-dev/writfold/issues/146)); a harness adapter ([#150](https://github.com/writfold-dev/writfold/issues/150)); budgets and delegation ([#159](https://github.com/writfold-dev/writfold/issues/159)); requirements at prepare, `needs` ([#154](https://github.com/writfold-dev/writfold/issues/154)); research contracts ([#155](https://github.com/writfold-dev/writfold/issues/155), [#156](https://github.com/writfold-dev/writfold/issues/156)).
 
 Writfold records and judges agent work; it does not run it. You describe a worker in three kinds of file. `agent prepare` records exactly what a worker is handed, at the run's current step. The worker's report comes back as a delivery candidate bound to that record. A plan step that owes the report cannot be done until the binding holds.
 
-`writfold kb init --example agent` writes the files on this page into a new KB.
+`writfold kb init --example agent` writes the files on this page into a new KB. The repository's copy, `fixtures/kb/agent-review/`, also has `worker.sh`, a fake worker that reads a package and writes a report, which the tests run in place of a model.
+
+How the pieces fit:
+
+```text
+agent profile ──skills (ordered)──▶ skill ──tools──▶ tool
+     │                               └──plan──▶ plan template ──step owes──▶ deliver:<mode>
+     └──tools (granted)──▶ tool                                                   │
+                                                                                  ▼
+agent prepare ──▶ runs/<run>/invocations/<id>.json ◀──invocation.bound── report (a delivery candidate)
+```
+
+Write a **skill** for a piece of work you would give to any worker: what to do, which tools it needs, and which plan its work belongs to. Write a **profile** for one kind of worker: which skills it carries, in which order, which tools it is granted, and its own standing instructions. One skill can be in several profiles; a profile adds no obligation of its own.
 
 ## The three files
 
@@ -177,7 +189,7 @@ A passed receipt is judged again on every read. If the closure moves (an edited 
 
 Because a report is a delivery candidate, the delivery guard's lenient rule counts it: a listed posting call whose bytes the guard cannot read is held back while any live candidate, an unchecked report included, is not ready ([delivery-modes](delivery-modes.md#listed-commands-and-tools-the-lenient-rule)).
 
-A model's judgment is never a mechanical pass. Whether the report is right is a statement (`deliver attest`), shown as attested. A harness that observed the worker records the same way, with `--by` as given.
+Binding is not correctness: a report that says the wrong thing passes `invocation.bound` as long as it is bound, which is why the example's mode also asks a person to attest `report.read`. A model's judgment is never a mechanical pass. Whether the report is right is a statement (`deliver attest`), shown as attested. A harness that observed the worker records the same way, with `--by` as given.
 
 `resume` lists the run's newest invocations, each with a derived state: `prepared` (no report yet), `delivered`, `conflicting` (two reports with different bytes) or `retried` (a later invocation names it with `--retry-of`). The run row in `runs` and `resume` counts them (`invocations: 1 delivered`). State is never stored.
 

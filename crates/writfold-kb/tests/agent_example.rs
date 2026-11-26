@@ -28,8 +28,64 @@ fn lint(w: &World) -> TestResult<(String, u8)> {
     Ok(outcome(&request))
 }
 
-#[test]
-fn the_example_runs_end_to_end() -> TestResult {
+fn inspect(w: &World) -> (String, u8) {
+    let verb = Verb::Agent(AgentVerb::Inspect(writfold_kb::agents::Inspect {
+        id: "reviewer".into(),
+        repo: None,
+    }));
+    outcome(&w.request(verb))
+}
+
+fn prepare(w: &World, out: &str) -> TestResult<String> {
+    let verb = Verb::Agent(AgentVerb::Prepare(Prepare {
+        id: "reviewer".into(),
+        input: "task.md".into(),
+        out: out.into(),
+        retry_of: None,
+        by: Some("harness".into()),
+        run: Some(RUN.into()),
+        repo: None,
+    }));
+    let before = invocations(w);
+    let (text, exit) = outcome(&w.request(verb));
+    assert_eq!(exit, 0, "{text}");
+    let new = invocations(w).into_iter().find(|i| !before.contains(i));
+    Ok(new
+        .ok_or("no invocation")?
+        .trim_end_matches(".json")
+        .to_owned())
+}
+
+/// The fake worker reads the package and writes `report`.
+fn work(w: &World, pkg: &str, report: &str) -> TestResult {
+    let status = std::process::Command::new("sh")
+        .arg(w.kb.join("worker.sh"))
+        .arg(w.base.join(pkg))
+        .arg(w.base.join(report))
+        .status()?;
+    assert!(status.success());
+    Ok(())
+}
+
+/// `deliver prepare --invocation`; returns the candidate.
+fn deliver(w: &World, report: &str, id: &str, at: i64) -> TestResult<String> {
+    let before = helpers::ids(w)?;
+    let p = writfold_kb::deliver::candidate::Prepare {
+        mode: "claims-report".into(),
+        from: w.base.join(report),
+        audience: None,
+        destination: None,
+        run: Some(RUN.into()),
+        invocation: Some(id.to_owned()),
+    };
+    let (text, exit) = helpers::deliver(w, DeliverVerb::Prepare(p), at)?;
+    assert_eq!(exit, 0, "{text}");
+    (helpers::ids(w)?.into_iter())
+        .find(|c| !before.contains(c))
+        .ok_or_else(|| "no candidate".into())
+}
+
+fn example() -> TestResult<World> {
     let w = world(&["agent-review"])?;
     let (text, exit) = lint(&w)?;
     assert_eq!(exit, 0, "{text}");
@@ -38,46 +94,33 @@ fn the_example_runs_end_to_end() -> TestResult {
         w.base.join("task.md"),
         "Review PR 42: \"batching halves flush time\".\n",
     )?;
-    let prepare = Verb::Agent(AgentVerb::Prepare(Prepare {
-        id: "reviewer".into(),
-        input: "task.md".into(),
-        out: "pkg".into(),
-        retry_of: None,
-        by: Some("harness".into()),
-        run: Some(RUN.into()),
-        repo: None,
-    }));
-    let (text, exit) = outcome(&w.request(prepare));
+    Ok(w)
+}
+
+#[test]
+fn the_example_runs_end_to_end_with_a_fake_worker() -> TestResult {
+    let w = example()?;
+    let (text, exit) = inspect(&w);
     assert_eq!(exit, 0, "{text}");
-    let id = invocations(&w)
-        .first()
-        .ok_or("no invocation")?
-        .trim_end_matches(".json")
-        .to_owned();
+    let id = prepare(&w, "pkg")?;
     let instructions = std::fs::read_to_string(w.base.join("pkg/instructions.md"))?;
     assert!(
         instructions.contains("# Skill summarise\n\nEnd with three lines"),
         "{instructions}"
     );
-    // The harness runs the worker; its report comes back as a candidate.
-    std::fs::write(
-        w.base.join("report.md"),
-        "The claim holds: flush.rs lines 10-14.\n",
-    )?;
-    let p = writfold_kb::deliver::candidate::Prepare {
-        mode: "claims-report".into(),
-        from: w.base.join("report.md"),
-        audience: None,
-        destination: None,
-        run: Some(RUN.into()),
-        invocation: Some(id),
-    };
-    let (text, exit) = helpers::deliver(&w, DeliverVerb::Prepare(p), NOW + 10)?;
-    assert_eq!(exit, 0, "{text}");
-    let c = helpers::ids(&w)?.pop().ok_or("no candidate")?;
+    work(&w, "pkg", "report.md")?;
+    let c = deliver(&w, "report.md", &id, NOW + 10)?;
     let (text, _) = check(&w, &c, NOW + 20)?;
     assert!(text.contains("invocation.bound [satisfied]"), "{text}");
-    let (text, _) = say(&w, Kind::Attested, &c, "report.read", NOW + 30)?;
+    assert!(text.contains("claims.cited-fresh [satisfied]"), "{text}");
+    // A second, identical report changes no judgment.
+    let again = deliver(&w, "report.md", &id, NOW + 25)?;
+    assert!(
+        check(&w, &again, NOW + 26)?
+            .0
+            .contains("invocation.bound [satisfied]")
+    );
+    let (text, _) = say(&w, Kind::Attested, &again, "report.read", NOW + 30)?;
     assert!(text.contains("[ready]"), "{text}");
     let (text, exit) = advance(&w)?;
     assert_eq!(exit, 0, "{text}");
@@ -88,6 +131,41 @@ fn the_example_runs_end_to_end() -> TestResult {
         },
     )?;
     assert!(text.contains("1 delivered"), "{text}");
+    Ok(())
+}
+
+/// Binding is not correctness: a report that says the wrong thing passes
+/// `invocation.bound`; only the person's statement speaks to its content.
+#[test]
+fn a_wrong_report_still_passes_the_binding() -> TestResult {
+    let w = example()?;
+    let id = prepare(&w, "pkg")?;
+    std::fs::write(w.base.join("wrong.md"), "Every claim is false.\n")?;
+    let c = deliver(&w, "wrong.md", &id, NOW + 10)?;
+    let (text, _) = check(&w, &c, NOW + 20)?;
+    assert!(text.contains("invocation.bound [satisfied]"), "{text}");
+    assert!(text.contains("report.read [open]"), "{text}");
+    Ok(())
+}
+
+/// A skill edited after prepare and before any check fails the binding.
+#[test]
+fn a_skill_edited_before_the_check_fails() -> TestResult {
+    let w = example()?;
+    let id = prepare(&w, "pkg")?;
+    work(&w, "pkg", "report.md")?;
+    let skill = w.kb.join(".writfold/skills/verify-claims.toml");
+    let text = std::fs::read_to_string(&skill)?;
+    std::fs::write(
+        &skill,
+        text.replace("quote the lines that do", "quote them"),
+    )?;
+    let c = deliver(&w, "report.md", &id, NOW + 10)?;
+    let (text, _) = check(&w, &c, NOW + 20)?;
+    assert!(
+        text.contains("invocation.bound [failed]") && text.contains("closure-moved"),
+        "{text}"
+    );
     Ok(())
 }
 
@@ -121,11 +199,7 @@ fn every_toml_example_in_the_guide_reads() -> TestResult {
     helpers::put(&w, "docs/summarise.md", "Three lines.\n")?;
     let (text, exit) = lint(&w)?;
     assert_eq!(exit, 0, "{text}");
-    let inspect = Verb::Agent(AgentVerb::Inspect(writfold_kb::agents::Inspect {
-        id: "reviewer".into(),
-        repo: None,
-    }));
-    let (text, exit) = outcome(&w.request(inspect));
+    let (text, exit) = inspect(&w);
     assert_eq!(exit, 0, "{text}");
     Ok(())
 }
