@@ -18,6 +18,8 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [watch](watch.md) | Recorded run progress in eight read-only views, and the knowledge base (decisions, status, tracker, impact, stale) as a second mode; layouts, controls, refresh and colour themes | built (T5) |
 | [agents](agents.md) | Tools, skills and agent profiles; `agent inspect`, `agent prepare`, and a worker's report bound to its invocation (`invocation.bound`) | built in v0.6.0-dev.22 |
 | [research](research.md) | Research contracts: a scope gate that keeps `kb impact --manifest`, review units generated from it and covered by workers' reports, and a disposition | built in v0.6.0-dev.23 |
+| [Claude Code adapter](claude-code-adapter.md) | Export a profile to a Claude Code agent, run a prepared package, deliver the report; what it attests and what it does not see | built in v0.6.0-dev.25 |
+| [receiving work](receiver.md) | A pre-receive hook that runs the policy's gates on a push and lands it only when `handoff check` accepts; a required status check example | built in v0.6.0-dev.25 |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
 | [adopting](adopting.md) | Moving an existing workflow onto Writfold: guards in audit first, several sessions at once, a short path for small changes, gates for some repositories, converting a registry of checks, sources only an agent's tools reach, a lookup hook | recipes over built features (v0.6.0-dev.6) |

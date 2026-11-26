@@ -6,6 +6,13 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.25
+
+- A run's policy pin records, for each delivery mode with `agent = "<id>"` that its steps owe, that agent's closure digest (`agent:<id>`, [#161](https://github.com/writfold-dev/writfold/issues/161)). While the step owing the mode is open, an edited profile, skill, `model` hint or instructions file makes the run read `policy moved` (exit 2 from `plan status`), as an edited gate or mode already did; `plan repin` adopts it. A run pinned before has no `agent:` entries and is judged as before.
+
+- The KB-consistency fixture's skill (`fixtures/kb/kb-consistency/`) reads each member's file from its input, and the rehearsal gives it the paths: a real worker cannot open a record from its id alone ([#150](https://github.com/writfold-dev/writfold/issues/150)). The fixture's closure digest changes.
+- New, outside the binary: the receiver's pre-receive hook recipe ([receiving work](receiver.md), [#64](https://github.com/writfold-dev/writfold/issues/64)), and the Claude Code adapter `plugins/writfold/adapter/claude_code.py` ([guide](claude-code-adapter.md)).
+
 ## v0.6.0-dev.24
 
 - **fix** A cover row that cites a withdrawn report (`delivery:<candidate>`) reads stale, and `gate cover` refuses to cite one (`is not grounded (withdrawn)`) ([#164](https://github.com/writfold-dev/writfold/issues/164)).

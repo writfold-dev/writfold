@@ -1,0 +1,69 @@
+#!/bin/sh
+# A Git pre-receive hook that lands a push to the protected branch only when
+# the receiver's own gate runs pass `writfold kb handoff check` (#64).
+#
+# For each update of the protected ref, the approved policy is the ref's
+# current tip, never the pushed commit. The hook checks the candidate out
+# into a temporary worktree and puts the policy revision's `.writfold/`
+# over it, so a gate weakened in the candidate is run as approved. It runs
+# every gate the policy's `.writfold/handoff.toml` requires into a new run
+# of a KB only the receiver writes, and refuses the push unless `handoff
+# check` accepts. The worker's own receipts, plans and hooks are never read.
+#
+# Install as hooks/pre-receive of the bare repository, with:
+#   WRITFOLD_RECEIVER_KB  a KB repository only this hook writes (required)
+#   WRITFOLD_PROTECTED    the protected ref (default refs/heads/main)
+#   WRITFOLD_PROJECT      the project name runs are recorded under (default:
+#                         the repository's directory name without .git)
+# `writfold` and the gates' commands must be on PATH. A push that creates
+# the protected ref (no approved policy yet) or deletes it is refused.
+# It runs candidate code: give the hook's user no credentials it does not
+# need, and run it where a candidate cannot reach the receiver KB's history.
+set -u
+KB=${WRITFOLD_RECEIVER_KB:?set WRITFOLD_RECEIVER_KB to the receiver KB}
+PROTECTED=${WRITFOLD_PROTECTED:-refs/heads/main}
+GIT_DIR=$(cd "${GIT_DIR:-.}" && pwd)
+PROJECT=${WRITFOLD_PROJECT:-$(basename "$GIT_DIR" .git)}
+ZERO=0000000000000000000000000000000000000000
+status=0
+
+receive() {
+    old=$1 new=$2
+    work=$(mktemp -d)
+    trap 'rm -rf "$work"' EXIT
+    # A pushed commit sits in the quarantine until the hook accepts it, and
+    # no ref may be written meanwhile: check it out into a new repository
+    # that borrows the objects, quarantined ones included.
+    objects="$GIT_DIR/objects"
+    quarantine=${GIT_QUARANTINE_PATH:-}
+    unset GIT_DIR GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_QUARANTINE_PATH
+    git init -q "$work/candidate" || return 1
+    printf '%s\n' "$objects" $quarantine > "$work/candidate/.git/objects/info/alternates"
+    cd "$work/candidate" || return 1
+    git checkout -q --detach "$new" || return 1
+    git checkout -q "$old" -- .writfold || return 1
+    required=$(git show "$old:.writfold/handoff.toml" | sed -n 's/^required *= *\[\(.*\)\]/\1/p' | tr ',' ' ' | tr -d '"')
+    mkdir -p "$KB/.git/writfold"
+    printf '# written by the pre-receive hook\n%s %s\n' "$PROJECT" "$work/candidate" > "$KB/.git/writfold/repos"
+    export WRITFOLD_KB="$KB"
+    writfold kb checkpoint --new-run --project "$PROJECT" --task "receive $new" --note "pre-receive" >/dev/null || return 1
+    for gate in $required; do
+        writfold kb gate run "$gate" >/dev/null 2>&1 || true
+    done
+    writfold kb handoff check --policy "$old" --candidate "$new"
+}
+
+while read -r old new ref; do
+    [ "$ref" = "$PROTECTED" ] || continue
+    if [ "$new" = "$ZERO" ]; then
+        echo "pre-receive: refused: $ref is protected and cannot be deleted"
+        status=1
+    elif [ "$old" = "$ZERO" ]; then
+        echo "pre-receive: refused: $ref has no approved policy yet; create it before installing this hook"
+        status=1
+    elif ! (receive "$old" "$new"); then
+        echo "pre-receive: refused: $new is not accepted by writfold kb handoff check at policy $old"
+        status=1
+    fi
+done
+exit $status

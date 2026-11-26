@@ -1,0 +1,48 @@
+# A required status check that runs the receiver's gates on a pull request
+# (#64). NOT EXERCISED: this file is an example, not tested here; the
+# pre-receive hook (receiver/pre-receive) is the tested recipe. Copy it to
+# .github/workflows/ of the protected repository, then make the check
+# "writfold-handoff / handoff" required on the protected branch, with
+# GitHub Actions as its expected source, so a status posted by anything
+# else does not satisfy it.
+#
+# The policy is the pull request's base commit, never its head: the
+# definitions and the required set come from there. Candidate code runs in
+# the job; give the job no secrets. A repository admin who may bypass
+# branch protection, or who can edit this workflow on the base branch, is
+# outside what this check prevents.
+name: writfold-handoff
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Install writfold
+        run: |
+          # Pin the release you trust; this line is a placeholder.
+          curl -fsSL -o writfold https://github.com/writfold-dev/writfold/releases/download/vX/writfold
+          install -m 0755 writfold /usr/local/bin/writfold
+      - name: Run the policy's gates on the candidate
+        env:
+          POLICY: ${{ github.event.pull_request.base.sha }}
+          CANDIDATE: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          git checkout -q "$POLICY" -- .writfold
+          kb=$(mktemp -d) && git init -q -b main "$kb"
+          (cd "$kb" && writfold kb init >/dev/null && git -c user.name=ci -c user.email=ci@example.invalid commit -qam kb --allow-empty)
+          mkdir -p "$kb/.git/writfold" && printf 'service %s\n' "$PWD" > "$kb/.git/writfold/repos"
+          export WRITFOLD_KB="$kb"
+          writfold kb checkpoint --new-run --project service --task "check $CANDIDATE" --note ci >/dev/null
+          for gate in $(git show "$POLICY:.writfold/handoff.toml" | sed -n 's/^required *= *\[\(.*\)\]/\1/p' | tr ',' ' ' | tr -d '"'); do
+            writfold kb gate run "$gate" || true
+          done
+          writfold kb handoff check --policy "$POLICY" --candidate "$CANDIDATE"
