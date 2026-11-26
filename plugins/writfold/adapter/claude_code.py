@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+"""A Writfold harness adapter for Claude Code (#150).
+
+Writfold starts no model. `writfold kb agent prepare` writes a package
+(`invocation.json`, `instructions.md`, `input`, optionally `packet.md`); this
+adapter turns that package into one Claude Code run and hands the report
+back to `writfold kb deliver`. It decides nothing the binary then trusts:
+what it observed is recorded as a statement, never as a check.
+
+    claude_code.py export PKG [--tools MAP.json] [--model MODEL] > agents.json
+    claude_code.py run PKG --report FILE [--tools MAP.json] [--model MODEL]
+                       [--harness CMD]
+    claude_code.py deliver PKG --mode MODE --report FILE --run RUN
+                       [--attest CHECK] [--writfold CMD]
+
+`export` is deterministic for the same closure and adapter version: the
+agent definition holds the profile's instructions, the mapped tools and the
+model, and no invocation id, input or time. It refuses (exit 3), never
+drops silently:
+  - a key of `invocation.json` this adapter does not know (it would be
+    ignored);
+  - a Writfold tool with no Claude Code mapping;
+  - a `model` hint Claude Code does not take, unless `--model` states the
+    substitution, which the definition then records.
+
+`run` calls `claude -p` (or `--harness`) with that definition, the input
+(and packet) as the prompt, built-in tools limited to the mapped ones, and
+no session persistence; the report is the printed answer.
+
+`deliver` records the report bound to its invocation, checks it, and, when
+`--attest` names a check the mode asks for (`context.submitted`), attests
+it as `adapter:claude-code@VERSION`: the adapter saw the request it sent,
+which is all that statement says.
+
+Standard library only. Tested by crates/writfold/tests/adapter_claude.rs
+with a fake harness; run once by hand against the real CLI (see
+docs/guide/claude-code-adapter.md).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+VERSION = "0.1.0"
+TESTED_HARNESS = "Claude Code 2.1.332"
+NAME = f"adapter:claude-code@{VERSION}"
+
+# Every key of writfold-invocation/1 this adapter knows what to do with.
+KNOWN = {
+    "agent", "by", "closure", "definitions", "for", "id", "input", "model",
+    "needs", "package", "packet", "recorded", "retry_of", "run", "schema",
+    "seq", "step",
+}
+
+# Writfold tool ids to Claude Code built-in tools. A --tools file adds to or
+# replaces entries: {"<writfold tool>": ["<Claude Code tool>", ...]}.
+TOOLS = {
+    "repo.read": ["Read", "Grep", "Glob"],
+    "kb.read": ["Read", "Grep", "Glob"],
+    "git.diff": ["Bash(git diff:*)"],
+}
+
+# Model hints Claude Code takes as they are.
+MODELS = {"opus", "sonnet", "haiku", "inherit"}
+
+
+class Refused(Exception):
+    """A refusal: exit 3, nothing written."""
+
+
+def read_package(pkg: Path) -> tuple[dict, str, bytes, bytes | None]:
+    record = json.loads((pkg / "invocation.json").read_text())
+    if record.get("schema") != "writfold-invocation/1":
+        raise Refused(f"{pkg}/invocation.json is not a writfold-invocation/1")
+    unknown = sorted(set(record) - KNOWN)
+    if unknown:
+        raise Refused(
+            f"invocation.json has keys this adapter ({VERSION}) does not know: "
+            f"{', '.join(unknown)}; they would be ignored")
+    instructions = (pkg / "instructions.md").read_text()
+    data = (pkg / "input").read_bytes()
+    packet = pkg / "packet.md"
+    return record, instructions, data, packet.read_bytes() if packet.is_file() else None
+
+
+def tools_of(record: dict, extra: dict[str, list[str]]) -> list[str]:
+    table = {**TOOLS, **extra}
+    ids = sorted(d["id"] for d in record.get("definitions", []) if d.get("kind") == "tool")
+    out: list[str] = []
+    for tool in ids:
+        if tool not in table:
+            raise Refused(
+                f"tool {tool} has no Claude Code mapping; name one with --tools MAP.json "
+                f"({{\"{tool}\": [\"Read\"]}})")
+        out += [t for t in table[tool] if t not in out]
+    return out
+
+
+def model_of(record: dict, chosen: str | None) -> tuple[str, str | None]:
+    """The model to run, and the substitution to state, if any."""
+    hint = record.get("model")
+    if chosen is not None:
+        return chosen, (None if chosen == hint else f"model hint {hint!r} substituted with {chosen!r}")
+    if hint is None:
+        return "inherit", None
+    if hint in MODELS or str(hint).startswith("claude-"):
+        return hint, None
+    raise Refused(
+        f"model hint {hint!r} is not a Claude Code model; pass --model MODEL to state the substitution")
+
+
+def definition(pkg: Path, extra: dict[str, list[str]], chosen: str | None) -> dict:
+    record, instructions, _, _ = read_package(pkg)
+    tools = tools_of(record, extra)
+    model, substituted = model_of(record, chosen)
+    agent = record["agent"]
+    note = [f"Generated by Writfold's Claude Code adapter {VERSION} from closure {record['closure']}."]
+    if substituted:
+        note.append(f"Stated: {substituted}.")
+    return {
+        agent: {
+            "description": f"Writfold agent {agent}. " + " ".join(note),
+            "prompt": instructions,
+            "tools": tools,
+            "model": model,
+        }
+    }
+
+
+def load_map(path: str | None) -> dict[str, list[str]]:
+    if path is None:
+        return {}
+    value = json.loads(Path(path).read_text())
+    if not isinstance(value, dict) or not all(
+            isinstance(v, list) and all(isinstance(t, str) for t in v) for v in value.values()):
+        raise Refused(f"--tools {path}: write {{\"<writfold tool>\": [\"<Claude Code tool>\"]}}")
+    return value
+
+
+def export(args: argparse.Namespace) -> int:
+    agents = definition(Path(args.pkg), load_map(args.tools), args.model)
+    print(json.dumps(agents, indent=2, sort_keys=True))
+    return 0
+
+
+def run(args: argparse.Namespace) -> int:
+    pkg = Path(args.pkg)
+    agents = definition(pkg, load_map(args.tools), args.model)
+    record, _, data, packet = read_package(pkg)
+    agent = record["agent"]
+    prompt = data.decode()
+    if packet is not None:
+        prompt = packet.decode() + "\n\n" + prompt
+    tools = agents[agent]["tools"]
+    argv = [*args.harness.split(), "-p", "--agents", json.dumps(agents), "--agent", agent,
+            "--tools", ",".join(t.split("(")[0] for t in tools),
+            "--allowedTools", *tools, "--model", agents[agent]["model"],
+            "--no-session-persistence", "--output-format", "text", prompt]
+    done = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+    if done.returncode != 0:
+        sys.stderr.write(done.stderr)
+        raise Refused(f"the harness exited {done.returncode}; no report written")
+    Path(args.report).write_text(done.stdout)
+    print(f"report={args.report} agent={agent} model={agents[agent]['model']} tools={','.join(tools)}")
+    return 0
+
+
+def writfold(cmd: str, *argv: str) -> str:
+    done = subprocess.run([*cmd.split(), "kb", *argv], stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, text=True, check=False)
+    sys.stdout.write(done.stdout)
+    if done.returncode not in (0, 2):
+        raise Refused(f"writfold kb {argv[0]} {argv[1]} exited {done.returncode}")
+    return done.stdout
+
+
+def deliver(args: argparse.Namespace) -> int:
+    record, _, _, _ = read_package(Path(args.pkg))
+    out = writfold(args.writfold, "deliver", "prepare", "--mode", args.mode, "--from", args.report,
+                   "--invocation", record["id"], "--run", args.run)
+    candidate = out.split()[1] if out.startswith("delivery ") else None
+    if candidate is None:
+        raise Refused("deliver prepare printed no candidate")
+    if args.attest:
+        writfold(args.writfold, "deliver", "attest", candidate, "--check", args.attest,
+                 "--statement", f"the adapter sent the package of invocation {record['id']} "
+                 f"as the prompt to {TESTED_HARNESS} (it did not observe what the model read)",
+                 "--by", NAME, "--run", args.run)
+    writfold(args.writfold, "deliver", "check", candidate, "--run", args.run)
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="claude_code.py")
+    sub = parser.add_subparsers(dest="verb", required=True)
+    for name in ("export", "run"):
+        p = sub.add_parser(name)
+        p.add_argument("pkg")
+        p.add_argument("--tools")
+        p.add_argument("--model")
+        if name == "run":
+            p.add_argument("--report", required=True)
+            p.add_argument("--harness", default=os.environ.get("WRITFOLD_HARNESS", "claude"))
+    p = sub.add_parser("deliver")
+    p.add_argument("pkg")
+    p.add_argument("--mode", required=True)
+    p.add_argument("--report", required=True)
+    p.add_argument("--run", required=True)
+    p.add_argument("--attest")
+    p.add_argument("--writfold", default="writfold")
+    args = parser.parse_args()
+    try:
+        return {"export": export, "run": run, "deliver": deliver}[args.verb](args)
+    except Refused as why:
+        sys.stderr.write(f"claude_code.py: refused: {why}\n")
+        return 3
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

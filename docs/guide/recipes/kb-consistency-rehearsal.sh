@@ -26,7 +26,9 @@ first() { "$@" 2>/dev/null | head -n 1 | awk '{print $2}'; }
 # run by a fake harness, the report delivered and checked; prints the
 # candidate id.
 prepare() {
-    printf '%s\n' "$1" > "$DIR/input-$2"
+    # The unit, then each member's file from the kept manifest: a worker
+    # cannot read a record from its id alone (found by the #150 hand run).
+    { printf '%s\n' "$1"; for id in $(echo "$1" | tr '~' ' '); do path_of "$id"; done; } > "$DIR/input-$2"
     inv=$(first writfold kb agent prepare consistency-reviewer --input "$DIR/input-$2" \
         --out "$DIR/pkg-$2" --for "pair-review.$1" $(at))
     sh "$ROOT/fixtures/harness/${3:-reads-record}.sh" "$DIR/pkg-$2" "$DIR/report-$2.md"
@@ -35,6 +37,8 @@ prepare() {
     writfold kb deliver check "$cand" --run "$RUN" >/dev/null 2>&1 || true
     echo "$cand"
 }
+# The file of member ID in the kept manifest.
+path_of() { awk -v id="$1" '$0 ~ "\"id\": \"" id "\"" { getline; sub(/.*"path": "/, ""); sub(/".*/, ""); print }' "$KEPT"; }
 cover() { show writfold kb gate cover pair-review "$1" supported "delivery:$2" --by agent $(at); }
 status() { show writfold kb gate status --budget-tokens 20000 $(at); }
 

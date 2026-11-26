@@ -4,6 +4,8 @@ tools = ["kb.read"]
 plan = "kb-consistency"
 needs = ["related-scope"]
 instructions = """
-Read the two records named in the input. Say whether they are consistent,
+The input's first line names the unit (two record ids joined by ~); the
+next two lines give each record's file, relative to the KB root. Read both
+files. Say whether the records are consistent,
 and quote the lines that disagree when they are not.
 """
