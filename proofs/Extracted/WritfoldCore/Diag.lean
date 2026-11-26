@@ -21,7 +21,7 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::diag::blocks]:
-    Source: 'crates/writfold-core/src/diag/mod.rs', lines 251:0-253:1
+    Source: 'crates/writfold-core/src/diag/mod.rs', lines 252:0-254:1
     Visibility: public -/
 def diag.blocks
   (errors : Std.Usize) (warnings : Std.Usize) (deny : Bool) : Result Bool := do

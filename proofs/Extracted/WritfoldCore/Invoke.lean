@@ -22,7 +22,7 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::invoke::Prepare]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 31:0-46:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 34:0-53:1
     Visibility: public -/
 structure invoke.Prepare where
   run_open : Bool
@@ -32,9 +32,11 @@ structure invoke.Prepare where
   input_read : Bool
   packet_required : Bool
   packet_complete : Bool
+  out_outside : Bool
+  for_item : invoke.ForItem
 
 /-- [writfold_core::invoke::prepare_check]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 63:0-83:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 86:0-112:1
     Visibility: public -/
 def invoke.prepare_check
   (facts : invoke.Prepare) :
@@ -53,11 +55,30 @@ def invoke.prepare_check
             if facts.packet_required
             then
               if facts.packet_complete
-              then ok (core.result.Result.Ok ())
+              then
+                if facts.out_outside
+                then
+                  match facts.for_item with
+                  | invoke.ForItem.Absent => ok (core.result.Result.Ok ())
+                  | invoke.ForItem.Known => ok (core.result.Result.Ok ())
+                  | invoke.ForItem.Unknown =>
+                    ok (core.result.Result.Err
+                      invoke.PrepareRefusal.ForUnknown)
+                else
+                  ok (core.result.Result.Err invoke.PrepareRefusal.OutInsideKb)
               else
                 ok (core.result.Result.Err
                   invoke.PrepareRefusal.PacketIncomplete)
-            else ok (core.result.Result.Ok ())
+            else
+              if facts.out_outside
+              then
+                match facts.for_item with
+                | invoke.ForItem.Absent => ok (core.result.Result.Ok ())
+                | invoke.ForItem.Known => ok (core.result.Result.Ok ())
+                | invoke.ForItem.Unknown =>
+                  ok (core.result.Result.Err invoke.PrepareRefusal.ForUnknown)
+              else
+                ok (core.result.Result.Err invoke.PrepareRefusal.OutInsideKb)
           else ok (core.result.Result.Err invoke.PrepareRefusal.InputUnread)
         else ok (core.result.Result.Err invoke.PrepareRefusal.PlanNotInRun)
       else ok (core.result.Result.Err invoke.PrepareRefusal.Closure)
@@ -65,7 +86,7 @@ def invoke.prepare_check
   else ok (core.result.Result.Err invoke.PrepareRefusal.RunClosed)
 
 /-- [writfold_core::invoke::first_unmet]: loop body 0:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 89:4-97:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 118:4-126:1
     Visibility: public -/
 @[rust_loop_body]
 def invoke.first_unmet_loop.body
@@ -84,7 +105,7 @@ def invoke.first_unmet_loop.body
   else ok (done none)
 
 /-- [writfold_core::invoke::first_unmet]: loop 0:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 89:4-97:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 118:4-126:1
     Visibility: public -/
 @[rust_loop]
 def invoke.first_unmet_loop
@@ -96,7 +117,7 @@ def invoke.first_unmet_loop
     index
 
 /-- [writfold_core::invoke::first_unmet]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 87:0-97:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 116:0-126:1
     Visibility: public -/
 @[reducible]
 def invoke.first_unmet
@@ -104,7 +125,7 @@ def invoke.first_unmet
   invoke.first_unmet_loop needs 0#usize
 
 /-- [writfold_core::invoke::prepare]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 101:0-109:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 130:0-138:1
     Visibility: public -/
 def invoke.prepare
   (facts : invoke.Prepare) (needs : Slice guard.Fact) :
@@ -121,7 +142,7 @@ def invoke.prepare
   | core.result.Result.Err _ => ok r
 
 /-- [writfold_core::invoke::Named]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 113:0-128:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 142:0-157:1
     Visibility: public -/
 structure invoke.Named where
   names : Bool
@@ -133,7 +154,7 @@ structure invoke.Named where
   single : Bool
 
 /-- [writfold_core::invoke::bound]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 133:0-150:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 162:0-179:1
     Visibility: public -/
 def invoke.bound (named : invoke.Named) : Result gate.Outcome := do
   if named.names

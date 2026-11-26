@@ -346,8 +346,17 @@ inductive investigation.Hypothesis where
 | Refuted : investigation.Hypothesis
 | Unknown : investigation.Hypothesis
 
+/-- [writfold_core::invoke::ForItem]
+    Source: 'crates/writfold-core/src/invoke.rs', lines 58:0-65:1
+    Visibility: public -/
+@[discriminant isize]
+inductive invoke.ForItem where
+| Absent : invoke.ForItem
+| Known : invoke.ForItem
+| Unknown : invoke.ForItem
+
 /-- [writfold_core::invoke::PrepareRefusal]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 51:0-60:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 70:0-83:1
     Visibility: public -/
 @[discriminant isize]
 inductive invoke.PrepareRefusal where
@@ -357,6 +366,8 @@ inductive invoke.PrepareRefusal where
 | PlanNotInRun : invoke.PrepareRefusal
 | InputUnread : invoke.PrepareRefusal
 | PacketIncomplete : invoke.PrepareRefusal
+| OutInsideKb : invoke.PrepareRefusal
+| ForUnknown : invoke.PrepareRefusal
 | Needs : Std.Usize → invoke.PrepareRefusal
 
 /-- [writfold_core::pin::Pin]
@@ -692,6 +703,30 @@ inductive subject.Pick where
 | Recorded : subject.Pick
 | Kb : subject.Pick
 | Nothing : subject.Pick
+
+/-- [writfold_core::units::Absent]
+    Source: 'crates/writfold-core/src/units.rs', lines 88:0-97:1
+    Visibility: public -/
+@[discriminant isize]
+inductive units.Absent where
+| NoGate : units.Absent
+| NotChecked : units.Absent
+| Unreadable : units.Absent
+| NotManifest : units.Absent
+| Partial : units.Absent
+| OutsideScope : units.Absent
+| SameName : units.Absent
+| OverCap : units.Absent
+
+/-- [writfold_core::units::Moved]
+    Source: 'crates/writfold-core/src/units.rs', lines 135:0-140:1
+    Visibility: public -/
+@[discriminant isize]
+inductive units.Moved where
+| Definition : units.Moved
+| Seed : units.Moved
+| First : units.Moved
+| Second : units.Moved
 
 /-- [writfold_core::vale::Level]
     Source: 'crates/writfold-core/src/vale.rs', lines 23:0-27:1

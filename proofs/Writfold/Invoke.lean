@@ -6,13 +6,16 @@ import Extracted.WritfoldCore.Types
 
 Theorems over the Aeneas translation of `writfold_core::invoke`.
 
-- `prepare_check_spec`: `prepare_check` names the first of its six facts,
-  in the fixed order, that does not hold (`firstRefusal`).
+- `prepare_check_spec`: `prepare_check` names the first of its eight
+  facts, in the fixed order, that does not hold (`firstRefusal`).
 - `prepare_ok_iff`: admitted exactly when the run is open, the step is
   current, the closure is admitted, every skill's plan is in the run, the
-  input was read, and a required packet is complete.
-- `plan_missing_refused`, `packet_incomplete_refused`: a missing plan, or
-  an incomplete packet the profile requires, is never admitted.
+  input was read, a required packet is complete, `--out` is outside the KB
+  and `--for`, when given, names an item the checklist has now (#167).
+- `plan_missing_refused`, `packet_incomplete_refused`, `out_inside_refused`,
+  `for_unknown_refused`: a missing plan, an incomplete packet the profile
+  requires, `--out` inside the KB, or `--for` an unknown item is never
+  admitted.
 - `bound_spec` (#149): `invocation.bound` fails when no invocation is
   named, is unknown when the named record does not read, and otherwise
   passes exactly when every fact holds (`bound_pass_iff`).
@@ -22,7 +25,7 @@ Theorems over the Aeneas translation of `writfold_core::invoke`.
   pass, whichever is newer.
 - `first_unmet_spec` (#154): the least index of a need that is not met.
 - `prepare_spec`, `prepare_needs_ok_iff`: `prepare` is `prepare_check`, then
-  the needs in order; admitted exactly when the six facts hold and every
+  the needs in order; admitted exactly when the eight facts hold and every
   need is met. `needs_unknown_refused`: a need that could not be judged is
   never admitted. `needs_first`: the refusal names the least unmet need.
   `no_needs_unchanged`: with no needs the decision is `prepare_check`'s.
@@ -41,27 +44,31 @@ def firstRefusal (f : invoke.Prepare) : Option invoke.PrepareRefusal :=
   else if !f.plans_in_run then some .PlanNotInRun
   else if !f.input_read then some .InputUnread
   else if f.packet_required && !f.packet_complete then some .PacketIncomplete
-  else none
+  else if !f.out_outside then some .OutInsideKb
+  else match f.for_item with
+    | .Unknown => some .ForUnknown
+    | _ => none
 
-/-- All six facts hold. -/
+/-- All eight facts hold. -/
 def Admitted (f : invoke.Prepare) : Prop :=
   f.run_open = true ∧ f.current_step = true ∧ f.closure_admitted = true ∧
   f.plans_in_run = true ∧ f.input_read = true ∧
-  (f.packet_required = true → f.packet_complete = true)
+  (f.packet_required = true → f.packet_complete = true) ∧
+  f.out_outside = true ∧ f.for_item ≠ .Unknown
 
 theorem prepare_check_spec (f : invoke.Prepare) :
     invoke.prepare_check f ⦃ r => r = match firstRefusal f with
       | none => .Ok ()
       | some e => .Err e ⦄ := by
-  rcases f with ⟨a, b, c, d, e, g, h⟩
+  rcases f with ⟨a, b, c, d, e, g, h, o, i⟩
   unfold invoke.prepare_check
   cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases g <;> cases h <;>
-    simp [firstRefusal]
+    cases o <;> cases i <;> simp [firstRefusal]
 
 theorem firstRefusal_none_iff (f : invoke.Prepare) : firstRefusal f = none ↔ Admitted f := by
-  rcases f with ⟨a, b, c, d, e, g, h⟩
+  rcases f with ⟨a, b, c, d, e, g, h, o, i⟩
   cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases g <;> cases h <;>
-    simp [firstRefusal, Admitted]
+    cases o <;> cases i <;> simp [firstRefusal, Admitted]
 
 theorem prepare_ok_iff (f : invoke.Prepare) :
     invoke.prepare_check f ⦃ r => r = .Ok () ↔ Admitted f ⦄ := by
@@ -85,9 +92,25 @@ theorem packet_incomplete_refused (f : invoke.Prepare) (hr : f.packet_required =
     invoke.prepare_check f ⦃ r => r ≠ .Ok () ⦄ := by
   apply WP.spec_mono (prepare_ok_iff f)
   intro r hiff hok
-  have := (hiff.mp hok).2.2.2.2.2 hr
+  have := (hiff.mp hok).2.2.2.2.2.1 hr
   rw [hc] at this
   cases this
+
+/-- `--out` inside the KB is never admitted (#167). -/
+theorem out_inside_refused (f : invoke.Prepare) (ho : f.out_outside = false) :
+    invoke.prepare_check f ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (prepare_ok_iff f)
+  intro r hiff hok
+  have := (hiff.mp hok).2.2.2.2.2.2.1
+  rw [ho] at this
+  cases this
+
+/-- `--for` an item the checklist does not have now is never admitted (#167). -/
+theorem for_unknown_refused (f : invoke.Prepare) (hu : f.for_item = .Unknown) :
+    invoke.prepare_check f ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (prepare_ok_iff f)
+  intro r hiff hok
+  exact (hiff.mp hok).2.2.2.2.2.2.2 hu
 
 /-- What `invocation.bound` decides. -/
 def boundOf (n : invoke.Named) : gate.Outcome :=
@@ -183,9 +206,9 @@ theorem first_unmet_spec (needs : Slice guard.Fact) :
 
 theorem firstRefusal_not_needs (f : invoke.Prepare) (k : Usize) :
     firstRefusal f ≠ some (.Needs k) := by
-  rcases f with ⟨a, b, c, d, g, p, q⟩
+  rcases f with ⟨a, b, c, d, g, p, q, o, i⟩
   cases a <;> cases b <;> cases c <;> cases d <;> cases g <;> cases p <;> cases q <;>
-    simp [firstRefusal]
+    cases o <;> cases i <;> simp [firstRefusal]
 
 /-- What `prepare` decides. -/
 def PrepareSpec (f : invoke.Prepare) (needs : List guard.Fact) :
@@ -215,7 +238,7 @@ theorem prepare_spec (f : invoke.Prepare) (needs : Slice guard.Fact) :
     | Needs k => exact absurd hf (firstRefusal_not_needs f k)
     | _ => simp [PrepareSpec, hf]
 
-/-- Admitted exactly when the six facts hold and every need is met. -/
+/-- Admitted exactly when the eight facts hold and every need is met. -/
 theorem prepare_needs_ok_iff (f : invoke.Prepare) (needs : Slice guard.Fact) :
     invoke.prepare f needs ⦃ r => r = .Ok () ↔ Admitted f ∧ AllMet needs.val ⦄ := by
   apply WP.spec_mono (prepare_spec f needs)

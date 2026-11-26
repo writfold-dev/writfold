@@ -18,6 +18,17 @@ Theorems over the Aeneas translation of `writfold_core::units`.
   its universe is present, it has a unit or allows none, and every unit
   is covered; `absent_universe_never_covered`,
   `empty_universe_needs_allow`.
+- `universe_first` (#165): `universe` names the first of its facts, in the
+  fixed order, that does not hold (`universeOf`); `universe_ok_iff`: a
+  universe exactly when the scope gate is defined and grounds as a passing
+  check, its kept file reads as a complete manifest whose members are
+  inside the scope, with distinct unit names, within 64 members.
+  `unchecked_scope_never_present`, `partial_manifest_never_present`,
+  `member_outside_scope_never_present`.
+- `unit_first_moved` (#166): `unit_moved` names the first of the
+  definition, the seed, the first and the second member that moved;
+  `unit_current_iff`: `None` exactly when none did. No other member is an
+  input to it.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -210,5 +221,118 @@ theorem empty_universe_needs_allow (present : Bool) (r : checklist.Rollup) :
   apply WP.spec_mono (generated_covered_iff present 0#usize false r)
   intro o ⟨h, _⟩
   cases ho : o.covered <;> simp_all
+
+/-! ## The universe (#165) -/
+
+/-- The scope gate stands satisfied by a check. -/
+def passing : gate.Standing → Bool
+  | .Checked .Satisfied => true
+  | _ => false
+
+/-- The first fact that does not hold, in the fixed order. -/
+def universeOf (f : units.Scope) : Option units.Absent :=
+  if !f.defined then some .NoGate
+  else if !passing f.standing then some .NotChecked
+  else if !f.reads then some .Unreadable
+  else if !f.manifest then some .NotManifest
+  else if !f.complete then some .Partial
+  else if !f.inside then some .OutsideScope
+  else if !f.distinct then some .SameName
+  else if 64 < f.members.val then some .OverCap
+  else none
+
+theorem universe_first (f : units.Scope) :
+    units.universe f ⦃ r => r = match universeOf f with
+      | none => .Ok ()
+      | some e => .Err e ⦄ := by
+  rcases f with ⟨d, st, r, m, c, i, ds, n⟩
+  unfold units.universe
+  cases d
+  · simp [universeOf]
+  · have hc : (n > units.MAX_MEMBERS) ↔ 64 < n.val := by
+      unfold units.MAX_MEMBERS; constructor <;> intro h <;> scalar_tac
+    have hm : units.MAX_MEMBERS.val = 64 := by unfold units.MAX_MEMBERS; scalar_tac
+    rcases st with (_ | _ | _ | _ | _) | _ | _ <;>
+      simp only [ground.of_gate, universeOf, passing, Bool.not_true,
+        Bool.not_false, Bool.false_eq_true, if_false, if_true] <;>
+      cases r <;> cases m <;> cases c <;> cases i <;> cases ds <;>
+      by_cases h : n > units.MAX_MEMBERS <;> simp_all
+    all_goals
+      have hn : ¬ (64 < n.val) := by omega
+      simp [hn]
+
+/-- All facts hold. -/
+def Present (f : units.Scope) : Prop :=
+  f.defined = true ∧ passing f.standing = true ∧ f.reads = true ∧
+  f.manifest = true ∧ f.complete = true ∧ f.inside = true ∧ f.distinct = true ∧
+  f.members.val ≤ 64
+
+theorem universeOf_none_iff (f : units.Scope) : universeOf f = none ↔ Present f := by
+  rcases f with ⟨d, st, r, m, c, i, ds, n⟩
+  unfold universeOf Present
+  rcases st with (_ | _ | _ | _ | _) | _ | _ <;>
+    cases d <;> cases r <;> cases m <;> cases c <;> cases i <;> cases ds <;>
+    by_cases h : 64 < n.val <;> simp [passing, h] <;> omega
+
+theorem universe_ok_iff (f : units.Scope) :
+    units.universe f ⦃ r => r = .Ok () ↔ Present f ⦄ := by
+  apply WP.spec_mono (universe_first f)
+  intro r hr
+  rw [hr, ← universeOf_none_iff]
+  cases universeOf f <;> simp
+
+/-- A scope gate that is attested, waived, open, stale, failed or unknown
+gives no universe. -/
+theorem unchecked_scope_never_present (f : units.Scope)
+    (h : passing f.standing = false) :
+    units.universe f ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (universe_ok_iff f)
+  intro r hiff hok
+  have := (hiff.mp hok).2.1
+  rw [h] at this
+  cases this
+
+/-- Only a satisfied check passes: `passing` is exactly that standing. -/
+theorem passing_iff (st : gate.Standing) :
+    passing st = true ↔ st = .Checked .Satisfied := by
+  rcases st with (_ | _ | _ | _ | _) | _ | _ <;> simp [passing]
+
+/-- A manifest that says `partial` gives none, whatever the exit status. -/
+theorem partial_manifest_never_present (f : units.Scope) (h : f.complete = false) :
+    units.universe f ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (universe_ok_iff f)
+  intro r hiff hok
+  have := (hiff.mp hok).2.2.2.2.1
+  rw [h] at this
+  cases this
+
+/-- A member the scope would not notice changing gives none. -/
+theorem member_outside_scope_never_present (f : units.Scope) (h : f.inside = false) :
+    units.universe f ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (universe_ok_iff f)
+  intro r hiff hok
+  have := (hiff.mp hok).2.2.2.2.2.1
+  rw [h] at this
+  cases this
+
+/-! ## Unit-local staleness (#166) -/
+
+/-- The first input of a unit that moved. -/
+def movedOf (d s a b : Bool) : Option units.Moved :=
+  if !d then some .Definition
+  else if !s then some .Seed
+  else if !a then some .First
+  else if !b then some .Second
+  else none
+
+theorem unit_first_moved (d s a b : Bool) :
+    units.unit_moved d s a b ⦃ r => r = movedOf d s a b ⦄ := by
+  unfold units.unit_moved
+  cases d <;> cases s <;> cases a <;> cases b <;> simp [movedOf]
+
+theorem unit_current_iff (d s a b : Bool) :
+    units.unit_moved d s a b ⦃ r => r = none ↔ d = true ∧ s = true ∧ a = true ∧ b = true ⦄ := by
+  unfold units.unit_moved
+  cases d <;> cases s <;> cases a <;> cases b <;> simp
 
 end Writfold.Core.Units

@@ -20,15 +20,24 @@ only (an edit on both sides is Git's conflict, left to the user).
 
 Ready and stale are derived on every read, never stored.
 
+The run's current step is derived from the done records, never stored: s1
+until a candidate of s1 is done, then s2. `agent prepare` records the
+invocation at the current step, and `deliver prepare` records the current
+step in the candidate (#164): the worker delivers any payload naming any
+invocation, at the step that is current where it delivers. Two invocations
+of one step are in the model, so a retry is.
+
 Mutants (constants, one per configuration): Single (the single-report
 rule), Recheck (advance re-checks under the lock), SameStep (the bound
-step is compared), AdvanceOnDeliver (delivery writes a done record).
+step is compared), AdvanceOnDeliver (delivery writes a done record),
+RecordedStep (the step compared is the candidate's recorded one; FALSE
+compares the run's current step, as before #164).
 ***************************************************************************)
-CONSTANTS Single, Recheck, SameStep, AdvanceOnDeliver, MaxCrashes, MaxDeliveries
+CONSTANTS Single, Recheck, SameStep, AdvanceOnDeliver, RecordedStep, MaxCrashes, MaxDeliveries
 
 Clones == {"a", "b"}
 Steps == {"s1", "s2"}
-Invs == {"i1"}
+Invs == {"i1", "i2"}
 Payloads == {"p", "q"}
 Home == [i \in Invs |-> "a"]
 Digests == {0, 1}
@@ -54,10 +63,17 @@ Live(c) == live[c] \ gone[c]
 
 Prepared(c, i) == prep[c][i] /= None
 
+\* The run's current step, derived from the done records.
+Cur(c) == IF \E y \in done[c] : y.step = "s1" THEN "s2" ELSE "s1"
+
+\* The step the check compares with the invocation's: the candidate's
+\* recorded step, or (the pre-#164 rule) the run's current step.
+Judged(c, x) == IF RecordedStep THEN x.step ELSE Cur(c)
+
 \* Whether the check would pass now (the product's rule, with mutants).
 Bound(c, x) ==
   /\ Prepared(c, x.inv)
-  /\ (SameStep => prep[c][x.inv].step = x.step)
+  /\ (SameStep => prep[c][x.inv].step = Judged(c, x))
   /\ prep[c][x.inv].digest = closure[c]
   /\ (Single => \A y \in Live(c) : y.inv = x.inv => y.payload = x.payload)
 
@@ -78,16 +94,18 @@ Init ==
   /\ crashes = 0
   /\ sent = 0
 
-Prepare(i, s) ==
+Prepare(i) ==
   LET c == Home[i] IN
   /\ ~Prepared(c, i)
-  /\ prep' = [prep EXCEPT ![c][i] = [step |-> s, digest |-> closure[c]]]
+  /\ prep' = [prep EXCEPT ![c][i] = [step |-> Cur(c), digest |-> closure[c]]]
   /\ last' = "prepare"
   /\ UNCHANGED <<closure, live, gone, checked, done, pending, bad, crashes, sent>>
 
-\* The worker: any payload, any invocation, any step, in any clone.
+\* The worker: any payload, any invocation, in any clone; the candidate
+\* records the step current there.
 Deliver(c, x) ==
   /\ sent < MaxDeliveries
+  /\ x.step = Cur(c)
   /\ sent' = sent + 1
   /\ x \notin live[c]
   /\ live' = [live EXCEPT ![c] = @ \union {x}]
@@ -120,6 +138,7 @@ Withdraw(c, x) ==
 Decide(c, x) ==
   /\ pending[c] = {}
   /\ Ready(c, x)
+  /\ x.step = Cur(c)
   /\ x \notin done[c]
   /\ pending' = [pending EXCEPT ![c] = {x}]
   /\ last' = "decide"
@@ -158,7 +177,7 @@ Merge(from, into) ==
   /\ UNCHANGED <<pending, bad, crashes, sent>>
 
 Next ==
-  \/ \E i \in Invs, s \in Steps : Prepare(i, s)
+  \/ \E i \in Invs : Prepare(i)
   \/ \E c \in Clones, x \in Cands : Deliver(c, x) \/ Check(c, x) \/ Withdraw(c, x) \/ Decide(c, x)
   \/ EditClosure
   \/ \E c \in Clones : Publish(c) \/ Crash(c)
@@ -180,6 +199,12 @@ DoneOnlyWhenReady == ~bad
 \* An invocation prepared at one step never makes a candidate ready for another.
 OtherStepNeverBinds ==
   \A c \in Clones, x \in Cands : Ready(c, x) => prep[c][x.inv].step = x.step
+
+\* A candidate that passes the check still passes after its step is done
+\* (#164): an advance changes neither its record, its closure nor its bytes,
+\* so the answer may not change either. A receiver re-runs checks.
+CheckIsStable ==
+  [][\A c \in Clones, x \in Cands : (last' = "advance" /\ Bound(c, x)) => Bound(c, x)']_vars
 
 \* Delivering a report or checking it never writes a done record.
 DeliveryDoesNotAdvance ==

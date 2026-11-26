@@ -1,7 +1,7 @@
 //! Agent invocations (#147, #148, RFC 2026-11-25-agent-vocabulary,
 //! calculus §3.8 and §6): whether `agent prepare` may record one.
 //!
-//! [`prepare_check`] judges six facts the caller classified, in a fixed
+//! [`prepare_check`] judges eight facts the caller classified, in a fixed
 //! order, and names the first that does not hold:
 //!
 //! 1. the run is open;
@@ -12,7 +12,10 @@
 //!    run's splice keys);
 //! 5. the input file was read;
 //! 6. when the profile says `packet = "required"`, the packet is complete
-//!    ([`crate::packet::complete`]).
+//!    ([`crate::packet::complete`]);
+//! 7. `--out` is outside the KB (#167);
+//! 8. `--for GATE.ITEM`, when given, names an item the checklist has now
+//!    (#167).
 //!
 //! [`bound`] (#149) is the built-in check `invocation.bound`: a delivery
 //! candidate passes only while it names an invocation of this run and step,
@@ -43,6 +46,22 @@ pub struct Prepare {
     pub packet_required: bool,
     /// The context packet is complete.
     pub packet_complete: bool,
+    /// `--out` does not resolve inside the KB root (#167).
+    pub out_outside: bool,
+    /// What `--for` names (#167).
+    pub for_item: ForItem,
+}
+
+/// What `--for GATE.ITEM` names, as the caller resolved it against the
+/// checklist's items as they are now (#167).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ForItem {
+    /// No `--for`.
+    Absent,
+    /// An item the checklist has now.
+    Known,
+    /// No such gate, not a checklist, or no such item now.
+    Unknown,
 }
 
 /// Why `agent prepare` is refused: the first fact, in the fixed order,
@@ -55,11 +74,15 @@ pub enum PrepareRefusal {
     PlanNotInRun,
     InputUnread,
     PacketIncomplete,
+    /// `--out` is inside the KB (#167).
+    OutInsideKb,
+    /// `--for` names no item the checklist has now (#167).
+    ForUnknown,
     /// The `needs` gate at this index is not met now (#154).
     Needs(usize),
 }
 
-/// The first of the six facts that does not hold, or admitted.
+/// The first of the eight facts that does not hold, or admitted.
 pub fn prepare_check(facts: &Prepare) -> Result<(), PrepareRefusal> {
     if !facts.run_open {
         return Err(PrepareRefusal::RunClosed);
@@ -79,7 +102,13 @@ pub fn prepare_check(facts: &Prepare) -> Result<(), PrepareRefusal> {
     if facts.packet_required && !facts.packet_complete {
         return Err(PrepareRefusal::PacketIncomplete);
     }
-    Ok(())
+    if !facts.out_outside {
+        return Err(PrepareRefusal::OutInsideKb);
+    }
+    match facts.for_item {
+        ForItem::Unknown => Err(PrepareRefusal::ForUnknown),
+        ForItem::Absent | ForItem::Known => Ok(()),
+    }
 }
 
 /// The least index of a need that is not [`Fact::Met`]: an unmet or an
@@ -151,7 +180,7 @@ pub fn bound(named: &Named) -> Outcome {
 
 #[cfg(test)]
 mod tests {
-    use super::{Named, Prepare, PrepareRefusal, bound, prepare_check};
+    use super::{ForItem, Named, Prepare, PrepareRefusal, bound, prepare_check};
     use crate::gate::Outcome;
 
     const BOUND: Named = Named {
@@ -211,11 +240,18 @@ mod tests {
         input_read: true,
         packet_required: true,
         packet_complete: true,
+        out_outside: true,
+        for_item: ForItem::Known,
     };
 
     #[test]
-    fn all_six_admit() {
+    fn all_eight_admit() {
         assert_eq!(prepare_check(&ALL), Ok(()));
+        let absent = Prepare {
+            for_item: ForItem::Absent,
+            ..ALL
+        };
+        assert_eq!(prepare_check(&absent), Ok(()));
     }
 
     #[test]
@@ -263,6 +299,20 @@ mod tests {
                 },
                 PrepareRefusal::PacketIncomplete,
             ),
+            (
+                Prepare {
+                    out_outside: false,
+                    ..ALL
+                },
+                PrepareRefusal::OutInsideKb,
+            ),
+            (
+                Prepare {
+                    for_item: ForItem::Unknown,
+                    ..ALL
+                },
+                PrepareRefusal::ForUnknown,
+            ),
         ];
         for (facts, want) in cases {
             assert_eq!(prepare_check(&facts), Err(want));
@@ -277,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    fn needs_are_judged_after_the_six_facts() {
+    fn needs_are_judged_after_the_eight_facts() {
         use super::{first_unmet, prepare};
         use crate::guard::Fact;
         assert_eq!(prepare(&ALL, &[]), prepare_check(&ALL));

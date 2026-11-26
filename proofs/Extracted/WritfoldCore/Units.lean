@@ -2,7 +2,9 @@
 -- [writfold_core]
 module
 public import Aeneas
+public import Extracted.WritfoldCore.Types
 public import Extracted.WritfoldCore.Checklist
+public import Extracted.WritfoldCore.Ground
 @[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
@@ -22,12 +24,12 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::units::MAX_MEMBERS]
-    Source: 'crates/writfold-core/src/units.rs', lines 20:0-20:34
+    Source: 'crates/writfold-core/src/units.rs', lines 29:0-29:34
     Visibility: public -/
 @[global_simps, irreducible] def units.MAX_MEMBERS : Std.Usize := 64#usize
 
 /-- [writfold_core::units::pairs]: loop body 1:
-    Source: 'crates/writfold-core/src/units.rs', lines 32:8-35:9
+    Source: 'crates/writfold-core/src/units.rs', lines 41:8-44:9
     Visibility: public -/
 @[rust_loop_body]
 def units.pairs_loop0_loop0.body
@@ -44,7 +46,7 @@ def units.pairs_loop0_loop0.body
   else ok (done out)
 
 /-- [writfold_core::units::pairs]: loop 1:
-    Source: 'crates/writfold-core/src/units.rs', lines 32:8-35:9
+    Source: 'crates/writfold-core/src/units.rs', lines 41:8-44:9
     Visibility: public -/
 @[rust_loop]
 def units.pairs_loop0_loop0
@@ -57,7 +59,7 @@ def units.pairs_loop0_loop0
     (out, b)
 
 /-- [writfold_core::units::pairs]: loop body 0:
-    Source: 'crates/writfold-core/src/units.rs', lines 30:4-37:5
+    Source: 'crates/writfold-core/src/units.rs', lines 39:4-46:5
     Visibility: public -/
 @[rust_loop_body]
 def units.pairs_loop0.body
@@ -75,7 +77,7 @@ def units.pairs_loop0.body
   else ok (done out)
 
 /-- [writfold_core::units::pairs]: loop 0:
-    Source: 'crates/writfold-core/src/units.rs', lines 30:4-37:5
+    Source: 'crates/writfold-core/src/units.rs', lines 39:4-46:5
     Visibility: public -/
 @[rust_loop]
 def units.pairs_loop0
@@ -88,7 +90,7 @@ def units.pairs_loop0
     (out, a)
 
 /-- [writfold_core::units::pairs]:
-    Source: 'crates/writfold-core/src/units.rs', lines 24:0-39:1
+    Source: 'crates/writfold-core/src/units.rs', lines 33:0-48:1
     Visibility: public -/
 def units.pairs
   (n : Std.Usize) :
@@ -102,7 +104,7 @@ def units.pairs
     ok (some out)
 
 /-- [writfold_core::units::generated]:
-    Source: 'crates/writfold-core/src/units.rs', lines 44:0-51:1
+    Source: 'crates/writfold-core/src/units.rs', lines 53:0-60:1
     Visibility: public -/
 def units.generated
   (present : Bool) (count : Std.Usize) (allow_empty : Bool)
@@ -118,5 +120,72 @@ def units.generated
   if «universe»
   then ok rollup
   else ok { rollup with covered := false }
+
+/-- [writfold_core::units::Scope]
+    Source: 'crates/writfold-core/src/units.rs', lines 65:0-83:1
+    Visibility: public -/
+structure units.Scope where
+  defined : Bool
+  standing : gate.Standing
+  reads : Bool
+  manifest : Bool
+  complete : Bool
+  inside : Bool
+  distinct : Bool
+  members : Std.Usize
+
+/-- [writfold_core::units::universe]:
+    Source: 'crates/writfold-core/src/units.rs', lines 104:0-131:1
+    Visibility: public -/
+def units.universe
+  (facts : units.Scope) : Result (core.result.Result Unit units.Absent) := do
+  if facts.defined
+  then
+    let g ← ground.of_gate facts.defined facts.standing
+    match g with
+    | grounding.Grounding.Grounded =>
+      if facts.reads
+      then
+        if facts.manifest
+        then
+          if facts.complete
+          then
+            if facts.inside
+            then
+              if facts.distinct
+              then
+                if facts.members > units.MAX_MEMBERS
+                then ok (core.result.Result.Err units.Absent.OverCap)
+                else ok (core.result.Result.Ok ())
+              else ok (core.result.Result.Err units.Absent.SameName)
+            else ok (core.result.Result.Err units.Absent.OutsideScope)
+          else ok (core.result.Result.Err units.Absent.Partial)
+        else ok (core.result.Result.Err units.Absent.NotManifest)
+      else ok (core.result.Result.Err units.Absent.Unreadable)
+    | grounding.Grounding.Attested =>
+      ok (core.result.Result.Err units.Absent.NotChecked)
+    | grounding.Grounding.Ungrounded =>
+      ok (core.result.Result.Err units.Absent.NotChecked)
+  else ok (core.result.Result.Err units.Absent.NoGate)
+
+/-- [writfold_core::units::unit_moved]:
+    Source: 'crates/writfold-core/src/units.rs', lines 145:0-164:1
+    Visibility: public -/
+def units.unit_moved
+  (definition_same : Bool) (seed_same : Bool) (first_same : Bool)
+  (second_same : Bool) :
+  Result (Option units.Moved)
+  := do
+  if definition_same
+  then
+    if seed_same
+    then
+      if first_same
+      then if second_same
+           then ok none
+           else ok (some units.Moved.Second)
+      else ok (some units.Moved.First)
+    else ok (some units.Moved.Seed)
+  else ok (some units.Moved.Definition)
 
 end writfold_core

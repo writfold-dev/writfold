@@ -177,10 +177,18 @@ theorem moved_iff (g : grounding.Grounding) (same : Bool) :
 /-! ## A worker's report (#156) -/
 
 /-- `delivery:<candidate>` grounds exactly when the candidate is found,
-ready, and bound to its invocation; otherwise nothing, never attested. -/
-theorem of_delivery_grounded_iff (found ready bound : Bool) :
-    ground.of_delivery found ready bound ⦃ g =>
-      (g = .Grounded ↔ found = true ∧ ready = true ∧ bound = true) ∧ g ≠ .Attested ⦄ := by
+live, ready, and bound to its invocation; otherwise nothing, never
+attested (#164). -/
+theorem of_delivery_grounded_iff (found live ready bound : Bool) :
+    ground.of_delivery found live ready bound ⦃ g =>
+      (g = .Grounded ↔ found = true ∧ live = true ∧ ready = true ∧ bound = true)
+        ∧ g ≠ .Attested ⦄ := by
+  unfold ground.of_delivery
+  cases found <;> cases live <;> cases ready <;> cases bound <;> simp
+
+/-- A withdrawn report grounds nothing, whatever else holds (#164). -/
+theorem withdrawn_never_grounds (found ready bound : Bool) :
+    ground.of_delivery found false ready bound ⦃ g => g = .Ungrounded ⦄ := by
   unfold ground.of_delivery
   cases found <;> cases ready <;> cases bound <;> simp
 

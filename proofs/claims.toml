@@ -3036,11 +3036,15 @@ theorems = [
   "Writfold.Core.Invoke.prepare_ok_iff",
   "Writfold.Core.Invoke.plan_missing_refused",
   "Writfold.Core.Invoke.packet_incomplete_refused",
+  "Writfold.Core.Invoke.out_inside_refused",
+  "Writfold.Core.Invoke.for_unknown_refused",
 ]
 total = "Writfold.Core.Invoke.prepare_check_spec"
 mutants = [
   "prepare-skips-packet",
   "prepare-skips-plan",
+  "prepare-skips-out",
+  "prepare-skips-for",
 ]
 
 [[claim]]
@@ -3132,13 +3136,53 @@ mutants = [
 
 [[claim]]
 crate = "writfold-core"
+file = "crates/writfold-core/src/units.rs"
+function = "universe"
+lean = "writfold_core.units.universe"
+theorems = [
+  "Writfold.Core.Units.universe_first",
+  "Writfold.Core.Units.universeOf_none_iff",
+  "Writfold.Core.Units.universe_ok_iff",
+  "Writfold.Core.Units.unchecked_scope_never_present",
+  "Writfold.Core.Units.passing_iff",
+  "Writfold.Core.Units.partial_manifest_never_present",
+  "Writfold.Core.Units.member_outside_scope_never_present",
+]
+total = "Writfold.Core.Units.universe_first"
+mutants = [
+  "universe-attested-scope",
+  "universe-partial-present",
+  "universe-outside-scope-present",
+  "universe-over-cap-present",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/units.rs"
+function = "unit_moved"
+lean = "writfold_core.units.unit_moved"
+theorems = [
+  "Writfold.Core.Units.unit_first_moved",
+  "Writfold.Core.Units.unit_current_iff",
+]
+total = "Writfold.Core.Units.unit_first_moved"
+mutants = [
+  "unit-ignores-second",
+  "unit-ignores-seed",
+  "unit-ignores-definition",
+]
+
+[[claim]]
+crate = "writfold-core"
 file = "crates/writfold-core/src/ground.rs"
 function = "of_delivery"
 lean = "writfold_core.ground.of_delivery"
 theorems = [
   "Writfold.Core.Ground.of_delivery_grounded_iff",
+  "Writfold.Core.Ground.withdrawn_never_grounds",
 ]
 total = "Writfold.Core.Ground.of_delivery_grounded_iff"
 mutants = [
   "delivery-unready-grounds",
+  "delivery-withdrawn-grounds",
 ]

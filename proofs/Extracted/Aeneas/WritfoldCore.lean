@@ -2443,7 +2443,7 @@ def delivery.guard
     | delivery.Unread.Deny => ok false
 
 /-- [writfold_core::diag::blocks]:
-    Source: 'crates/writfold-core/src/diag/mod.rs', lines 251:0-253:1
+    Source: 'crates/writfold-core/src/diag/mod.rs', lines 252:0-254:1
     Visibility: public -/
 def diag.blocks
   (errors : Std.Usize) (warnings : Std.Usize) (deny : Bool) : Result Bool := do
@@ -3206,24 +3206,27 @@ def ground.of_gate
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_delivery]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 33:0-39:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 34:0-40:1
     Visibility: public -/
 def ground.of_delivery
-  (found : Bool) (ready : Bool) (bound : Bool) :
+  (found : Bool) (live : Bool) (ready : Bool) (bound : Bool) :
   Result grounding.Grounding
   := do
   if found
   then
-    if ready
+    if live
     then
-      if bound
-      then ok grounding.Grounding.Grounded
+      if ready
+      then
+        if bound
+        then ok grounding.Grounding.Grounded
+        else ok grounding.Grounding.Ungrounded
       else ok grounding.Grounding.Ungrounded
     else ok grounding.Grounding.Ungrounded
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::ReceiptFacts]
-    Source: 'crates/writfold-core/src/ground.rs', lines 42:0-53:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 43:0-54:1
     Visibility: public -/
 structure ground.ReceiptFacts where
   same_subject : Bool
@@ -3233,7 +3236,7 @@ structure ground.ReceiptFacts where
   gate_met : Bool
 
 /-- [writfold_core::ground::of_receipt]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 56:0-67:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 57:0-68:1
     Visibility: public -/
 def ground.of_receipt
   (facts : ground.ReceiptFacts) : Result grounding.Grounding := do
@@ -3254,7 +3257,7 @@ def ground.of_receipt
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_token]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 71:0-77:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 72:0-78:1
     Visibility: public -/
 def ground.of_token
   (count : Std.Usize) (not_fresh : Std.Usize) :
@@ -3295,7 +3298,7 @@ def observe.grounds
   | observe.Status.Error => ok false
 
 /-- [writfold_core::ground::of_observation]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 81:0-87:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 82:0-88:1
     Visibility: public -/
 def ground.of_observation
   (status : observe.Status) (count : Std.Usize) (not_fresh : Std.Usize) :
@@ -3310,7 +3313,7 @@ def ground.of_observation
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_statement]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 90:0-96:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 91:0-97:1
     Visibility: public -/
 def ground.of_statement
   (current_attestation : Bool) : Result grounding.Grounding := do
@@ -3319,7 +3322,7 @@ def ground.of_statement
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::moved]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 100:0-102:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 101:0-103:1
     Visibility: public -/
 def ground.moved
   (now : grounding.Grounding) (same_word : Bool) : Result Bool := do
@@ -4345,8 +4348,17 @@ def investigation.conclude
       «open»
     }
 
+/-- [writfold_core::invoke::ForItem]
+    Source: 'crates/writfold-core/src/invoke.rs', lines 58:0-65:1
+    Visibility: public -/
+@[discriminant isize]
+inductive invoke.ForItem where
+| Absent : invoke.ForItem
+| Known : invoke.ForItem
+| Unknown : invoke.ForItem
+
 /-- [writfold_core::invoke::Prepare]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 31:0-46:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 34:0-53:1
     Visibility: public -/
 structure invoke.Prepare where
   run_open : Bool
@@ -4356,9 +4368,11 @@ structure invoke.Prepare where
   input_read : Bool
   packet_required : Bool
   packet_complete : Bool
+  out_outside : Bool
+  for_item : invoke.ForItem
 
 /-- [writfold_core::invoke::PrepareRefusal]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 51:0-60:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 70:0-83:1
     Visibility: public -/
 @[discriminant isize]
 inductive invoke.PrepareRefusal where
@@ -4368,10 +4382,12 @@ inductive invoke.PrepareRefusal where
 | PlanNotInRun : invoke.PrepareRefusal
 | InputUnread : invoke.PrepareRefusal
 | PacketIncomplete : invoke.PrepareRefusal
+| OutInsideKb : invoke.PrepareRefusal
+| ForUnknown : invoke.PrepareRefusal
 | Needs : Std.Usize → invoke.PrepareRefusal
 
 /-- [writfold_core::invoke::prepare_check]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 63:0-83:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 86:0-112:1
     Visibility: public -/
 def invoke.prepare_check
   (facts : invoke.Prepare) :
@@ -4390,11 +4406,30 @@ def invoke.prepare_check
             if facts.packet_required
             then
               if facts.packet_complete
-              then ok (core.result.Result.Ok ())
+              then
+                if facts.out_outside
+                then
+                  match facts.for_item with
+                  | invoke.ForItem.Absent => ok (core.result.Result.Ok ())
+                  | invoke.ForItem.Known => ok (core.result.Result.Ok ())
+                  | invoke.ForItem.Unknown =>
+                    ok (core.result.Result.Err
+                      invoke.PrepareRefusal.ForUnknown)
+                else
+                  ok (core.result.Result.Err invoke.PrepareRefusal.OutInsideKb)
               else
                 ok (core.result.Result.Err
                   invoke.PrepareRefusal.PacketIncomplete)
-            else ok (core.result.Result.Ok ())
+            else
+              if facts.out_outside
+              then
+                match facts.for_item with
+                | invoke.ForItem.Absent => ok (core.result.Result.Ok ())
+                | invoke.ForItem.Known => ok (core.result.Result.Ok ())
+                | invoke.ForItem.Unknown =>
+                  ok (core.result.Result.Err invoke.PrepareRefusal.ForUnknown)
+              else
+                ok (core.result.Result.Err invoke.PrepareRefusal.OutInsideKb)
           else ok (core.result.Result.Err invoke.PrepareRefusal.InputUnread)
         else ok (core.result.Result.Err invoke.PrepareRefusal.PlanNotInRun)
       else ok (core.result.Result.Err invoke.PrepareRefusal.Closure)
@@ -4402,7 +4437,7 @@ def invoke.prepare_check
   else ok (core.result.Result.Err invoke.PrepareRefusal.RunClosed)
 
 /-- [writfold_core::invoke::first_unmet]: loop body 0:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 89:4-97:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 118:4-126:1
     Visibility: public -/
 @[rust_loop_body]
 def invoke.first_unmet_loop.body
@@ -4421,7 +4456,7 @@ def invoke.first_unmet_loop.body
   else ok (done none)
 
 /-- [writfold_core::invoke::first_unmet]: loop 0:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 89:4-97:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 118:4-126:1
     Visibility: public -/
 @[rust_loop]
 def invoke.first_unmet_loop
@@ -4433,7 +4468,7 @@ def invoke.first_unmet_loop
     index
 
 /-- [writfold_core::invoke::first_unmet]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 87:0-97:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 116:0-126:1
     Visibility: public -/
 @[reducible]
 def invoke.first_unmet
@@ -4441,7 +4476,7 @@ def invoke.first_unmet
   invoke.first_unmet_loop needs 0#usize
 
 /-- [writfold_core::invoke::prepare]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 101:0-109:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 130:0-138:1
     Visibility: public -/
 def invoke.prepare
   (facts : invoke.Prepare) (needs : Slice guard.Fact) :
@@ -4458,7 +4493,7 @@ def invoke.prepare
   | core.result.Result.Err _ => ok r
 
 /-- [writfold_core::invoke::Named]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 113:0-128:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 142:0-157:1
     Visibility: public -/
 structure invoke.Named where
   names : Bool
@@ -4470,7 +4505,7 @@ structure invoke.Named where
   single : Bool
 
 /-- [writfold_core::invoke::bound]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 133:0-150:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 162:0-179:1
     Visibility: public -/
 def invoke.bound (named : invoke.Named) : Result gate.Outcome := do
   if named.names
@@ -7016,12 +7051,12 @@ def subject.pick
            else ok subject.Pick.Nothing
 
 /-- [writfold_core::units::MAX_MEMBERS]
-    Source: 'crates/writfold-core/src/units.rs', lines 20:0-20:34
+    Source: 'crates/writfold-core/src/units.rs', lines 29:0-29:34
     Visibility: public -/
 @[global_simps, irreducible] def units.MAX_MEMBERS : Std.Usize := 64#usize
 
 /-- [writfold_core::units::pairs]: loop body 1:
-    Source: 'crates/writfold-core/src/units.rs', lines 32:8-35:9
+    Source: 'crates/writfold-core/src/units.rs', lines 41:8-44:9
     Visibility: public -/
 @[rust_loop_body]
 def units.pairs_loop0_loop0.body
@@ -7038,7 +7073,7 @@ def units.pairs_loop0_loop0.body
   else ok (done out)
 
 /-- [writfold_core::units::pairs]: loop 1:
-    Source: 'crates/writfold-core/src/units.rs', lines 32:8-35:9
+    Source: 'crates/writfold-core/src/units.rs', lines 41:8-44:9
     Visibility: public -/
 @[rust_loop]
 def units.pairs_loop0_loop0
@@ -7051,7 +7086,7 @@ def units.pairs_loop0_loop0
     (out, b)
 
 /-- [writfold_core::units::pairs]: loop body 0:
-    Source: 'crates/writfold-core/src/units.rs', lines 30:4-37:5
+    Source: 'crates/writfold-core/src/units.rs', lines 39:4-46:5
     Visibility: public -/
 @[rust_loop_body]
 def units.pairs_loop0.body
@@ -7069,7 +7104,7 @@ def units.pairs_loop0.body
   else ok (done out)
 
 /-- [writfold_core::units::pairs]: loop 0:
-    Source: 'crates/writfold-core/src/units.rs', lines 30:4-37:5
+    Source: 'crates/writfold-core/src/units.rs', lines 39:4-46:5
     Visibility: public -/
 @[rust_loop]
 def units.pairs_loop0
@@ -7082,7 +7117,7 @@ def units.pairs_loop0
     (out, a)
 
 /-- [writfold_core::units::pairs]:
-    Source: 'crates/writfold-core/src/units.rs', lines 24:0-39:1
+    Source: 'crates/writfold-core/src/units.rs', lines 33:0-48:1
     Visibility: public -/
 def units.pairs
   (n : Std.Usize) :
@@ -7096,7 +7131,7 @@ def units.pairs
     ok (some out)
 
 /-- [writfold_core::units::generated]:
-    Source: 'crates/writfold-core/src/units.rs', lines 44:0-51:1
+    Source: 'crates/writfold-core/src/units.rs', lines 53:0-60:1
     Visibility: public -/
 def units.generated
   (present : Bool) (count : Std.Usize) (allow_empty : Bool)
@@ -7112,6 +7147,97 @@ def units.generated
   if «universe»
   then ok rollup
   else ok { rollup with covered := false }
+
+/-- [writfold_core::units::Scope]
+    Source: 'crates/writfold-core/src/units.rs', lines 65:0-83:1
+    Visibility: public -/
+structure units.Scope where
+  defined : Bool
+  standing : gate.Standing
+  reads : Bool
+  manifest : Bool
+  complete : Bool
+  inside : Bool
+  distinct : Bool
+  members : Std.Usize
+
+/-- [writfold_core::units::Absent]
+    Source: 'crates/writfold-core/src/units.rs', lines 88:0-97:1
+    Visibility: public -/
+@[discriminant isize]
+inductive units.Absent where
+| NoGate : units.Absent
+| NotChecked : units.Absent
+| Unreadable : units.Absent
+| NotManifest : units.Absent
+| Partial : units.Absent
+| OutsideScope : units.Absent
+| SameName : units.Absent
+| OverCap : units.Absent
+
+/-- [writfold_core::units::universe]:
+    Source: 'crates/writfold-core/src/units.rs', lines 104:0-131:1
+    Visibility: public -/
+def units.universe
+  (facts : units.Scope) : Result (core.result.Result Unit units.Absent) := do
+  if facts.defined
+  then
+    let g ← ground.of_gate facts.defined facts.standing
+    match g with
+    | grounding.Grounding.Grounded =>
+      if facts.reads
+      then
+        if facts.manifest
+        then
+          if facts.complete
+          then
+            if facts.inside
+            then
+              if facts.distinct
+              then
+                if facts.members > units.MAX_MEMBERS
+                then ok (core.result.Result.Err units.Absent.OverCap)
+                else ok (core.result.Result.Ok ())
+              else ok (core.result.Result.Err units.Absent.SameName)
+            else ok (core.result.Result.Err units.Absent.OutsideScope)
+          else ok (core.result.Result.Err units.Absent.Partial)
+        else ok (core.result.Result.Err units.Absent.NotManifest)
+      else ok (core.result.Result.Err units.Absent.Unreadable)
+    | grounding.Grounding.Attested =>
+      ok (core.result.Result.Err units.Absent.NotChecked)
+    | grounding.Grounding.Ungrounded =>
+      ok (core.result.Result.Err units.Absent.NotChecked)
+  else ok (core.result.Result.Err units.Absent.NoGate)
+
+/-- [writfold_core::units::Moved]
+    Source: 'crates/writfold-core/src/units.rs', lines 135:0-140:1
+    Visibility: public -/
+@[discriminant isize]
+inductive units.Moved where
+| Definition : units.Moved
+| Seed : units.Moved
+| First : units.Moved
+| Second : units.Moved
+
+/-- [writfold_core::units::unit_moved]:
+    Source: 'crates/writfold-core/src/units.rs', lines 145:0-164:1
+    Visibility: public -/
+def units.unit_moved
+  (definition_same : Bool) (seed_same : Bool) (first_same : Bool)
+  (second_same : Bool) :
+  Result (Option units.Moved)
+  := do
+  if definition_same
+  then
+    if seed_same
+    then
+      if first_same
+      then if second_same
+           then ok none
+           else ok (some units.Moved.Second)
+      else ok (some units.Moved.First)
+    else ok (some units.Moved.Seed)
+  else ok (some units.Moved.Definition)
 
 /-- [writfold_core::vale::Level]
     Source: 'crates/writfold-core/src/vale.rs', lines 23:0-27:1

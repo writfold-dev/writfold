@@ -27,11 +27,12 @@ pub fn of_gate(found: bool, standing: Standing) -> Grounding {
     }
 }
 
-/// `delivery:<candidate>` (#156): grounded exactly when the candidate is
-/// found in this run, is ready, and passes `invocation.bound`; anything
-/// else grounds nothing. What the report says is never judged.
-pub fn of_delivery(found: bool, ready: bool, bound: bool) -> Grounding {
-    if found && ready && bound {
+/// `delivery:<candidate>` (#156, #164): grounded exactly when the candidate
+/// is found in this run, is live (not withdrawn), is ready, and passes
+/// `invocation.bound`; anything else grounds nothing. What the report says
+/// is never judged.
+pub fn of_delivery(found: bool, live: bool, ready: bool, bound: bool) -> Grounding {
+    if found && live && ready && bound {
         Grounding::Grounded
     } else {
         Grounding::Ungrounded
@@ -103,7 +104,10 @@ pub fn moved(now: Grounding, same_word: bool) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{ReceiptFacts, moved, of_gate, of_observation, of_receipt, of_statement, of_token};
+    use super::{
+        ReceiptFacts, moved, of_delivery, of_gate, of_observation, of_receipt, of_statement,
+        of_token,
+    };
     use crate::gate::{Standing, State};
     use crate::grounding::Grounding;
     use crate::observe::{ALL, Status};
@@ -150,6 +154,10 @@ mod tests {
                     assert_eq!(got == Grounding::Grounded, status == Status::Ok && any);
                 }
             }
+        }
+        for bits in 0..16u8 {
+            let [f, l, r, b] = [1, 2, 4, 8].map(|m| bits & m != 0);
+            assert_eq!(of_delivery(f, l, r, b) == Grounding::Grounded, bits == 15);
         }
         assert_eq!(of_statement(true), Grounding::Attested);
         assert_eq!(of_statement(false), Grounding::Ungrounded);
