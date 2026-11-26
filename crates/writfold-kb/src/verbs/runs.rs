@@ -232,6 +232,7 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     let (deliveries, notes) = crate::deliver::resume_rows(session, &rec);
     answer.rows.extend(deliveries);
     answer.notes.extend(notes);
+    (answer.rows).extend(crate::agents::shown::rows(&session.ws.root, &rec));
     answer
         .rows
         .extend(crate::write::artifact::rows(session, &rec)?);

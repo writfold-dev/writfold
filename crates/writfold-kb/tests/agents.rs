@@ -32,10 +32,12 @@ fn setup(w: &World) -> TestResult {
 }
 
 fn inspect(w: &World) -> TestResult<(serde_json::Value, u8)> {
-    let mut request = w.request(Verb::AgentInspect(writfold_kb::agents::Inspect {
-        id: "reviewer".into(),
-        repo: None,
-    }));
+    let mut request = w.request(Verb::Agent(writfold_kb::agents::AgentVerb::Inspect(
+        writfold_kb::agents::Inspect {
+            id: "reviewer".into(),
+            repo: None,
+        },
+    )));
     request.json = true;
     let out = writfold_kb::run(&request)?;
     Ok((serde_json::from_str(&out.text)?, out.exit))

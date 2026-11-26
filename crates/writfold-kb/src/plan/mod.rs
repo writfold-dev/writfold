@@ -32,6 +32,7 @@ pub mod moved;
 pub mod pin;
 mod pin_write;
 mod place;
+pub(crate) use place::ancestors;
 pub mod recheck;
 pub mod records;
 pub mod refs;

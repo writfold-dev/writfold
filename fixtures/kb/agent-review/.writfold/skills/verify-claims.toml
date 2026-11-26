@@ -1,0 +1,12 @@
+# A skill: instructions, the tools it needs, and the plan its work belongs
+# to. agent prepare refuses until that plan is in the run.
+schema = "writfold-skill/1"
+id = "verify-claims"
+description = "Check each claim in a change description against the diff."
+tools = ["repo.read", "git.diff"]
+plan = "claims-review"
+instructions = """
+List each claim the change description makes. For each one, say whether
+the diff supports it, and quote the lines that do. Say "not shown" when
+the diff neither supports nor contradicts it.
+"""

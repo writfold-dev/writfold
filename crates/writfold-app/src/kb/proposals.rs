@@ -13,14 +13,47 @@ pub const SESSION_ENV: &str = "WRITFOLD_SESSION";
 pub const SWITCHES: [&str; 2] = ["tracked", "local"];
 
 /// Flags here that take a value: `policy --paths GATE`.
-pub const VALUES: [&str; 1] = ["paths"];
+pub const VALUES: [&str; 4] = ["paths", "input", "out", "retry-of"];
+
+pub const AGENT: &str = "usage: agent inspect <id> [--repo DIR] | agent prepare <id> --input FILE --out DIR [--retry-of ID] [--by WHO] [--run ID] [--repo DIR]";
+
+/// `agent inspect|prepare <id>`.
+fn agent(sub: &str, id: &str, common: &Common) -> Result<Verb, String> {
+    use writfold_kb::agents::{AgentVerb, Inspect, prepare::Prepare};
+    let path = |key: &str| get(common, key).map(std::path::PathBuf::from);
+    let only = |keys: &[&str]| {
+        (common.values.keys())
+            .find(|k| !keys.contains(&k.as_str()))
+            .cloned()
+    };
+    let verb = match sub {
+        "inspect" => match only(&["repo"]) {
+            Some(flag) => return Err(format!("--{flag} does not apply to agent inspect")),
+            None => AgentVerb::Inspect(Inspect {
+                id: id.to_owned(),
+                repo: path("repo"),
+            }),
+        },
+        "prepare" => AgentVerb::Prepare(Prepare {
+            id: id.to_owned(),
+            input: path("input").ok_or("agent prepare needs --input FILE")?,
+            out: path("out").ok_or("agent prepare needs --out DIR")?,
+            retry_of: get(common, "retry-of"),
+            by: get(common, "by"),
+            run: get(common, "run"),
+            repo: path("repo"),
+        }),
+        _ => return Err(AGENT.into()),
+    };
+    Ok(Verb::Agent(verb))
+}
 
 /// The write flags each verb here accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::kinds::PROPOSE.as_slice(),
         "lint" => &["repo", "deny-warnings", "records"],
-        "agent" => &["repo"],
+        "agent" => &["repo", "input", "out", "retry-of", "by", "run"],
         "init" => &["example", "dry-run"],
         "policy" => &["paths"],
         _ => &[],
@@ -70,13 +103,8 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
                 records: switch(common, "records"),
             }));
         }
-        ("agent", [sub, id]) if sub == "inspect" => {
-            return Some(Ok(Verb::AgentInspect(writfold_kb::agents::Inspect {
-                id: id.clone(),
-                repo: get(common, "repo").map(std::path::PathBuf::from),
-            })));
-        }
-        ("agent", _) => return Some(Err("usage: agent inspect <id> [--repo DIR]".into())),
+        ("agent", [sub, id]) => return Some(agent(sub, id, common)),
+        ("agent", _) => return Some(Err(AGENT.into())),
         ("check", []) => return Some(Ok(Verb::Check { scope: None })),
         ("check", [scope]) => {
             return Some(Ok(Verb::Check {

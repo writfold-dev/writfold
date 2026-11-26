@@ -35,6 +35,8 @@ pub struct Prepare {
     pub audience: Option<String>,
     pub destination: Option<String>,
     pub run: Option<String>,
+    /// `--invocation`: the agent invocation this candidate reports (#149).
+    pub invocation: Option<String>,
 }
 
 /// A manifest, as written and read back.
@@ -53,6 +55,8 @@ pub struct Manifest {
     /// Its place among the run's candidates of its mode (0 when the
     /// manifest predates it): what decides which candidate is newest.
     pub seq: u64,
+    /// The agent invocation it reports, when prepared with `--invocation`.
+    pub invocation: Option<String>,
 }
 
 fn manifest_bytes(m: &Manifest, size: usize, rendering: &str) -> Vec<u8> {
@@ -69,6 +73,10 @@ fn manifest_bytes(m: &Manifest, size: usize, rendering: &str) -> Vec<u8> {
         "recorded": m.recorded,
         "seq": m.seq,
     });
+    let mut value = value;
+    if let (Some(id), Some(map)) = (&m.invocation, value.as_object_mut()) {
+        map.insert("invocation".into(), json!(id));
+    }
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
     out
@@ -102,6 +110,10 @@ pub fn parse(text: &str, run: &str, id: &str) -> std::result::Result<Manifest, S
         seq: match value.get("seq") {
             None => 0,
             Some(n) => n.as_u64().ok_or("/seq is not a non-negative integer")?,
+        },
+        invocation: match value.get("invocation") {
+            None => None,
+            Some(_) => Some(field(&value, "/invocation")?),
         },
     };
     if m.id != id || m.run != run {
@@ -218,6 +230,7 @@ pub fn plan(
         prepared: digest,
         recorded: crate::time::stamp(now),
         seq: super::step::next_seq(root, run_dir, run_id, &p.mode),
+        invocation: invoked(root, run, p.invocation.as_deref())?,
     };
     let op = Op::CreateDir {
         path: format!("{run_dir}/{DIR}/{id}"),
@@ -230,6 +243,26 @@ pub fn plan(
         ],
     };
     Ok((op, id))
+}
+
+/// `--invocation ID`: an invocation recorded in this run (#149).
+fn invoked(
+    root: &Path,
+    (run_id, run_dir): (&str, &str),
+    id: Option<&str>,
+) -> Result<Option<String>> {
+    let Some(id) = id else {
+        return Ok(None);
+    };
+    let path = crate::agents::invocation::path(run_dir, id);
+    match root.join(&path).is_file()
+        && (!id.is_empty() && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-'))
+    {
+        true => Ok(Some(id.to_owned())),
+        false => Err(KbError::Refused(format!(
+            "--invocation {id}: run {run_id} has no such invocation; record one with writfold kb agent prepare"
+        ))),
+    }
 }
 
 pub use super::pick::named as pick;

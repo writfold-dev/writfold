@@ -42,6 +42,7 @@ fn prepare(w: &World, mode: &str, text: &str) -> TestResult<(String, u8)> {
         audience: Some("external".into()),
         destination: None,
         run: Some(RUN.into()),
+        invocation: None,
     });
     deliver(w, verb, NOW)
 }

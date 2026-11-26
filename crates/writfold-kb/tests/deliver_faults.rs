@@ -41,6 +41,7 @@ fn prepare(from: &Path) -> DeliverVerb {
         audience: Some("internal".into()),
         destination: None,
         run: Some(RUN.into()),
+        invocation: None,
     })
 }
 
@@ -163,6 +164,7 @@ fn a_script_gate_receipt_survives_every_fault_point() -> TestResult {
             audience: Some("external".into()),
             destination: None,
             run: Some(RUN.into()),
+            invocation: None,
         });
         w.run(&request(&w.kb, p))?;
         child_at(&w.kb, "check", step)?;

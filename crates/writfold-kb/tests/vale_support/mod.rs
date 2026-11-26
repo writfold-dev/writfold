@@ -32,6 +32,7 @@ pub fn prepare(w: &World, text: &str) -> TestResult<(String, u8)> {
         audience: Some("internal".into()),
         destination: Some("docs".into()),
         run: Some(RUN.into()),
+        invocation: None,
     });
     deliver(w, verb, NOW)
 }

@@ -19,7 +19,7 @@ run run-… [open] try it @runs/run-…/manifest.json:8 !current
 # note: policy: none configured (continuity only: checkpoints, records and citations work without one)
 ```
 
-`writfold kb init [DIR] [--example research-policy|delivery] [--dry-run]` is the one `kb` verb that needs no KB. It creates `inventory/assets/.gitkeep`, the directory every verb looks for, and nothing else. Every file is create-new: a path that exists is listed `kept  PATH (exists; not changed)` and left alone; `init` never overwrites, never commits, and writes no project, record or run. `--dry-run` prints the same rows and writes nothing. Exit 0 when every file was written or kept; 3 when `DIR` is inside another KB (`refused: <dir> is inside the KB at <root>; run init there, or pass --kb`); 1 for a directory that cannot be written. With `--json`, one row per path with `status` `wrote` or `kept`.
+`writfold kb init [DIR] [--example research-policy|delivery|agent] [--dry-run]` is the one `kb` verb that needs no KB. It creates `inventory/assets/.gitkeep`, the directory every verb looks for, and nothing else. Every file is create-new: a path that exists is listed `kept  PATH (exists; not changed)` and left alone; `init` never overwrites, never commits, and writes no project, record or run. `--dry-run` prints the same rows and writes nothing. Exit 0 when every file was written or kept; 3 when `DIR` is inside another KB (`refused: <dir> is inside the KB at <root>; run init there, or pass --kb`); 1 for a directory that cannot be written. With `--json`, one row per path with `status` `wrote` or `kept`.
 
 Every other verb, run outside a KB, now names the fix: `no KB found: pass --kb DIR, set WRITFOLD_KB, run inside a KB, or create one here: writfold kb init`.
 

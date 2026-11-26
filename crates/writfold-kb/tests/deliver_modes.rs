@@ -61,6 +61,7 @@ fn prepare_verb(w: &World, mode: &str, text: &str) -> TestResult<DeliverVerb> {
         audience: Some("external".into()),
         destination: Some("harbor main".into()),
         run: Some(RUN.into()),
+        invocation: None,
     }))
 }
 

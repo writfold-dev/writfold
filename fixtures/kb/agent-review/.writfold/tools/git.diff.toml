@@ -1,0 +1,3 @@
+schema = "writfold-tool/1"
+id = "git.diff"
+description = "Show the change under review."

@@ -602,3 +602,19 @@ Read as design inputs on 25 November 2026:
   `ref.undefined`, `ref.wrong-kind`, `file.twice`, `value.twice`,
   `value.unmeetable` (a listed skill needs a tool the profile does not
   grant).
+- 2026-11-26: #147, #148 and #149 built; #151's example and guide
+  written. `agent prepare` takes no step name: it prepares at the run's
+  current step, and the record's publication is guarded by the shipped
+  re-check under the write lock (`Decided::Current`), so a step that moved
+  is refused, not recorded. "In the run" for a skill's plan is decided by
+  `compose::covers` over the template names spliced or included at the
+  current step or an ancestor (by name; a moved template is already
+  `!template-moved`). `--out` must be new or empty; `--by` is optional.
+  `invocation.bound` judges the step at `deliver check` (the step that
+  owes the mode must be the invocation's step); on every read it judges
+  again only what can move after a pass, the closure and a second report.
+  The closure at check and on read is resolved from the KB root and the
+  run's repository. Pinning delivery modes and the definitions they name
+  is split to #161: modes are not pinned today, and the per-report
+  re-check already makes a moved closure `stale`. The lenient guard rule
+  counting an unready report is tested and documented in the guide.

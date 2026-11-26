@@ -6,6 +6,14 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.22
+
+- **Agent vocabulary** ([#143](https://github.com/writfold-dev/writfold/issues/143), [agents](agents.md)): new definition files `.writfold/tools/`, `.writfold/skills/` and `.writfold/agents/`, read by `kb lint`; new verbs `agent inspect` and `agent prepare`; a new run directory `runs/<run>/invocations/`. A KB without these directories lints and answers as before.
+- Every definition file Writfold reads now accepts multi-line `"""` strings. Such a file was refused before (`syntax.subset`); a line-ending backslash and more than three closing quotes are still refused.
+- `deliver prepare --invocation ID` writes `invocation` into `delivery.json`. A manifest without it keeps its bytes. A new built-in check, `invocation.bound`, with a new mode key `agent`. The check is never a default, so the built-in modes and existing receipts are unchanged.
+- `resume` adds one row per invocation (the newest three), and the run row in `runs` and `resume` gains an `invocations:` line, when the run has any.
+- `kb init --example agent` writes the example in [agents](agents.md).
+
 ## v0.6.0-dev.21
 
 - **Vale for documents** ([#117](https://github.com/writfold-dev/writfold/issues/117)): a new built-in check, `prose.vale`, with new mode keys `vale` and `vale_block`, new profile files `.writfold/deliveries/vale-<name>.toml`, and a new KB directory `.writfold/vale/<name>/` for the Vale config and styles. It is never a default, so the built-in modes and existing receipts are unchanged. Mode names starting `vale-` are refused, as `deny-*` and `prose-*` are. `kb init --example delivery` also writes a `design-doc` mode, the `house` profile and an example style.

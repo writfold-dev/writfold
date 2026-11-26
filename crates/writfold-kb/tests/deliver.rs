@@ -62,6 +62,7 @@ pub fn prepare(
         audience: Some(audience.into()),
         destination: destination.map(str::to_owned),
         run: Some(RUN.into()),
+        invocation: None,
     };
     deliver(w, DeliverVerb::Prepare(p), at)
 }
@@ -352,6 +353,7 @@ fn refusals() -> TestResult {
         audience: Some(audience.into()),
         destination: None,
         run: Some(RUN.into()),
+        invocation: None,
     };
     assert!(refused(DeliverVerb::Prepare(p("email", "internal"))).is_err());
     assert!(refused(DeliverVerb::Prepare(p("pr-comment", "public"))).is_err());

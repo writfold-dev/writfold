@@ -4,7 +4,7 @@
 //! a script gate adds no write path).
 use super::candidate::{self, Candidate};
 use super::checks::{self, Evaluated};
-use super::config::{self, CLAIMS, LENGTH, PARAGRAPHS, PROSE, REFERENCES, VALE};
+use super::config::{self, BOUND, CLAIMS, LENGTH, PARAGRAPHS, PROSE, REFERENCES, VALE};
 use super::receipt::{self, Facts};
 use crate::error::{KbError, Result};
 use crate::index::query::Rec;
@@ -60,7 +60,7 @@ pub(super) fn run(
     let filed = receipt::filed(root, &c.dir, &rec.id, &c.id);
     for ob in &wanted {
         let evaluated = evaluate(
-            session,
+            (session, rec),
             c,
             (&text.0, &text.1),
             ob,
@@ -126,7 +126,7 @@ fn write_payload(
 /// Evaluate one obligation: the payload for the paragraph bound, the deny
 /// list and script gates; the candidate's own tokens for cited claims.
 fn evaluate(
-    session: &Session<'_>,
+    (session, rec): (&Session<'_>, &Rec),
     c: &Candidate,
     (payload, source): (&str, &str),
     ob: &config::Obligation,
@@ -146,6 +146,7 @@ fn evaluate(
         REFERENCES => checks::references(payload, deny),
         CLAIMS => checks::claims(session, source, &c.payload_path())?,
         LENGTH => checks::length(payload, mode),
+        BOUND => super::bound::evaluate(session, rec, c, mode.agent.as_deref()),
         PROSE => match &mode.prose {
             Some(rules) => super::prose::evaluate(payload, rules),
             None => return Err(KbError::Refused(format!("{PROSE} needs a prose rule set"))),

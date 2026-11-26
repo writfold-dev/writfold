@@ -16,7 +16,7 @@ use blocks::blocks;
 
 type TestResult<T = ()> = Result<T, Box<dyn Error>>;
 
-const PAGES: [&str; 14] = [
+const PAGES: [&str; 15] = [
     "adopting",
     "README",
     "kb-layout",
@@ -31,6 +31,7 @@ const PAGES: [&str; 14] = [
     "assurance",
     "json",
     "policy",
+    "agents",
 ];
 
 fn guide() -> PathBuf {
@@ -108,6 +109,28 @@ fn delivery(file: &str, text: &str, read: impl Fn(&Path) -> Result<bool, String>
     }
 }
 
+/// Read a tool, skill or agent profile the way `kb lint` does, in a scratch
+/// root holding the `instructions_file` it names.
+fn manifest(
+    kind: writfold_kb::agents::DefKind,
+    text: &str,
+    map: &std::collections::BTreeMap<String, Value>,
+) -> TestResult {
+    let id = string(map, "id")?;
+    let root =
+        std::env::temp_dir().join(format!("writfold-guide-agent-{}-{id}", std::process::id()));
+    if let Ok(file) = string(map, "instructions_file") {
+        let path = root.join(file);
+        std::fs::create_dir_all(path.parent().ok_or("no parent")?)?;
+        std::fs::write(path, "Instructions.\n")?;
+    }
+    std::fs::create_dir_all(&root)?;
+    let read = writfold_kb::agents::manifest::check(kind, text, &id, "guide", &root);
+    std::fs::remove_dir_all(&root)?;
+    read.map(|_| ())
+        .map_err(|r| format!("{:?}", r.diagnostics.first().map(|d| &d.message)).into())
+}
+
 /// Accept the block with the real parser for its `schema`, or say why not.
 fn accept(text: &str) -> TestResult {
     let map = toml::parse(text)?;
@@ -178,6 +201,9 @@ fn accept(text: &str) -> TestResult {
             writfold_kb::plan::required::parse(text.as_bytes())?;
             Ok(())
         }
+        "writfold-tool/1" => manifest(writfold_kb::agents::DefKind::Tool, text, &map),
+        "writfold-skill/1" => manifest(writfold_kb::agents::DefKind::Skill, text, &map),
+        "writfold-agent-profile/1" => manifest(writfold_kb::agents::DefKind::Agent, text, &map),
         other => Err(format!("no parser reads schema {other:?}").into()),
     }
 }

@@ -1,0 +1,8 @@
+# The plan the verify-claims skill names: one step that owes the worker's
+# report as a delivery of mode claims-report.
+schema = "writfold-plan/1"
+name = "claims-review"
+description = "a worker reviews the change's claims; its report is bound to the invocation"
+steps = [
+  "review: deliver:claims-report",
+]

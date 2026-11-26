@@ -153,3 +153,32 @@ pub(super) fn prose(
         }
     }
 }
+
+/// `agent`: the profile `invocation.bound` accepts. Required when `checks`
+/// lists `invocation.bound` and refused otherwise. `Some(None)` when absent
+/// and not needed, `None` on a fault.
+pub(super) fn agent(c: &mut Check<'_>, listed: bool) -> Option<Option<String>> {
+    match (c.text("agent"), listed) {
+        (Field::Bad, _) => None,
+        (Field::Absent, false) => Some(None),
+        (Field::Absent, true) => {
+            let why = "invocation.bound needs agent = \"<id>\", naming .writfold/agents/<id>.toml"
+                .to_owned();
+            c.error("key.missing", None, why).label("no agent");
+            None
+        }
+        (Field::Got(v), false) => {
+            let why =
+                "`agent` names a profile, but checks does not list invocation.bound".to_owned();
+            c.error("value.conflict", Some(v.span), why)
+                .label("not checked");
+            None
+        }
+        (Field::Got(v), true) if !crate::write::is_slug(v.str()) => {
+            let why = format!("{:?} is not an agent id", v.str());
+            c.error("value.form", Some(v.span), why).label("not an id");
+            None
+        }
+        (Field::Got(v), true) => Some(Some(v.value.text)),
+    }
+}

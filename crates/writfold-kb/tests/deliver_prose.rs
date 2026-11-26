@@ -26,6 +26,7 @@ fn prepare(w: &World, mode: &str, text: &str) -> TestResult<(String, u8)> {
         audience: Some("internal".into()),
         destination: Some("harbor main".into()),
         run: Some(RUN.into()),
+        invocation: None,
     });
     deliver(w, verb, NOW)
 }

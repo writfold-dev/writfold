@@ -16,6 +16,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built, with your own modes |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
 | [watch](watch.md) | Recorded run progress in eight read-only views, and the knowledge base (decisions, status, tracker, impact, stale) as a second mode; layouts, controls, refresh and colour themes | built (T5) |
+| [agents](agents.md) | Tools, skills and agent profiles; `agent inspect`, `agent prepare`, and a worker's report bound to its invocation (`invocation.bound`) | built in v0.6.0-dev.22 |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
 | [adopting](adopting.md) | Moving an existing workflow onto Writfold: guards in audit first, several sessions at once, a short path for small changes, gates for some repositories, converting a registry of checks, sources only an agent's tools reach, a lookup hook | recipes over built features (v0.6.0-dev.6) |

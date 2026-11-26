@@ -48,6 +48,7 @@ fn a_delivery_receipt_written_after_a_clock_ran_back_still_decides() -> TestResu
         audience: Some("internal".into()),
         destination: None,
         run: Some(RUN.into()),
+        invocation: None,
     };
     let (text, exit) = deliver(&w, DeliverVerb::Prepare(p), NOW)?;
     assert_eq!(exit, 0, "{text}");
@@ -99,6 +100,7 @@ fn a_receipt_without_seq_is_read_and_comes_first() -> TestResult {
         audience: Some("internal".into()),
         destination: None,
         run: Some(RUN.into()),
+        invocation: None,
     };
     deliver(&w, DeliverVerb::Prepare(p), NOW)?;
     let dir = w.kb.join(format!("runs/{RUN}/deliveries"));

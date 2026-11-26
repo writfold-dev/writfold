@@ -112,6 +112,8 @@ runs/run-20261112T211025Z-7fe148/
   artifacts/           one file per checkpoint naming what the run made in an attached store
                        (checkpoint --artifact; built in v0.6.0-dev.8)
   deliveries/<id>/     candidate.md, delivery.json, checks/, statements/
+  invocations/<id>.json  one file per agent prepare: what a worker was handed, as paths and
+                       digests (built in v0.6.0-dev.22; see agents.md)
 ```
 
 The worktree is recorded, not created. `writfold-run.json` holds its local path; everything else in a run is free of local paths.

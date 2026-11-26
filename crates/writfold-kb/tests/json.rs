@@ -192,6 +192,7 @@ fn delivery_labels_are_documented() -> TestResult {
         audience: Some("external".into()),
         destination: None,
         run: run.clone(),
+        invocation: None,
     });
     w.run(&w.request(Verb::Deliver(prepare)))?;
     let page = std::fs::read_to_string(

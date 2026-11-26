@@ -104,6 +104,18 @@ fn no_evidence_a_waiver_and_stale_inputs_are_refused() -> TestResult {
         refused(&text, "statement"),
         "a waiver is not a pass: {text}"
     );
+    // Nor is an attestation, such as a harness's observation of a worker
+    // (#149): one cannot even be recorded for a mechanical gate.
+    let (w, rev) = policy("[\"unit\"]")?;
+    let attested = say(&w, Kind::Attested, "unit").map_err(|e| e.to_string());
+    assert!(
+        attested
+            .as_ref()
+            .is_err_and(|e| e.contains("only a passing gate run satisfies it")),
+        "{attested:?}"
+    );
+    let (text, _) = handoff(&w, &rev, "HEAD")?;
+    assert!(refused(&text, "no-evidence"), "{text}");
     let (w, rev) = policy("[\"unit\"]")?;
     assert_eq!(check(&w, "unit")?, 0);
     let moved = commit(&w, &[("src/ledger.rs", "pub fn changed() {}\n")], "change")?;

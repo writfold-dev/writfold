@@ -76,6 +76,7 @@ pub fn prepare(w: &World, mode: &str, text: &str, at: i64) -> TestResult<String>
         audience: None,
         destination: Some("harbor#42".into()),
         run: Some(RUN.into()),
+        invocation: None,
     });
     let (out, exit) = deliver(w, verb, at)?;
     assert_eq!(exit, 0, "{out}");

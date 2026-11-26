@@ -99,6 +99,8 @@ pub fn rows(session: &Session<'_>, rec: &Rec) -> Result<Vec<Row>> {
     if current_of(session).as_deref() == Some(rec.id.as_str()) {
         row.flags.push("current".into());
     }
+    row.more
+        .extend(crate::agents::shown::summary(&session.ws.root, rec));
     let mut out = vec![row];
     let (path, found) = entries(session, rec);
     if let Some(entry) = found.last() {

@@ -55,6 +55,9 @@ pub struct Mode {
     /// `vale` and `vale_block`: the profile `prose.vale` runs
     /// ([`super::vale_profile`]); required with that check, refused without.
     pub vale: Option<super::vale_profile::Vale>,
+    /// `agent`: the profile whose invocations `invocation.bound` accepts;
+    /// required with that check, refused without it (#149).
+    pub agent: Option<String>,
 }
 
 impl Mode {
@@ -120,6 +123,7 @@ pub(super) fn default(name: &str) -> Mode {
         audience: None,
         prose: None,
         vale: None,
+        agent: None,
     }
 }
 

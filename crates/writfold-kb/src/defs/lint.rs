@@ -203,9 +203,6 @@ pub fn enclosing(kb: &Path, cwd: &Path) -> Option<PathBuf> {
 
 /// `kb lint` from its request ([`crate::Verb::Lint`]).
 pub fn run(kb: &Path, request: &crate::Request) -> Result<Output> {
-    if let crate::Verb::AgentInspect(i) = &request.verb {
-        return crate::agents::inspect::run(kb, request, &i.id, i.repo.as_deref());
-    }
     let crate::Verb::Lint {
         paths,
         repo,

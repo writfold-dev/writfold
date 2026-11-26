@@ -201,8 +201,8 @@ pub enum Verb {
     },
     /// `catalog diff|check`: asset catalogs as reviewable patches (#86).
     Catalog(catalog::CatalogVerb),
-    /// `agent inspect <id> [--repo DIR]` ([`agents::inspect`]).
-    AgentInspect(agents::Inspect),
+    /// `agent inspect|prepare` ([`agents`]).
+    Agent(agents::AgentVerb),
 }
 
 /// One invocation.
@@ -237,44 +237,26 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     let mut ws = workspace::discover(request.kb.as_deref(), &request.cwd)?;
     ws.seat.session = seat::session_id(session);
     let now = request.now.unwrap_or_else(time::now);
-    if let Verb::Write(write) = &request.verb {
-        return write::execute(&ws, request, write, now);
-    }
-    if let Verb::Gate(verb) = &request.verb {
-        return gate::execute(&ws, request, verb, now);
-    }
-    if let Verb::Guard(guard::GuardVerb::Status) = &request.verb {
-        return guard::status::execute(&ws, request, now);
-    }
-    if let Verb::Guard(guard::GuardVerb::Log { rule, since }) = &request.verb {
-        return guard::log_report(&ws, request, (rule.as_deref(), *since), now);
-    }
-    if let Verb::Deliver(verb) = &request.verb {
-        return deliver::execute(&ws, request, verb, now);
-    }
-    if let Verb::Plan(verb) = &request.verb {
-        return plan::execute(&ws, request, verb, now);
-    }
-    if let Verb::Proposal(verb) = &request.verb {
-        return proposal::execute(&ws, request, verb, now);
-    }
-    if let Verb::Checker(verb) = &request.verb {
-        return stale::checker::verb::execute(&ws, request, verb, now);
-    }
-    if let Verb::StaleRecord { scope } = &request.verb {
-        return stale::checker::record::execute(&ws, request, scope.as_deref(), now);
-    }
-    if let Verb::Delta(verb) = &request.verb {
-        return delta::execute(&ws, request, verb, now);
-    }
-    if matches!(request.verb, Verb::Lint { .. } | Verb::AgentInspect(_)) {
-        return defs::lint::run(&ws.root, request);
-    }
-    if let Verb::Catalog(verb) = &request.verb {
-        return catalog::execute(&ws, request, verb, now);
-    }
-    if let Verb::Check { scope } = &request.verb {
-        return check::execute(&ws, request, scope.as_deref(), now);
+    match &request.verb {
+        Verb::Write(v) => return write::execute(&ws, request, v, now),
+        Verb::Gate(v) => return gate::execute(&ws, request, v, now),
+        Verb::Guard(guard::GuardVerb::Status) => return guard::status::execute(&ws, request, now),
+        Verb::Guard(guard::GuardVerb::Log { rule, since }) => {
+            return guard::log_report(&ws, request, (rule.as_deref(), *since), now);
+        }
+        Verb::Deliver(v) => return deliver::execute(&ws, request, v, now),
+        Verb::Plan(v) => return plan::execute(&ws, request, v, now),
+        Verb::Proposal(v) => return proposal::execute(&ws, request, v, now),
+        Verb::Checker(v) => return stale::checker::verb::execute(&ws, request, v, now),
+        Verb::StaleRecord { scope } => {
+            return stale::checker::record::execute(&ws, request, scope.as_deref(), now);
+        }
+        Verb::Delta(v) => return delta::execute(&ws, request, v, now),
+        Verb::Agent(v) => return agents::execute(&ws, request, v, now),
+        Verb::Lint { .. } => return defs::lint::run(&ws.root, request),
+        Verb::Catalog(v) => return catalog::execute(&ws, request, v, now),
+        Verb::Check { scope } => return check::execute(&ws, request, scope.as_deref(), now),
+        _ => {}
     }
     let tool = match &ws.repo {
         Some(_) => Some(workspace::GitTool::locate()?),

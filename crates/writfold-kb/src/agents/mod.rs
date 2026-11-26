@@ -10,10 +10,16 @@
 //!
 //! Reading is tested ([`manifest`]); whether a profile's closure holds
 //! together is decided by [`writfold_core::compose`] over the facts
-//! [`refs`] gathers. Nothing here runs or records anything.
+//! [`refs`] gathers. `agent inspect` records nothing; `agent prepare`
+//! ([`prepare`]) records an invocation ([`invocation`]) and writes a
+//! package ([`package`]). Nothing here starts a model.
 pub mod inspect;
+pub mod invocation;
 pub mod manifest;
+pub mod package;
+pub mod prepare;
 pub mod refs;
+pub mod shown;
 
 use std::path::PathBuf;
 
@@ -26,6 +32,26 @@ pub const AGENTS: &str = ".writfold/agents";
 pub struct Inspect {
     pub id: String,
     pub repo: Option<PathBuf>,
+}
+
+/// One `agent` verb.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum AgentVerb {
+    Inspect(Inspect),
+    Prepare(prepare::Prepare),
+}
+
+/// Answer one `agent` verb.
+pub fn execute(
+    ws: &crate::workspace::Workspace,
+    request: &crate::Request,
+    verb: &AgentVerb,
+    now: i64,
+) -> crate::error::Result<crate::emit::Output> {
+    match verb {
+        AgentVerb::Inspect(i) => inspect::run(&ws.root, request, &i.id, i.repo.as_deref()),
+        AgentVerb::Prepare(p) => prepare::run(ws, request, p, now),
+    }
 }
 
 /// Which of the three files a definition is.

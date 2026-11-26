@@ -21,8 +21,10 @@ pub const LENGTH: &str = "length.bounded";
 pub const PROSE: &str = "prose.rules";
 /// `prose.vale` (`vale = "<profile>"`): never on by default.
 pub const VALE: &str = "prose.vale";
+/// `invocation.bound` (`agent = "<id>"`): never on by default (#149).
+pub const BOUND: &str = "invocation.bound";
 /// The built-in checks, in the order they run and are shown.
-pub const BUILTIN: [&str; 6] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH, PROSE, VALE];
+pub const BUILTIN: [&str; 7] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH, PROSE, VALE, BOUND];
 /// The checks a built-in mode runs when no file names it.
 pub const DEFAULTS: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
@@ -158,6 +160,10 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
                 ("mechanical", format!("audience={}\n{list}", deny.audience))
             }
             PROSE | VALE => ("mechanical", mode.material(check)),
+            BOUND => (
+                "mechanical",
+                format!("agent={}", mode.agent.as_deref().unwrap_or("")),
+            ),
             _ => ("observed", String::new()),
         };
         out.push(Obligation {

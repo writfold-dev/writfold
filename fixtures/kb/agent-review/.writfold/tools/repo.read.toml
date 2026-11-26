@@ -1,0 +1,5 @@
+# An example to edit (writfold kb init --example agent). A tool is a name
+# your harness gives a worker, and one line saying what it is for.
+schema = "writfold-tool/1"
+id = "repo.read"
+description = "Read files in the repository under review."

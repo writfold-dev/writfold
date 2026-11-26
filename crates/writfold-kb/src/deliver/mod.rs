@@ -9,6 +9,7 @@
 //! obligation's standing. Nothing is sent, ever: there is no network and
 //! no adapter. The checks are mechanical; attestations are attestations.
 mod answer;
+pub mod bound;
 pub mod candidate;
 pub mod checks;
 pub mod config;

@@ -40,6 +40,7 @@ fn a_modes_audience_and_the_modes_list() -> TestResult {
             audience: audience.map(str::to_owned),
             destination: None,
             run: Some(RUN.into()),
+            invocation: None,
         })
     };
     let (why, exit) = run(&w, prep(Some("internal")), NOW + 60)?;
@@ -98,6 +99,7 @@ fn the_example_commit_message_flow() -> TestResult {
         audience: None,
         destination: None,
         run: Some(RUN.into()),
+        invocation: None,
     });
     run(&w, prep, NOW + 60)?;
     let id = ids(&w)?.pop().ok_or("no candidate")?;
@@ -150,6 +152,7 @@ fn the_example_design_doc_flow() -> TestResult {
             audience: Some("internal".into()),
             destination: None,
             run: Some(RUN.into()),
+            invocation: None,
         });
         let at = NOW + 60 * (i64::try_from(at)? + 1);
         run(&w, prep, at)?;

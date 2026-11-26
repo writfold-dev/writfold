@@ -1,0 +1,12 @@
+# An agent profile: ordered skills, the tools it is granted, and its own
+# instructions. writfold kb agent inspect reviewer shows the closure.
+schema = "writfold-agent-profile/1"
+id = "reviewer"
+description = "Reviews the claims a change makes."
+skills = ["verify-claims", "summarise"]
+tools = ["repo.read", "git.diff"]
+packet = "none"
+model = "reviewer"
+instructions = """
+Review only the change you are given. Do not edit files.
+"""

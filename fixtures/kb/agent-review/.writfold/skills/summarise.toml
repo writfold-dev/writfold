@@ -1,0 +1,5 @@
+# Instructions may live in a file in the repository instead, such as the
+# SKILL.md your harness already loads.
+schema = "writfold-skill/1"
+id = "summarise"
+instructions_file = ".writfold/skills/summarise.md"

@@ -7,6 +7,7 @@
 //! model hint and instruction bytes, then each skill in listed order with
 //! its instruction bytes and plan, then the granted tools sorted. Comments
 //! and descriptions are not part of it.
+use super::invocation::Used;
 use super::refs::{self, Ref, Table};
 use super::{Def, DefKind, Instructions};
 use crate::emit::Output;
@@ -25,7 +26,6 @@ pub fn top_of(dir: &Path) -> PathBuf {
 
 /// Every definition file in the KB root and the repository in view.
 fn table(kb: &Path, cwd: &Path, repo: Option<&Path>) -> Result<Table> {
-    let mut all = crate::defs::lint::files(kb, Origin::Kb, "");
     let repo = match repo {
         Some(r) if cwd.join(r).is_dir() => Some(cwd.join(r)),
         Some(r) => {
@@ -36,7 +36,15 @@ fn table(kb: &Path, cwd: &Path, repo: Option<&Path>) -> Result<Table> {
         }
         None => crate::defs::lint::enclosing(kb, cwd),
     };
-    if let Some(top) = &repo {
+    Ok(table_at(kb, repo.as_deref()))
+}
+
+/// Every definition file in the KB root and, when given, the repository
+/// whose root is `top` (once, when that repository is the KB itself).
+pub fn table_at(kb: &Path, top: Option<&Path>) -> Table {
+    let mut all = crate::defs::lint::files(kb, Origin::Kb, "");
+    let same = |t: &Path| std::fs::canonicalize(t).ok() == std::fs::canonicalize(kb).ok();
+    if let Some(top) = top.filter(|t| !same(t)) {
         let name = (top.file_name()).map_or_else(String::new, |n| n.to_string_lossy().into_owned());
         all.extend(crate::defs::lint::files(
             top,
@@ -44,7 +52,7 @@ fn table(kb: &Path, cwd: &Path, repo: Option<&Path>) -> Result<Table> {
             &format!("{name}:"),
         ));
     }
-    Ok(refs::table(&all))
+    refs::table(&all)
 }
 
 /// The bytes of a definition's instructions.
@@ -95,31 +103,97 @@ fn refusal(refs: &[Ref], required: &[Vec<u8>], r: Refusal) -> String {
     }
 }
 
+/// Why profile `id` cannot be found as one readable definition.
+fn absent(t: &Table, id: &str) -> String {
+    match t.fact(DefKind::Agent, id) {
+        writfold_core::compose::RefFact::Twice => {
+            format!("agent {id:?} is defined in both the KB root and the repository")
+        }
+        _ if (t.broken.iter()).any(|(k, s)| *k == DefKind::Agent && s == id) => {
+            format!("agent {id:?} has errors; run writfold kb lint")
+        }
+        _ => format!("no agent profile {id:?} in {}", super::AGENTS),
+    }
+}
+
+/// A profile with its references (when one was found), and its closure
+/// digest or why the closure is refused.
+pub type Decided<'a> = (
+    Option<(&'a Def, Vec<Ref>)>,
+    std::result::Result<String, String>,
+);
+
+/// Profile `id` with its references, and its closure digest or why the
+/// closure is refused ([`writfold_core::compose::closure`]).
+pub fn decide<'a>(t: &'a Table, id: &str) -> Decided<'a> {
+    let Some(p) = t.find(DefKind::Agent, id) else {
+        return (None, Err(absent(t, id)));
+    };
+    let (refs, required, granted) = refs::facts(t, p);
+    let decided = match refs::decide(&refs, &required, &granted) {
+        Ok(()) => digest(t, p),
+        Err(r) => Err(refusal(&refs, &required, r)),
+    };
+    (Some((p, refs)), decided)
+}
+
+/// The files an admitted closure was read from: the profile, its skills in
+/// listed order, its granted tools, then each instructions file; each
+/// with the digest of its bytes now.
+pub fn used(t: &Table, p: &Def) -> std::result::Result<Vec<Used>, String> {
+    let skills = p.skills.iter().filter_map(|s| t.find(DefKind::Skill, s));
+    let tools = p.tools.iter().filter_map(|s| t.find(DefKind::Tool, s));
+    let defs: Vec<&Def> = std::iter::once(p).chain(skills).chain(tools).collect();
+    let mut out = Vec::new();
+    for d in &defs {
+        let rel = format!("{}/{}.toml", d.kind.dir(), d.id);
+        let bytes = std::fs::read(d.top.join(&rel)).map_err(|e| format!("{}: {e}", d.shown))?;
+        let shown = d.shown.clone();
+        out.push(Used {
+            kind: d.kind.word().to_owned(),
+            id: d.id.clone(),
+            path: shown,
+            digest: super::invocation::sha(&bytes),
+        });
+    }
+    for d in &defs {
+        if let Instructions::File(rel) = &d.instructions {
+            let prefix = d.shown.split_once(':').map_or("", |(repo, _)| repo);
+            out.push(Used {
+                kind: "instructions".into(),
+                id: d.id.clone(),
+                path: match prefix.is_empty() {
+                    true => rel.clone(),
+                    false => format!("{prefix}:{rel}"),
+                },
+                digest: super::invocation::sha(&instruction_bytes(d)?),
+            });
+        }
+    }
+    Ok(out)
+}
+
+/// The instructions a worker reads: the profile's, then each skill's in
+/// listed order, each under a heading.
+pub fn instructions(t: &Table, p: &Def) -> std::result::Result<Vec<u8>, String> {
+    let mut out = format!("# Agent {}\n\n", p.id).into_bytes();
+    out.extend(instruction_bytes(p)?);
+    for s in p.skills.iter().filter_map(|s| t.find(DefKind::Skill, s)) {
+        if !out.ends_with(b"\n") {
+            out.push(b'\n');
+        }
+        out.extend(format!("\n# Skill {}\n\n", s.id).into_bytes());
+        out.extend(instruction_bytes(s)?);
+    }
+    Ok(out)
+}
+
 /// `agent inspect` for profile `id`.
 pub fn run(kb: &Path, request: &crate::Request, id: &str, repo: Option<&Path>) -> Result<Output> {
     let t = table(kb, &request.cwd, repo)?;
-    let Some(p) = t.find(DefKind::Agent, id) else {
-        let why = match t.fact(DefKind::Agent, id) {
-            writfold_core::compose::RefFact::Twice => {
-                format!("agent {id:?} is defined in both the KB root and the repository")
-            }
-            _ if t
-                .broken
-                .iter()
-                .any(|(k, s)| *k == DefKind::Agent && s == id) =>
-            {
-                format!("agent {id:?} has errors; run writfold kb lint")
-            }
-            _ => format!("no agent profile {id:?} in {}", super::AGENTS),
-        };
-        return Ok(render(id, None, Err(why), request.json));
-    };
-    let (refs, required, granted) = refs::facts(&t, p);
-    let decided = match refs::decide(&refs, &required, &granted) {
-        Ok(()) => digest(&t, p),
-        Err(r) => Err(refusal(&refs, &required, r)),
-    };
-    Ok(render(id, Some((p, &refs)), decided, request.json))
+    let (found, decided) = decide(&t, id);
+    let found = found.as_ref().map(|(p, refs)| (*p, refs.as_slice()));
+    Ok(render(id, found, decided, request.json))
 }
 
 fn render(

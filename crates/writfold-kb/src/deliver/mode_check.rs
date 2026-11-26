@@ -120,7 +120,7 @@ fn names(
 }
 
 /// Every key a mode file may have.
-const KEYS: [&str; 15] = [
+const KEYS: [&str; 16] = [
     "schema",
     "mode",
     "description",
@@ -136,6 +136,7 @@ const KEYS: [&str; 15] = [
     "prose",
     "vale",
     "vale_block",
+    "agent",
 ];
 
 /// `<mode>.toml`, over the mode's defaults.
@@ -176,6 +177,7 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
     let listed = |check: &str| mode.checks.iter().any(|x| x == check);
     let prose = super::mode_keys::prose(&mut c, root, listed(super::config::PROSE));
     let vale = super::vale_profile::key(&mut c, root, listed(super::config::VALE));
+    let agent = super::mode_keys::agent(&mut c, listed(super::config::BOUND));
     let measured = (mode.checks.iter()).any(|x| x == super::config::LENGTH);
     let unbounded = matches!((&max_chars, &max_lines), (Some(None), Some(None)));
     if measured && unbounded {
@@ -201,6 +203,7 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         mode.audience = audience?;
         mode.prose = prose?;
         mode.vale = vale?;
+        mode.agent = agent?;
         mode.source = path.to_owned();
         (ok && unique && !(measured && unbounded)).then_some(mode)
     })();

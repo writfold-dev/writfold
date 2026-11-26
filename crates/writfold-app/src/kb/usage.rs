@@ -33,7 +33,7 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
-  init [DIR] [--example research-policy|delivery] [--dry-run]
+  init [DIR] [--example research-policy|delivery|agent] [--dry-run]
                                    make DIR (default: here) a KB: inventory/assets/.gitkeep, and with
                                    --example an editable example policy; create-new only, never commits
   policy                           the policy as it is now (required steps, gates with accept and
@@ -47,6 +47,9 @@ verbs:
                                    tokens. Reads files only (exit 0 clean, 2 errors, 1 usage)
   agent inspect ID [--repo DIR]     an agent profile's closure (skills, tools, plans) and its
                                    digest, or the first fault; read only (exit 3 when refused)
+  agent prepare ID --input FILE --out DIR [--retry-of ID] [--by WHO] [--run ID] [--repo DIR]
+                                   record an invocation at the run's current step and write a
+                                   package for an external harness; starts no model (exit 3 refused)
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
   runs --idle AGE [--project P] [--plan]
@@ -113,8 +116,9 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
 deliveries (offline candidates: the exact payload, checked mechanically; nothing is sent):
   deliver modes [MODE]             what each mode asks for: audience, checks, waivers, deny rules, routes
   deliver prepare --mode MODE --from FILE|- [--audience internal|external]
-                  [--destination NAME] [--run ID]
-                                   MODE: pr-comment, slack-summary, or .writfold/deliveries/MODE.toml
+                  [--destination NAME] [--invocation ID] [--run ID]
+                                   MODE: pr-comment, slack-summary, or .writfold/deliveries/MODE.toml;
+                                   --invocation: the agent invocation this report answers
   deliver check [CANDIDATE] [--mode MODE] [--check NAME] [--run ID]
                                    run the mode's checks and script gates on the payload
   deliver attest|waive [CANDIDATE] [--mode MODE] --check NAME --statement TEXT|--reason TEXT --by WHO

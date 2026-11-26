@@ -8,12 +8,12 @@ use writfold_kb::deliver::DeliverVerb;
 use writfold_kb::deliver::candidate::Prepare;
 use writfold_kb::gate::statement::Kind;
 
-pub const USAGE: &str = "usage: deliver modes [MODE] | deliver prepare --mode MODE --from FILE|- [--audience internal|external] [--destination NAME] [--run ID] | deliver check [CANDIDATE] [--mode MODE] [--check NAME] [--run ID] | deliver attest [CANDIDATE] [--mode MODE] --check NAME --statement TEXT --by WHO [--run ID] | deliver waive [CANDIDATE] [--mode MODE] --check NAME --reason TEXT --by WHO [--run ID] | deliver withdraw [CANDIDATE] [--mode MODE] --reason TEXT --by WHO [--run ID] | deliver payload [CANDIDATE] [--mode MODE] [--to FILE] [--run ID] | deliver posted [CANDIDATE] [--mode MODE] --ref TEXT --by WHO [--run ID] | deliver match --from FILE|- [--mode MODE] [--run ID] | deliver status [CANDIDATE] [--all] [--run ID]";
+pub const USAGE: &str = "usage: deliver modes [MODE] | deliver prepare --mode MODE --from FILE|- [--audience internal|external] [--destination NAME] [--invocation ID] [--run ID] | deliver check [CANDIDATE] [--mode MODE] [--check NAME] [--run ID] | deliver attest [CANDIDATE] [--mode MODE] --check NAME --statement TEXT --by WHO [--run ID] | deliver waive [CANDIDATE] [--mode MODE] --check NAME --reason TEXT --by WHO [--run ID] | deliver withdraw [CANDIDATE] [--mode MODE] --reason TEXT --by WHO [--run ID] | deliver payload [CANDIDATE] [--mode MODE] [--to FILE] [--run ID] | deliver posted [CANDIDATE] [--mode MODE] --ref TEXT --by WHO [--run ID] | deliver match --from FILE|- [--mode MODE] [--run ID] | deliver status [CANDIDATE] [--all] [--run ID]";
 
 /// The flags each deliver verb takes, beyond `--run`.
 fn flags(sub: &str) -> &'static [&'static str] {
     match sub {
-        "prepare" => &["mode", "from", "audience", "destination"],
+        "prepare" => &["mode", "from", "audience", "destination", "invocation"],
         "check" => &["check", "mode"],
         "attest" => &["check", "statement", "by", "mode"],
         "waive" => &["check", "reason", "by", "mode"],
@@ -59,6 +59,7 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
             audience: get(common, "audience"),
             destination: get(common, "destination"),
             run,
+            invocation: get(common, "invocation"),
         }),
         "check" => DeliverVerb::Check {
             candidate,

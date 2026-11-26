@@ -1,4 +1,4 @@
-//! `kb init [DIR] [--example research-policy|delivery] [--dry-run]`: the shortest
+//! `kb init [DIR] [--example research-policy|delivery|agent] [--dry-run]`: the shortest
 //! path from an ordinary directory to a KB. The one `kb` verb that needs
 //! no KB. It creates `inventory/assets/.gitkeep` (the directory every verb
 //! looks for) and, with `--example`, an editable example policy. Every
@@ -66,8 +66,31 @@ const DELIVERY: [(&str, &str); 17] = [
     example!(".writfold/vale/house/styles/House/Headings.yml"),
 ];
 
+/// One file of the agent example (#151), at the same path in the new KB.
+macro_rules! agent {
+    ($path:literal) => {
+        (
+            $path,
+            include_str!(concat!("../../../fixtures/kb/agent-review/", $path)),
+        )
+    };
+}
+
+/// What `init` writes with `--example agent`: the bytes of
+/// `fixtures/kb/agent-review/`, which are the user's after `init`.
+const AGENT: [(&str, &str); 8] = [
+    agent!(".writfold/tools/repo.read.toml"),
+    agent!(".writfold/tools/git.diff.toml"),
+    agent!(".writfold/skills/verify-claims.toml"),
+    agent!(".writfold/skills/summarise.toml"),
+    agent!(".writfold/skills/summarise.md"),
+    agent!(".writfold/agents/reviewer.toml"),
+    agent!(".writfold/plans/claims-review.toml"),
+    agent!(".writfold/deliveries/claims-report.toml"),
+];
+
 /// The examples `--example` names.
-pub const EXAMPLES: [&str; 2] = ["research-policy", "delivery"];
+pub const EXAMPLES: [&str; 3] = ["research-policy", "delivery", "agent"];
 
 /// `kb init`'s arguments.
 #[derive(Clone, Debug, Default)]
@@ -84,6 +107,7 @@ fn plan(example: Option<&str>) -> Result<Vec<(&'static str, &'static str)>> {
         None => {}
         Some("research-policy") => files.extend(RESEARCH),
         Some("delivery") => files.extend(DELIVERY),
+        Some("agent") => files.extend(AGENT),
         Some(other) => {
             return Err(KbError::Usage(format!(
                 "unknown example {other}; known: {}",

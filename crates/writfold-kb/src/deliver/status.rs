@@ -28,6 +28,9 @@ pub struct Judged<'a> {
     /// Citation tokens no longer fresh, of how many, when a passed
     /// `claims.cited-fresh` receipt was re-checked ([`super::recheck`]).
     pub moved: Option<(usize, usize)>,
+    /// Why a passed `invocation.bound` receipt no longer holds
+    /// ([`super::bound::recheck`]).
+    pub unbound: Option<&'static str>,
 }
 
 /// A candidate's receipts and statements.
@@ -103,6 +106,7 @@ pub fn judge<'a>(obligations: Vec<Obligation>, c: &Candidate, f: &'a Filings) ->
                 statements,
                 obligation: ob,
                 moved: None,
+                unbound: None,
             }
         })
         .collect()

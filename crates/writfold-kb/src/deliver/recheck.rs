@@ -56,6 +56,7 @@ pub fn apply(session: &Session<'_>, c: &Candidate, judged: &mut [Judged<'_>]) {
 pub fn judged<'a>(session: &Session<'_>, c: &Candidate, f: &'a Filings) -> Result<Vec<Judged<'a>>> {
     let mut judged = status::judge(status::obligations(&session.ws.root, c)?, c, f);
     apply(session, c, &mut judged);
+    super::bound::recheck(session, c, &mut judged);
     Ok(judged)
 }
 

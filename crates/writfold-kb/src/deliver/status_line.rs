@@ -47,7 +47,10 @@ pub(super) fn line(j: &Judged<'_>, id: &str) -> More {
         }
         (None, None) => format!("needs: writfold kb deliver check {id}"),
     };
-    let moved = super::recheck::note(j.moved).unwrap_or_default();
+    let mut moved = super::recheck::note(j.moved).unwrap_or_default();
+    if let Some(why) = j.unbound {
+        moved.push_str(&format!("; {why}"));
+    }
     more.text = format!(
         "{} [{}] {} {detail}{moved}",
         ob.name,
@@ -58,7 +61,7 @@ pub(super) fn line(j: &Judged<'_>, id: &str) -> More {
     if j.standing != Standing::Checked(State::Satisfied) {
         more.flags.push(j.standing.name().into());
     }
-    if j.moved.is_some() && !more.flags.iter().any(|f| f == "stale") {
+    if (j.moved.is_some() || j.unbound.is_some()) && !more.flags.iter().any(|f| f == "stale") {
         more.flags.push("stale".into());
     }
     if j.rejected() {

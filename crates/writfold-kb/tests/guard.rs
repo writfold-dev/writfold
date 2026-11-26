@@ -90,6 +90,7 @@ fn prepare(w: &World, from: &Path) -> TestResult<String> {
             audience: Some("internal".into()),
             destination: None,
             run: Some(RUN.into()),
+            invocation: None,
         }),
     )?;
     ids(w)
