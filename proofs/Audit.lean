@@ -141,6 +141,10 @@ def claims : List Name := [
   ``Writfold.Core.Invoke.prepare_ok_iff,
   ``Writfold.Core.Invoke.plan_missing_refused,
   ``Writfold.Core.Invoke.packet_incomplete_refused,
+  ``Writfold.Core.Invoke.bound_spec,
+  ``Writfold.Core.Invoke.bound_pass_iff,
+  ``Writfold.Core.Invoke.bound_unread_unknown,
+  ``Writfold.Core.Invoke.conflict_never_passes,
   -- policy inventories (writfold_core::inventory, #56)
   ``Writfold.Core.Inventory.readable_spec,
   ``Writfold.Core.Inventory.complete_loop_spec,

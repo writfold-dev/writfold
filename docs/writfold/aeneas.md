@@ -1264,6 +1264,13 @@ the step is current, the closure is admitted, every skill's plan template is
 in the run, the input was read, a required packet is complete; admitted
 exactly when all hold; a missing plan or an incomplete required packet is
 never admitted). Mutants `prepare-skips-packet`, `prepare-skips-plan`.
+`writfold_core::invoke::bound` (#149) is the built-in check
+`invocation.bound` (`Invoke.lean`: `Fail` when the candidate names no
+invocation, `Unknown` when the named record does not read, else `Pass`
+exactly when the record is of this run, at the step judged, for the mode's
+agent, under the present closure, with no second report; two different
+reports never pass). Mutants `bound-ignores-closure`, `bound-ignores-step`,
+`bound-ignores-single`, `bound-unread-passes`.
 
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition

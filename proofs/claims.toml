@@ -3042,3 +3042,22 @@ mutants = [
   "prepare-skips-packet",
   "prepare-skips-plan",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/invoke.rs"
+function = "bound"
+lean = "writfold_core.invoke.bound"
+theorems = [
+  "Writfold.Core.Invoke.bound_spec",
+  "Writfold.Core.Invoke.bound_pass_iff",
+  "Writfold.Core.Invoke.bound_unread_unknown",
+  "Writfold.Core.Invoke.conflict_never_passes",
+]
+total = "Writfold.Core.Invoke.bound_spec"
+mutants = [
+  "bound-ignores-closure",
+  "bound-ignores-step",
+  "bound-ignores-single",
+  "bound-unread-passes",
+]

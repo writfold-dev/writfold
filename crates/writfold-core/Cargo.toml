@@ -150,6 +150,7 @@ start_from = [
     "writfold_core::compose::covers",
     "writfold_core::compose::closure",
     "writfold_core::invoke::prepare_check",
+    "writfold_core::invoke::bound",
     "writfold_core::diag::blocks",
     "writfold_core::subject::pick",
     "writfold_core::order::less",

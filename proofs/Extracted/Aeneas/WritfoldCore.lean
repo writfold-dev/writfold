@@ -4329,7 +4329,7 @@ def investigation.conclude
     }
 
 /-- [writfold_core::invoke::Prepare]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 24:0-39:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 30:0-45:1
     Visibility: public -/
 structure invoke.Prepare where
   run_open : Bool
@@ -4341,7 +4341,7 @@ structure invoke.Prepare where
   packet_complete : Bool
 
 /-- [writfold_core::invoke::PrepareRefusal]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 44:0-51:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 50:0-57:1
     Visibility: public -/
 @[discriminant isize]
 inductive invoke.PrepareRefusal where
@@ -4353,7 +4353,7 @@ inductive invoke.PrepareRefusal where
 | PacketIncomplete : invoke.PrepareRefusal
 
 /-- [writfold_core::invoke::prepare_check]:
-    Source: 'crates/writfold-core/src/invoke.rs', lines 54:0-74:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 60:0-80:1
     Visibility: public -/
 def invoke.prepare_check
   (facts : invoke.Prepare) :
@@ -4382,6 +4382,44 @@ def invoke.prepare_check
       else ok (core.result.Result.Err invoke.PrepareRefusal.Closure)
     else ok (core.result.Result.Err invoke.PrepareRefusal.NotCurrentStep)
   else ok (core.result.Result.Err invoke.PrepareRefusal.RunClosed)
+
+/-- [writfold_core::invoke::Named]
+    Source: 'crates/writfold-core/src/invoke.rs', lines 84:0-99:1
+    Visibility: public -/
+structure invoke.Named where
+  names : Bool
+  readable : Bool
+  this_run : Bool
+  this_step : Bool
+  this_agent : Bool
+  closure_current : Bool
+  single : Bool
+
+/-- [writfold_core::invoke::bound]:
+    Source: 'crates/writfold-core/src/invoke.rs', lines 104:0-121:1
+    Visibility: public -/
+def invoke.bound (named : invoke.Named) : Result gate.Outcome := do
+  if named.names
+  then
+    if named.readable
+    then
+      if named.this_run
+      then
+        if named.this_step
+        then
+          if named.this_agent
+          then
+            if named.closure_current
+            then
+              if named.single
+              then ok gate.Outcome.Pass
+              else ok gate.Outcome.Fail
+            else ok gate.Outcome.Fail
+          else ok gate.Outcome.Fail
+        else ok gate.Outcome.Fail
+      else ok gate.Outcome.Fail
+    else ok gate.Outcome.Unknown
+  else ok gate.Outcome.Fail
 
 /-- [writfold_core::observe::embeds]:
     Source: 'crates/writfold-core/src/observe.rs', lines 71:0-78:1

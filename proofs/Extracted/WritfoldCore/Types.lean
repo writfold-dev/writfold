@@ -347,7 +347,7 @@ inductive investigation.Hypothesis where
 | Unknown : investigation.Hypothesis
 
 /-- [writfold_core::invoke::PrepareRefusal]
-    Source: 'crates/writfold-core/src/invoke.rs', lines 44:0-51:1
+    Source: 'crates/writfold-core/src/invoke.rs', lines 50:0-57:1
     Visibility: public -/
 @[discriminant isize]
 inductive invoke.PrepareRefusal where

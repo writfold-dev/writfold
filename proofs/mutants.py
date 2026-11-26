@@ -255,6 +255,26 @@ MUTANTS = (
            "    if !facts.plans_in_run {\n        return Err(PrepareRefusal::PlanNotInRun);\n    }\n",
            "",
            ("Writfold.Core.Invoke.prepare_check_spec",)),
+    # invoke (#149): the closure as it is now must be the one prepared
+    Mutant("bound-ignores-closure", "invoke.rs",
+           "        && named.closure_current\n",
+           "\n",
+           ("Writfold.Core.Invoke.bound_spec",)),
+    # invoke (#149): the invocation's step must be the step judged
+    Mutant("bound-ignores-step", "invoke.rs",
+           "        && named.this_step\n",
+           "\n",
+           ("Writfold.Core.Invoke.bound_spec",)),
+    # invoke (#149): a second report for the invocation fails both
+    Mutant("bound-ignores-single", "invoke.rs",
+           "        && named.single\n",
+           "\n",
+           ("Writfold.Core.Invoke.bound_spec",)),
+    # invoke (#149): an unreadable record is never a pass
+    Mutant("bound-unread-passes", "invoke.rs",
+           "        return Outcome::Unknown;",
+           "        return Outcome::Pass;",
+           ("Writfold.Core.Invoke.bound_spec",)),
     # vale (#131): only the pinned executable's run is read
     Mutant("vale-absent-usable", "vale.rs",
            "        Tool::Absent | Tool::Other => return false,",

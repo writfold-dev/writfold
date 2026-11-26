@@ -13,6 +13,13 @@ Theorems over the Aeneas translation of `writfold_core::invoke`.
   input was read, and a required packet is complete.
 - `plan_missing_refused`, `packet_incomplete_refused`: a missing plan, or
   an incomplete packet the profile requires, is never admitted.
+- `bound_spec` (#149): `invocation.bound` fails when no invocation is
+  named, is unknown when the named record does not read, and otherwise
+  passes exactly when every fact holds (`bound_pass_iff`).
+- `bound_unread_unknown`: an unreadable record is neither a pass nor a
+  failure.
+- `conflict_never_passes`: two different reports for one invocation never
+  pass, whichever is newer.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -74,6 +81,49 @@ theorem packet_incomplete_refused (f : invoke.Prepare) (hr : f.packet_required =
   intro r hiff hok
   have := (hiff.mp hok).2.2.2.2.2 hr
   rw [hc] at this
+  cases this
+
+/-- What `invocation.bound` decides. -/
+def boundOf (n : invoke.Named) : gate.Outcome :=
+  if !n.names then .Fail
+  else if !n.readable then .Unknown
+  else if n.this_run && n.this_step && n.this_agent && n.closure_current && n.single then .Pass
+  else .Fail
+
+/-- Every fact holds. -/
+def Bound (n : invoke.Named) : Prop :=
+  n.names = true ∧ n.readable = true ∧ n.this_run = true ∧ n.this_step = true ∧
+  n.this_agent = true ∧ n.closure_current = true ∧ n.single = true
+
+theorem bound_spec (n : invoke.Named) : invoke.bound n ⦃ o => o = boundOf n ⦄ := by
+  rcases n with ⟨a, b, c, d, e, g, h⟩
+  unfold invoke.bound
+  cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases g <;> cases h <;>
+    simp [boundOf]
+
+theorem bound_pass_iff (n : invoke.Named) : invoke.bound n ⦃ o => o = .Pass ↔ Bound n ⦄ := by
+  apply WP.spec_mono (bound_spec n)
+  intro o ho
+  rw [ho]
+  rcases n with ⟨a, b, c, d, e, g, h⟩
+  cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases g <;> cases h <;>
+    simp [boundOf, Bound]
+
+/-- A named record that does not read is unknown: never a pass, never a failure. -/
+theorem bound_unread_unknown (n : invoke.Named) (hn : n.names = true)
+    (hr : n.readable = false) : invoke.bound n ⦃ o => o = .Unknown ⦄ := by
+  apply WP.spec_mono (bound_spec n)
+  intro o ho
+  rw [ho]
+  simp [boundOf, hn, hr]
+
+/-- Two different reports for one invocation never pass, whichever is newer. -/
+theorem conflict_never_passes (n : invoke.Named) (hs : n.single = false) :
+    invoke.bound n ⦃ o => o ≠ .Pass ⦄ := by
+  apply WP.spec_mono (bound_pass_iff n)
+  intro o hiff hp
+  have := (hiff.mp hp).2.2.2.2.2.2
+  rw [hs] at this
   cases this
 
 end Writfold.Core.Invoke

@@ -14,10 +14,16 @@
 //! 6. when the profile says `packet = "required"`, the packet is complete
 //!    ([`crate::packet::complete`]).
 //!
+//! [`bound`] (#149) is the built-in check `invocation.bound`: a delivery
+//! candidate passes only while it names an invocation of this run and step,
+//! prepared for the mode's agent under the closure as it is now, with no
+//! second report for it. An unreadable record is `Unknown`.
+//!
 //! Gathering the facts, the record's codec, the package bytes and the
 //! write plan are the caller's (tested). In the Charon `start_from` list;
 //! `proofs/Writfold/Invoke.lean` proves it for every input
 //! (docs/writfold/aeneas.md).
+use crate::gate::Outcome;
 
 /// What `agent prepare` found, each fact classified by the caller.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -73,9 +79,100 @@ pub fn prepare_check(facts: &Prepare) -> Result<(), PrepareRefusal> {
     Ok(())
 }
 
+/// What `invocation.bound` found for one delivery candidate.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Named {
+    /// The candidate names an invocation.
+    pub names: bool,
+    /// The named invocation record reads and is intact.
+    pub readable: bool,
+    /// The record is of this run.
+    pub this_run: bool,
+    /// Its step is the step the candidate is judged for.
+    pub this_step: bool,
+    /// Its agent is the mode's `agent`.
+    pub this_agent: bool,
+    /// Its closure digest is the profile's present one.
+    pub closure_current: bool,
+    /// Every live candidate naming it holds the same bytes.
+    pub single: bool,
+}
+
+/// `invocation.bound`: `Fail` when no invocation is named, `Unknown` when
+/// the named record does not read, else `Pass` exactly when every fact
+/// holds.
+pub fn bound(named: &Named) -> Outcome {
+    if !named.names {
+        return Outcome::Fail;
+    }
+    if !named.readable {
+        return Outcome::Unknown;
+    }
+    if named.this_run
+        && named.this_step
+        && named.this_agent
+        && named.closure_current
+        && named.single
+    {
+        Outcome::Pass
+    } else {
+        Outcome::Fail
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Prepare, PrepareRefusal, prepare_check};
+    use super::{Named, Prepare, PrepareRefusal, bound, prepare_check};
+    use crate::gate::Outcome;
+
+    const BOUND: Named = Named {
+        names: true,
+        readable: true,
+        this_run: true,
+        this_step: true,
+        this_agent: true,
+        closure_current: true,
+        single: true,
+    };
+
+    #[test]
+    fn bound_passes_only_with_every_fact() {
+        assert_eq!(bound(&BOUND), Outcome::Pass);
+        for facts in [
+            Named {
+                this_run: false,
+                ..BOUND
+            },
+            Named {
+                this_step: false,
+                ..BOUND
+            },
+            Named {
+                this_agent: false,
+                ..BOUND
+            },
+            Named {
+                closure_current: false,
+                ..BOUND
+            },
+            Named {
+                single: false,
+                ..BOUND
+            },
+            Named {
+                names: false,
+                ..BOUND
+            },
+        ] {
+            assert_eq!(bound(&facts), Outcome::Fail, "{facts:?}");
+        }
+        let unread = Named {
+            readable: false,
+            single: false,
+            ..BOUND
+        };
+        assert_eq!(bound(&unread), Outcome::Unknown);
+    }
 
     const ALL: Prepare = Prepare {
         run_open: true,
