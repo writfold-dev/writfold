@@ -2,7 +2,7 @@
 rfc: "2026-11-25-agent-vocabulary"
 title: "Composable tools, gates, skills and agent profiles"
 status: accepted
-implementation: in-progress
+implementation: partial
 authors:
   - tknawara
 created: 2026-11-25
@@ -618,3 +618,6 @@ Read as design inputs on 25 November 2026:
   is split to #161: modes are not pinned today, and the per-report
   re-check already makes a moved closure `stale`. The lenient guard rule
   counting an unready report is tested and documented in the guide.
+- 2026-11-26: The v0.6.0-dev.22 milestone landed on main and gated (#143
+  closed). Implementation is `partial` because #161 (pinning modes and
+  the definitions they name), split from #148's scope, is in Later.
