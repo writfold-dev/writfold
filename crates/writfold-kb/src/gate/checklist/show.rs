@@ -127,7 +127,12 @@ pub fn row(subject: &Subject, judged: &Judged<'_>, view: &View<'_>) -> Row {
         status: Some(judged.standing.name().into()),
         section: Some("gates"),
         text: format!(
-            "checklist {covered}/{required} required covered at {}@{} scope={}",
+            "checklist {covered}/{required} {} covered at {}@{} scope={}",
+            if view.universe.is_some() {
+                "units"
+            } else {
+                "required"
+            },
             subject.name,
             short(&view.commit),
             short(&view.content)
@@ -151,6 +156,9 @@ pub fn row(subject: &Subject, judged: &Judged<'_>, view: &View<'_>) -> Row {
         row.more.push(statement::more(f, s));
     }
     row.flags.push(judged.standing.name().into());
+    if let Some(why) = view.universe.as_ref().and_then(|u| u.why.clone()) {
+        row.more.push(more("why", why));
+    }
     if judged.met() {
         return row;
     }

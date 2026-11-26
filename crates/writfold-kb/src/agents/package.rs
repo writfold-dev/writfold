@@ -109,6 +109,14 @@ pub(super) fn build(
         retry_of: retry(found, run, a.retry_of.as_deref())?,
         by,
         model: p.model.clone(),
+        for_item: match &a.for_item {
+            None => None,
+            Some(text) => Some(invocation::for_item(text).ok_or_else(|| {
+                KbError::Usage(format!(
+                    "--for {text}: write GATE.ITEM, a checklist gate and one of its items"
+                ))
+            })?),
+        },
         recorded: crate::time::stamp(now),
     };
     Ok((record, files))

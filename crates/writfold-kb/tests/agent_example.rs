@@ -45,6 +45,7 @@ fn prepare(w: &World, out: &str) -> TestResult<String> {
         by: Some("harness".into()),
         run: Some(RUN.into()),
         repo: None,
+        for_item: None,
     }));
     let before = invocations(w);
     let (text, exit) = outcome(&w.request(verb));

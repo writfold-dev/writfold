@@ -2,7 +2,7 @@
 rfc: "2026-11-25-evidence-governed-execution"
 title: "Evidence-governed execution"
 status: accepted
-implementation: not-started
+implementation: complete
 authors:
   - tknawara
 created: 2026-11-25
@@ -384,3 +384,11 @@ None blocks acceptance.
   RFC, which owns the shared calculus. Implementation (#154) is the
   v0.6.0-dev.23 milestone and starts after the dev.22 slice ships
   `agent prepare`.
+- 2026-11-26: #154 built. `needs` is proved as a new function,
+  `invoke::prepare`: `prepare_check` unchanged, then the first need not met
+  (`first_unmet`); its theorems are `prepare_spec`, `prepare_needs_ok_iff`,
+  `needs_unknown_refused`, `needs_first` and `no_needs_unchanged`, so
+  #148's theorems stand as proved rather than being restated. Each need is
+  judged by the code a guard rule's `gate:<id>` uses, so the two agree; a
+  need with no subject repository reads `cannot be judged`. The use-site
+  table in the agents guide names the tests behind each row.

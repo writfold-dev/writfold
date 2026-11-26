@@ -21,8 +21,9 @@ verbs:
   find --eval [FILE]               run each query of FILE (.writfold/queries.jsonl) as find does:
                                    hit@1, hit@5 or miss per query (exit 0 only if all hit@5)
   match <text>                     find, testing signature patterns first
-  impact <id> [--depth N] [--direction in|out|both] [--include inferred]
-                                   what does changing X touch (bounded walk, frontier stated)
+  impact <id> [--depth N] [--direction in|out|both] [--include inferred] [--manifest FILE]
+                                   what does changing X touch (bounded walk, frontier stated);
+                                   --manifest keeps the members, sorted, with path and digest
   uses <target>                    who relies on a record or a code locator
   timeline <id>                    linked investigations, tickets, decisions, checkpoints by date
   stale [<project>|<path>] [--offline|--cached|--record]

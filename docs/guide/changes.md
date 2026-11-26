@@ -6,6 +6,13 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.23
+
+- **Research contracts** ([#153](https://github.com/writfold-dev/writfold/issues/153), [research](research.md)): `kb impact --manifest FILE`; checklist keys `items_from`, `units` and `empty`; `delivery:<candidate>` as a cover reference; `agent prepare --for GATE.ITEM`; `needs` on skills and agent profiles. A definition without the new keys keeps its digest, and `impact` without `--manifest` answers as before.
+- With `--manifest`, `impact` does not walk edges declared in a run's own files, so its answer can differ from the same walk without the flag; the note says so.
+- A cover row's file name writes each `/` of its item as `_`. Only generated units have one, so existing rows keep their names.
+- An invocation record gains `for` when prepared with `--for`. A record without it keeps its bytes.
+
 ## v0.6.0-dev.22
 
 - **Agent vocabulary** ([#143](https://github.com/writfold-dev/writfold/issues/143), [agents](agents.md)): new definition files `.writfold/tools/`, `.writfold/skills/` and `.writfold/agents/`, read by `kb lint`; new verbs `agent inspect` and `agent prepare`; a new run directory `runs/<run>/invocations/`. A KB without these directories lints and answers as before.

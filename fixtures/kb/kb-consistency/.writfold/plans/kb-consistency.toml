@@ -1,0 +1,8 @@
+schema = "writfold-plan/1"
+name = "kb-consistency"
+description = "enumerate the related records, review every pair, dispose of the findings"
+steps = [
+  "enumerate: related-scope",
+  "review: deliver:pair-report pair-review",
+  "dispose: findings-disposition",
+]

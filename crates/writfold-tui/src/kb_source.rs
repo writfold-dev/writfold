@@ -55,6 +55,7 @@ impl Source {
             depth: 2,
             direction,
             inferred: false,
+            manifest: None,
         })
     }
 }

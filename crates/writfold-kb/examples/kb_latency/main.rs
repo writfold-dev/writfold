@@ -121,6 +121,7 @@ fn verbs() -> Vec<(&'static str, Verb)> {
         depth: 2,
         direction: Direction::Both,
         inferred,
+        manifest: None,
     };
     vec![
         ("brief proj3", brief(Some("proj3"))),

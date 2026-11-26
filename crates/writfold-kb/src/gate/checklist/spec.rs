@@ -14,7 +14,10 @@ use crate::defs::{Check, Spanned, Text};
 use crate::write::is_slug;
 
 /// The keys only a checklist gate may use.
-pub const KEYS: [&str; 7] = [
+pub const KEYS: [&str; 10] = [
+    "items_from",
+    "units",
+    "empty",
     "items",
     "optional",
     "not_applicable",
@@ -56,6 +59,9 @@ pub struct Spec {
     /// `own_evidence` and `evidence_from` as written ([`super::evidence`]).
     pub own_evidence: super::allowed::Listed,
     pub evidence_from: super::evidence::From,
+    /// `items_from`: the items are made from a scope gate's manifest when
+    /// judged ([`super::generated`]); `items` is then empty here.
+    pub generated: Option<super::generated::From>,
 }
 
 impl Spec {
@@ -75,8 +81,12 @@ impl Spec {
         let own = super::allowed::canonical(&self.items, &self.lists);
         let needs =
             super::evidence::canonical(&self.items, &self.own_evidence, &self.evidence_from);
+        let generated = self
+            .generated
+            .as_ref()
+            .map_or_else(String::new, |g| g.canonical());
         format!(
-            "items={}\noptional={}\n{own}{needs}",
+            "items={}\noptional={}\n{own}{needs}{generated}",
             serde_json::to_string(&items).unwrap_or_default(),
             serde_json::to_string(&optional).unwrap_or_default()
         )
@@ -170,7 +180,22 @@ pub fn check(c: &mut Check<'_>, class: &str) -> Option<Option<Spec>> {
         }
         return ok.then_some(None);
     }
-    let items = items(c);
+    let generated = super::generated::check(c);
+    let items = match &generated {
+        Some(Some(g)) => match c.list("items") {
+            crate::defs::Field::Absent => Some(Vec::new()),
+            _ => {
+                let why = format!(
+                    "write `items` or `items_from = \"{}/{}\"`, not both",
+                    g.gate, g.file
+                );
+                c.error("value.conflict", None, why).label("both");
+                None
+            }
+        },
+        _ => items(c),
+    };
+    let generated = generated?;
     let optional = c.list("optional").or(Spanned {
         value: Vec::new(),
         span: Default::default(),
@@ -218,6 +243,7 @@ pub fn check(c: &mut Check<'_>, class: &str) -> Option<Option<Spec>> {
         lists,
         own_evidence,
         evidence_from,
+        generated,
     }))
 }
 

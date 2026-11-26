@@ -106,6 +106,7 @@ fn impact_rows_add_only_the_documented_keys() -> TestResult {
         depth: 2,
         direction: writfold_kb::verbs::impact::Direction::In,
         inferred: false,
+        manifest: None,
     });
     request.json = true;
     let body: Value = serde_json::from_str(&writfold_kb::run(&request)?.text)?;

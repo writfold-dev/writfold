@@ -13,9 +13,9 @@ pub const SESSION_ENV: &str = "WRITFOLD_SESSION";
 pub const SWITCHES: [&str; 2] = ["tracked", "local"];
 
 /// Flags here that take a value: `policy --paths GATE`.
-pub const VALUES: [&str; 4] = ["paths", "input", "out", "retry-of"];
+pub const VALUES: [&str; 5] = ["paths", "input", "out", "retry-of", "manifest"];
 
-pub const AGENT: &str = "usage: agent inspect <id> [--repo DIR] | agent prepare <id> --input FILE --out DIR [--retry-of ID] [--by WHO] [--run ID] [--repo DIR]";
+pub const AGENT: &str = "usage: agent inspect <id> [--repo DIR] | agent prepare <id> --input FILE --out DIR [--for GATE.ITEM] [--retry-of ID] [--by WHO] [--run ID] [--repo DIR]";
 
 /// `agent inspect|prepare <id>`.
 fn agent(sub: &str, id: &str, common: &Common) -> Result<Verb, String> {
@@ -42,6 +42,7 @@ fn agent(sub: &str, id: &str, common: &Common) -> Result<Verb, String> {
             by: get(common, "by"),
             run: get(common, "run"),
             repo: path("repo"),
+            for_item: get(common, "for"),
         }),
         _ => return Err(AGENT.into()),
     };
@@ -53,9 +54,10 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::kinds::PROPOSE.as_slice(),
         "lint" => &["repo", "deny-warnings", "records"],
-        "agent" => &["repo", "input", "out", "retry-of", "by", "run"],
+        "agent" => &["repo", "input", "out", "retry-of", "by", "run", "for"],
         "init" => &["example", "dry-run"],
         "policy" => &["paths"],
+        "impact" => &["manifest"],
         _ => &[],
     }
 }

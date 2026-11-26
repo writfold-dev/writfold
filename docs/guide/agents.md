@@ -76,6 +76,44 @@ Review only the change you are given. Do not edit files.
 
 `packet` is `none` (the default) or `required`. `model` is recorded and exported, never judged.
 
+### Needs: gates that must be met when a worker is set up
+
+A skill or a profile may list gates that must be met now, when `agent prepare` sets up the worker. This is what plan order alone cannot say: a step done earlier whose gate has since gone stale does not count.
+
+```toml
+# .writfold/gates/unit.toml
+schema = "writfold-gate/1"
+id = "unit"
+version = 1
+class = "mechanical"
+argv = ["cargo", "test"]
+timeout_seconds = 600
+scope = ["src/**"]
+```
+
+```toml
+# .writfold/agents/checked-reviewer.toml
+schema = "writfold-agent-profile/1"
+id = "checked-reviewer"
+skills = ["verify-claims"]
+tools = ["repo.read", "git.diff"]
+needs = ["unit"]
+instructions = "Review only the change you are given."
+```
+
+Each need is judged for the run and its subject repository exactly as a guard rule's `gate:<id>` requirement is. `prepare` refuses, after its six facts, at the first need that is not met. It names who needs the gate, the gate's standing and the next step; when the gates cannot be judged (no subject repository, for example) it says `cannot be judged`. `kb lint` reports a need that no gate defines (`ref.undefined`). `needs` joins the closure digest only when it is written, so a file without it keeps the digest it had.
+
+### Where evidence is consulted
+
+Writfold judges evidence at four places. Each can refuse only what passes through it:
+
+| Where | Verb | Refuses | Cannot refuse | Exercised by |
+|---|---|---|---|---|
+| a step's end | `plan advance` | a step whose gates or deliveries are not met | work done without advancing | `plan_deliver.rs` (`advance_is_refused_until_a_candidate_is_ready`) |
+| before a tool call | the `pre-tool-use` hook's guard rules | a matched command while a requirement is unmet | a call that does not go through the hook: a guard, not enforcement | `guard_status.rs` (`gate_judgements_match_hooks`, `failed_and_unknown_gates_ask`), `guard.rs` |
+| a receiver | `handoff check` | a candidate without a current mechanical pass of every required gate; a statement is never a pass | nothing it is given: it reads the policy and evidence itself | `handoff.rs` |
+| setting up a worker | `agent prepare` | a profile whose closure, plans, input, packet or `needs` do not hold | a worker started without `prepare` | `agent_prepare.rs`, `agent_needs.rs` |
+
 ## Inspect: does the profile hold together?
 
 ```text

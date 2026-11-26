@@ -5,6 +5,7 @@ pub mod eval;
 pub mod find;
 pub mod find_each;
 pub mod impact;
+pub mod impact_manifest;
 pub mod index;
 pub mod material;
 pub mod measured;

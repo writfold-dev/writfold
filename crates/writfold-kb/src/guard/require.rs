@@ -18,6 +18,7 @@ use writfold_core::guard::Fact;
 use writfold_core::guard::require::{Looked, gate_fact, run_current, settled_fact, step_fact};
 
 mod gates;
+pub(crate) mod needs;
 use writfold_core::scope::in_scope;
 
 /// One requirement's fact, and (when it is not met) what is owed and the

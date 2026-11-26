@@ -1,0 +1,6 @@
+# A worker's pair review, bound to its invocation.
+schema = "writfold-delivery-mode/1"
+mode = "pair-report"
+description = "one pair review by consistency-reviewer"
+checks = ["invocation.bound"]
+agent = "consistency-reviewer"

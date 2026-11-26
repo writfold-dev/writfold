@@ -1,0 +1,10 @@
+# Review units (#156): one item per pair of the scope's members, each
+# covered by a worker's report prepared --for it. Coverage is not
+# correctness: a well-formed report that is wrong still covers its unit.
+schema = "writfold-gate/1"
+id = "pair-review"
+version = 1
+class = "checklist"
+scope = ["proposals/**", "decisions/**", "ktlo/**", "investigations/**"]
+items_from = "related-scope/manifest.json"
+units = "pairs"

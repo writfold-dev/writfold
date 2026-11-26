@@ -2,7 +2,7 @@
 rfc: "2026-11-25-kb-research-contracts"
 title: "KB research contracts and review coverage"
 status: accepted
-implementation: not-started
+implementation: partial
 authors:
   - tknawara
 created: 2026-11-25
@@ -371,3 +371,21 @@ None blocks acceptance.
   KB move makes every earlier review row stale as the first rule.
   Implementation (#155, #156, #157) is the v0.6.0-dev.23 milestone, after
   the dev.22 agent vocabulary slice.
+- 2026-11-26: #155, #156 and #157 built. Settled when the slice started:
+  a read verb runs as a gate's command while `gate run` holds the run (the
+  rehearsal does it); one seed per manifest. Deviations, found by the
+  fixture or forced by the format: with `--manifest` the walk is over
+  records, so an edge declared in a run's own files (a report, a receipt,
+  an invocation record) is neither walked, listed nor counted; without
+  this the reviews the scope leads to made the scope itself partial under
+  the shipped, proved completeness rule. Members are KB records outside
+  `runs/`; other nodes are counted in `others`. The definition subset has
+  no booleans, so `allow_empty` is written `empty = "allowed"`. A
+  generated checklist's definition digest is unchanged (the run's pin
+  holds); the manifest's digest joins only the digest cover rows record,
+  so a new member makes every earlier row stale. A cover row's file name
+  writes `/` in an item as `_`. `agent prepare --for` checks the form
+  `GATE.ITEM`, not that the item exists, because a generated item exists
+  only against the scope's current manifest. Implementation is `partial`:
+  unit-local reuse, other unit rules and `gate cover --from` remain, as
+  #156 records.

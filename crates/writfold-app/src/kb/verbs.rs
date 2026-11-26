@@ -183,6 +183,7 @@ fn impact(common: &Common, target: String) -> Result<Verb, String> {
         depth: common.depth.unwrap_or(2),
         direction,
         inferred,
+        manifest: super::writes::get(common, "manifest").map(std::path::PathBuf::from),
     })
 }
 

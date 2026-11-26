@@ -94,6 +94,7 @@ fn a_closed_run_and_a_partial_packet_are_refused() -> TestResult {
         by: None,
         run: Some(RUN.into()),
         repo: Some(w.code.clone()),
+        for_item: None,
     }));
     let mut request = w.request(verb.clone());
     request.budget = 20;
@@ -230,6 +231,7 @@ fn a_step_that_moved_under_the_lock_is_refused() -> TestResult {
         by: None,
         run: Some(RUN.into()),
         repo: Some(w.code.clone()),
+        for_item: None,
     })));
     request.probe = inject;
     let (text, exit) = outcome(&request);

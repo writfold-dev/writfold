@@ -1,0 +1,9 @@
+# What the reviews found, and what will be done about it: a person's
+# statement, never derived from the units' coverage.
+schema = "writfold-gate/1"
+id = "findings-disposition"
+version = 1
+class = "attested"
+accept = ["attested"]
+scope = ["proposals/**", "decisions/**", "ktlo/**", "investigations/**"]
+description = "every finding of the pair reviews is fixed, filed or dismissed with a reason"

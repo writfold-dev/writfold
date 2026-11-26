@@ -21,6 +21,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use writfold_core::bind::{self, Bound, Need, Ref};
 use writfold_core::checklist::Item;
 
+/// Where a run's references were recorded for: its looks (`observe
+/// --for`), and the KB root its reports' invocation records are read from.
+pub struct Looks<'a> {
+    pub observed: &'a [Filed],
+    pub root: &'a std::path::Path,
+}
+
 /// The gate a reference names: `gate:<id>`, or a receipt
 /// `runs/<run>/gates/<id>-<stamp>-<hex>.json`.
 fn gate_of(c: &Cited) -> Option<&str> {
@@ -40,15 +47,23 @@ fn gate_of(c: &Cited) -> Option<&str> {
 /// How a cited reference relates to `gate`.`item`, with the item a look
 /// recorded for another item names: `Named` when it is a gate the item's
 /// `evidence_from` names.
-pub fn classify(observed: &[Filed], c: &Cited, gate: &str, item: &Spec) -> (Bound, Option<String>) {
+pub fn classify(looks: &Looks<'_>, c: &Cited, gate: &str, item: &Spec) -> (Bound, Option<String>) {
     if gate_of(c).is_some_and(|g| item.from.iter().any(|f| f == g)) {
         return (Bound::Named, None);
     }
     let item = item.id.as_str();
-    let look = (c.path.as_deref())
-        .and_then(|p| observed.iter().find(|f| f.path == p))
-        .and_then(|f| f.parsed.as_ref().ok());
-    match look.and_then(|o| o.item.as_ref()) {
+    // A worker's report (`delivery:`) is bound by its invocation's `--for`.
+    let made_for = match c.path.as_deref() {
+        Some(p) if p.contains("/invocations/") => {
+            crate::agents::invocation::read_for(looks.root, p)
+        }
+        Some(p) => (looks.observed.iter())
+            .find(|f| f.path == p)
+            .and_then(|f| f.parsed.as_ref().ok())
+            .and_then(|o| o.item.clone()),
+        None => None,
+    };
+    match made_for.as_ref() {
         None => (Bound::Unbound, None),
         Some((g, i)) if g == gate && i == item => (Bound::This, None),
         Some((g, i)) => (Bound::Other, Some(format!("{g}.{i}"))),
@@ -87,14 +102,14 @@ fn note(c: &Cited, flag: &str, said: &str) -> More {
 
 /// The notes under one entry; `backs` counts the items each reference
 /// backs across every checklist judged.
-fn notes(observed: &[Filed], backs: &BTreeMap<String, usize>, gate: &str, e: &Entry) -> Vec<More> {
+fn notes(looks: &Looks<'_>, backs: &BTreeMap<String, usize>, gate: &str, e: &Entry) -> Vec<More> {
     let Some(row) = standing_on(e) else {
         return Vec::new();
     };
     let mut out = Vec::new();
     let mut seen = BTreeSet::new();
     for c in row.evidence.iter().filter(|c| seen.insert(key(c))) {
-        let (bound, other) = classify(observed, c, gate, &e.spec);
+        let (bound, other) = classify(looks, c, gate, &e.spec);
         if let Some(other) = other.filter(|_| !bind::answers(Need::Own, bound)) {
             let said = format!("recorded for {other}, not this item");
             out.push(note(c, "other-item", &said));
@@ -110,7 +125,7 @@ fn notes(observed: &[Filed], backs: &BTreeMap<String, usize>, gate: &str, e: &En
 }
 
 /// Fill [`Entry::bound`] for every checklist item judged.
-pub fn annotate(observed: &[Filed], judged: &mut [Judged<'_>]) {
+pub fn annotate(looks: &Looks<'_>, judged: &mut [Judged<'_>]) {
     let mut backs: BTreeMap<String, usize> = BTreeMap::new();
     for view in judged.iter().filter_map(|j| j.checklist.as_ref()) {
         for row in view.entries.iter().filter_map(standing_on) {
@@ -126,7 +141,7 @@ pub fn annotate(observed: &[Filed], judged: &mut [Judged<'_>]) {
             continue;
         };
         for entry in &mut view.entries {
-            let found = notes(observed, &backs, &gate, entry);
+            let found = notes(looks, &backs, &gate, entry);
             entry.bound = found;
         }
     }
@@ -135,7 +150,7 @@ pub fn annotate(observed: &[Filed], judged: &mut [Judged<'_>]) {
 /// Whether the cited references answer `item` ([`bind::answered`]);
 /// `grounded` says whether they are all grounded now.
 pub fn answered(
-    observed: &[Filed],
+    looks: &Looks<'_>,
     gate: &str,
     item: &Spec,
     cited: &[Cited],
@@ -144,7 +159,7 @@ pub fn answered(
     let refs: Vec<Ref> = (cited.iter())
         .map(|c| Ref {
             grounded,
-            bound: classify(observed, c, gate, item).0,
+            bound: classify(looks, c, gate, item).0,
         })
         .collect();
     bind::answered(item.need, &refs)
@@ -152,11 +167,11 @@ pub fn answered(
 
 /// Refuse a new `supported` or `none-found` row whose references do not
 /// answer its item.
-pub fn require(observed: &[Filed], d: &Definition, item: &str, cited: &[Cited]) -> Result<()> {
+pub fn require(looks: &Looks<'_>, d: &Definition, item: &str, cited: &[Cited]) -> Result<()> {
     let Some(spec) = d.checklist.as_ref().and_then(|s| s.item(item)) else {
         return Ok(());
     };
-    if answered(observed, &d.id, spec, cited, true) {
+    if answered(looks, &d.id, spec, cited, true) {
         return Ok(());
     }
     let key = match spec.need {

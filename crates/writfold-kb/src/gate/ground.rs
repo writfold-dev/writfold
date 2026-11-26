@@ -101,6 +101,9 @@ pub fn resolve(cx: &Context<'_, '_>, reference: &str) -> Result<Resolved> {
     if let Some(id) = r.strip_prefix("gate:") {
         return Ok(gate(cx, reference, id));
     }
+    if let Some(id) = r.strip_prefix("delivery:") {
+        return Ok(super::ground_delivery::resolve(cx, reference, id.trim()));
+    }
     if let Some(path) = file(cx, r) {
         let parts: Vec<&str> = path.split('/').collect();
         return match parts.as_slice() {

@@ -120,6 +120,8 @@ pub enum Verb {
         depth: usize,
         direction: verbs::impact::Direction,
         inferred: bool,
+        /// `--manifest FILE` (#155).
+        manifest: Option<PathBuf>,
     },
     Uses {
         target: String,
@@ -403,16 +405,11 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
             depth,
             direction,
             inferred,
-        } => (
-            verbs::impact::impact(session, target, *depth, *direction, *inferred)?,
-            "impact",
-            vec![
-                target.clone(),
-                format!("depth={depth}"),
-                format!("direction={}", direction.name()),
-                format!("inferred={inferred}"),
-            ],
-        ),
+            manifest,
+        } => {
+            let walk = (*depth, *direction, *inferred);
+            verbs::impact::answer(session, target, walk, manifest.as_deref())?
+        }
         Verb::Uses { target } => (
             verbs::uses::uses(session, target)?,
             "uses",

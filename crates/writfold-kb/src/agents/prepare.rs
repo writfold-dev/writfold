@@ -39,6 +39,8 @@ pub struct Prepare {
     pub by: Option<String>,
     pub run: Option<String>,
     pub repo: Option<PathBuf>,
+    /// `--for GATE.ITEM`: the checklist item the report will answer (#156).
+    pub for_item: Option<String>,
 }
 
 /// Everything the facts were gathered from.
@@ -51,6 +53,9 @@ pub(super) struct Gathered<'a> {
     pub input: std::result::Result<Vec<u8>, String>,
     /// The packet's text and whether it is complete, when required.
     pub packet: Option<(Vec<u8>, bool)>,
+    /// Each needed gate (#154): who named it, its id, its fact and what is
+    /// owed, in order (the profile's, then each skill's).
+    pub needs: Vec<(String, String, writfold_core::guard::Fact, String)>,
 }
 
 /// The template names spliced or included at `step` or an ancestor.
@@ -104,6 +109,38 @@ fn packet(session: &Session<'_>, request: &Request, run: &str) -> Result<(Vec<u8
     Ok((session.emit(&answer, &frame)?.text.into_bytes(), whole))
 }
 
+/// The gates the profile and its skills need, each once, with who named it.
+fn wanted(t: &Table, p: &Def) -> Vec<(String, String)> {
+    let skills = p.skills.iter().filter_map(|s| t.find(DefKind::Skill, s));
+    let mut out: Vec<(String, String)> = Vec::new();
+    for d in std::iter::once(p).chain(skills) {
+        for need in &d.needs {
+            if !out.iter().any(|(_, g)| g == need) {
+                out.push((format!("{} {}", d.kind.word(), d.id), need.clone()));
+            }
+        }
+    }
+    out
+}
+
+/// Each needed gate judged for the run and its subject (#154).
+fn needs(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    wanted: Vec<(String, String)>,
+) -> Vec<(String, String, writfold_core::guard::Fact, String)> {
+    let ids: Vec<String> = wanted.iter().map(|(_, g)| g.clone()).collect();
+    let judged = crate::guard::require::needs::judge_needs(
+        session,
+        &loaded.rec,
+        loaded.subject.clone(),
+        &ids,
+    );
+    (wanted.into_iter().zip(judged))
+        .map(|((who, gate), (fact, owed))| (who, gate, fact, owed))
+        .collect()
+}
+
 /// Gather the facts for profile `a.id` on the loaded run.
 pub(super) fn gather<'a>(
     session: &Session<'_>,
@@ -121,7 +158,9 @@ pub(super) fn gather<'a>(
         true => Some(packet(session, request, &loaded.rec.id)?),
         false => None,
     };
+    let wanted = profile.map_or_else(Vec::new, |p| wanted(t, p));
     Ok(Gathered {
+        needs: needs(session, loaded, wanted),
         profile,
         closure,
         missing_plan: profile.and_then(|p| missing_plan(t, p, &spliced)),
@@ -158,6 +197,25 @@ fn refusal(r: PrepareRefusal, g: &Gathered<'_>, a: &Prepare, run: &str) -> Strin
         PrepareRefusal::PacketIncomplete => format!(
             "agent {id} requires a context packet and run {run}'s is partial; next: writfold kb resume {run} --packet, with a larger --budget-tokens"
         ),
+        PrepareRefusal::Needs(i) => {
+            let (who, gate, fact, owed) = g.needs.get(i).cloned().unwrap_or_else(|| {
+                (
+                    String::new(),
+                    String::new(),
+                    writfold_core::guard::Fact::Unknown,
+                    String::new(),
+                )
+            });
+            let word = match fact {
+                writfold_core::guard::Fact::Unknown => "cannot be judged",
+                _ => "is not met",
+            };
+            let next = match owed.contains("next:") {
+                true => String::new(),
+                false => format!("; next: writfold kb gate status {gate}"),
+            };
+            format!("{who} needs gate {gate}, which {word}: {owed}{next}")
+        }
     }
 }
 
@@ -172,7 +230,8 @@ pub(super) fn judge(g: &Gathered<'_>, a: &Prepare, (run, open): (&str, bool)) ->
         packet_required: g.packet.is_some(),
         packet_complete: g.packet.as_ref().is_some_and(|(_, whole)| *whole),
     };
-    kernel::prepare_check(&facts).map_err(|r| KbError::Refused(refusal(r, g, a, run)))
+    let needs: Vec<writfold_core::guard::Fact> = g.needs.iter().map(|(_, _, f, _)| *f).collect();
+    kernel::prepare(&facts, &needs).map_err(|r| KbError::Refused(refusal(r, g, a, run)))
 }
 
 /// `agent prepare`: judge, record, then write the package.

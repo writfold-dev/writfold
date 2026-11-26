@@ -10,16 +10,17 @@ use std::path::Path;
 use writfold_core::diag::Report;
 
 const TOOL_KEYS: [&str; 3] = ["schema", "id", "description"];
-const SKILL_KEYS: [&str; 7] = [
+const SKILL_KEYS: [&str; 8] = [
     "schema",
     "id",
     "description",
     "tools",
     "plan",
+    "needs",
     "instructions",
     "instructions_file",
 ];
-const AGENT_KEYS: [&str; 9] = [
+const AGENT_KEYS: [&str; 10] = [
     "schema",
     "id",
     "description",
@@ -27,6 +28,7 @@ const AGENT_KEYS: [&str; 9] = [
     "tools",
     "packet",
     "model",
+    "needs",
     "instructions",
     "instructions_file",
 ];
@@ -81,6 +83,20 @@ fn id(c: &mut Check<'_>, kind: DefKind, stem: &str) -> Option<String> {
 
 /// A list of ids, each in the grammar of the kind it names.
 fn ids(c: &mut Check<'_>, key: &str, of: DefKind) -> Option<Vec<String>> {
+    listed(c, key, &|id| id_ok(of, id), of.word())
+}
+
+/// `needs`: gate ids (slugs), each once (#154).
+fn needs(c: &mut Check<'_>) -> Option<Vec<String>> {
+    listed(c, "needs", &crate::write::is_slug, "gate")
+}
+
+fn listed(
+    c: &mut Check<'_>,
+    key: &str,
+    ok: &dyn Fn(&str) -> bool,
+    word: &str,
+) -> Option<Vec<String>> {
     let items = match c.list(key) {
         Field::Absent => return Some(Vec::new()),
         Field::Bad => return None,
@@ -88,8 +104,8 @@ fn ids(c: &mut Check<'_>, key: &str, of: DefKind) -> Option<Vec<String>> {
     };
     let mut out: Vec<String> = Vec::new();
     for item in items {
-        if !id_ok(of, item.str()) {
-            let why = format!("{:?} is not a {} id", item.str(), of.word());
+        if !ok(item.str()) {
+            let why = format!("{:?} is not a {word} id", item.str());
             c.error("value.form", Some(item.span), why)
                 .label("not an id");
             return None;
@@ -179,6 +195,10 @@ pub fn check(
     schema(&mut c, kind.schema());
     let id = id(&mut c, kind, stem);
     let description = description(&mut c);
+    let wants = match kind {
+        DefKind::Tool => Some(Vec::new()),
+        DefKind::Skill | DefKind::Agent => needs(&mut c),
+    };
     let (tools, skills, plan, packet, model, instructions) = match kind {
         DefKind::Tool => (
             Some(Vec::new()),
@@ -225,6 +245,7 @@ pub fn check(
             plan: plan?,
             packet: packet?,
             model: model?,
+            needs: wants?,
             instructions: instructions?,
             shown: shown.to_owned(),
             top: top.to_path_buf(),

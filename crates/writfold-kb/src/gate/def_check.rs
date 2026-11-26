@@ -9,7 +9,10 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 22] = [
+const KEYS: [&str; 25] = [
+    "items_from",
+    "units",
+    "empty",
     "accept",
     "schema",
     "id",
@@ -60,6 +63,9 @@ fn keys_for(class: Option<&str>) -> Vec<&'static str> {
         Some(CHECKLIST) => &[
             "scope",
             "items",
+            "items_from",
+            "units",
+            "empty",
             "optional",
             "not_applicable",
             "none_found",

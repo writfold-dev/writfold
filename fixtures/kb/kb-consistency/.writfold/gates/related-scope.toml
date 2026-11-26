@@ -1,0 +1,11 @@
+# The scope (#155): every record within depth 1 of SEED-1, read in full,
+# the list kept. A partial walk fails; a timeout is unknown.
+schema = "writfold-gate/1"
+id = "related-scope"
+version = 1
+class = "mechanical"
+argv = ["writfold", "kb", "impact", "SEED-1", "--direction", "in", "--depth", "1", "--include", "inferred", "--manifest", "{artifacts}/manifest.json"]
+timeout_seconds = 120
+scope = ["proposals/**", "decisions/**", "ktlo/**", "investigations/**"]
+retain = ["manifest.json"]
+accept = ["satisfied"]

@@ -1,0 +1,3 @@
+schema = "writfold-tool/1"
+id = "kb.read"
+description = "Read records in the KB."

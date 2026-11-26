@@ -43,6 +43,7 @@ pub fn prepare(w: &World, out: &str) -> TestResult<(String, u8)> {
         by: Some("harness".into()),
         run: Some(RUN.into()),
         repo: Some(w.code.clone()),
+        for_item: None,
     }));
     Ok(outcome(&w.request(verb)))
 }

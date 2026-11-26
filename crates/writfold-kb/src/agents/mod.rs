@@ -3,9 +3,10 @@
 //!
 //! - `.writfold/tools/<id>.toml` (`writfold-tool/1`): `id`, `description`.
 //! - `.writfold/skills/<id>.toml` (`writfold-skill/1`): `tools`, at most
-//!   one `plan`, and exactly one of `instructions` and `instructions_file`.
+//!   one `plan`, `needs`, and exactly one of `instructions` and
+//!   `instructions_file`.
 //! - `.writfold/agents/<id>.toml` (`writfold-agent-profile/1`): ordered
-//!   `skills`, `tools`, `packet`, the hint `model`, and exactly one of
+//!   `skills`, `tools`, `packet`, the hint `model`, `needs`, and exactly one of
 //!   `instructions` and `instructions_file`.
 //!
 //! Reading is tested ([`manifest`]); whether a profile's closure holds
@@ -130,6 +131,8 @@ pub struct Def {
     pub packet: bool,
     /// A hint: recorded and exported, not judged.
     pub model: Option<String>,
+    /// Gates that must be met when a worker is set up (#154).
+    pub needs: Vec<String>,
     pub instructions: Instructions,
     /// As rows show it.
     pub shown: String,

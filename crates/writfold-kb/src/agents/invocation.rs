@@ -44,6 +44,9 @@ pub struct Record {
     pub retry_of: Option<String>,
     pub by: Option<String>,
     pub model: Option<String>,
+    /// `--for GATE.ITEM`: the checklist item this invocation's report
+    /// answers (#156); written only when given.
+    pub for_item: Option<(String, String)>,
     pub recorded: String,
 }
 
@@ -68,9 +71,20 @@ pub fn bytes(r: &Record) -> Vec<u8> {
         "model": r.model,
         "recorded": r.recorded,
     });
+    let mut value = value;
+    if let (Some((gate, item)), Some(map)) = (&r.for_item, value.as_object_mut()) {
+        map.insert("for".into(), json!(format!("{gate}.{item}")));
+    }
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
     out
+}
+
+/// `GATE.ITEM`: the gate is a slug, so it ends at the first `.`.
+pub fn for_item(text: &str) -> Option<(String, String)> {
+    let (gate, item) = text.split_once('.')?;
+    (crate::write::is_slug(gate) && !item.is_empty() && !item.contains(['\n', '\r']))
+        .then(|| (gate.to_owned(), item.to_owned()))
 }
 
 fn text(v: &Value, pointer: &str) -> Result<String, String> {
@@ -139,12 +153,35 @@ pub fn parse(text_: &str, run: &str, id: &str) -> Result<Record, String> {
         retry_of: optional(&v, "/retry_of")?,
         by: optional(&v, "/by")?,
         model: optional(&v, "/model")?,
+        for_item: match optional(&v, "/for")? {
+            None => None,
+            Some(f) => Some(for_item(&f).ok_or("/for is not GATE.ITEM")?),
+        },
         recorded: text(&v, "/recorded")?,
     };
     if r.id != id || r.run != run {
         return Err("its id or run does not match where it is filed".into());
     }
     Ok(r)
+}
+
+/// The `--for` of the invocation record at KB path `path`
+/// (`runs/<run>/invocations/<id>.json`), when it reads.
+pub fn read_for(root: &Path, path: &str) -> Option<(String, String)> {
+    let mut parts = path.strip_prefix("runs/")?.split('/');
+    let run_dir = parts.next()?;
+    let id = parts.nth(1)?.strip_suffix(".json")?;
+    let text = std::fs::read_to_string(root.join(path)).ok()?;
+    let run = run_of(root, run_dir)?;
+    parse(&text, &run, id).ok()?.for_item
+}
+
+/// The run id a run directory holds (its manifest's `run_id`).
+fn run_of(root: &Path, run_dir: &str) -> Option<String> {
+    let text =
+        std::fs::read_to_string(root.join("runs").join(run_dir).join("manifest.json")).ok()?;
+    let v: Value = serde_json::from_str(&text).ok()?;
+    v.get("run_id").and_then(Value::as_str).map(str::to_owned)
 }
 
 /// One record file of a run, as found.

@@ -1,0 +1,9 @@
+schema = "writfold-skill/1"
+id = "kb-consistency"
+tools = ["kb.read"]
+plan = "kb-consistency"
+needs = ["related-scope"]
+instructions = """
+Read the two records named in the input. Say whether they are consistent,
+and quote the lines that disagree when they are not.
+"""

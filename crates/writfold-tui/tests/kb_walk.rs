@@ -35,6 +35,7 @@ fn tree_parents_follow_the_edge() -> TestResult {
             depth: 2,
             direction: Direction::In,
             inferred: false,
+            manifest: None,
         },
     )?;
     let parent_of = |id: &str| -> Option<String> {

@@ -57,6 +57,8 @@ pub struct View<'a> {
     /// The subject's commit and the scope content digest judged against.
     pub commit: String,
     pub content: String,
+    /// A generated checklist's universe ([`super::generated`]).
+    pub universe: Option<super::generated::Universe>,
 }
 
 impl View<'_> {
@@ -94,6 +96,13 @@ struct Present<'c, 's, 'r> {
 }
 
 impl Present<'_, '_, '_> {
+    fn looks(&self) -> super::bound::Looks<'_> {
+        super::bound::Looks {
+            observed: &self.observed,
+            root: &self.cx.session.ws.root,
+        }
+    }
+
     /// The `looked:` line for `gate`.`item`; when the newest look kept a
     /// snapshot, JSON also carries what that snapshot reads now.
     fn looked(&self, gate: &str, item: &str) -> Result<Option<crate::emit::More>> {
@@ -181,11 +190,12 @@ fn entry<'a>(
     let Some((_, c)) = newest else {
         return Ok((item(None), None));
     };
-    let same_definition = c.definition == d.digest;
+    let digest = super::generated::rows_digest(d);
+    let same_definition = c.definition == digest;
     let current = about(
         c.definition.as_bytes(),
         c.content.as_bytes(),
-        d.digest.as_bytes(),
+        digest.as_bytes(),
         content.as_bytes(),
     );
     let moved = match (current, c.outcome) {
@@ -196,7 +206,7 @@ fn entry<'a>(
     let answered = match c.outcome {
         Outcome::Supported | Outcome::NoneFound => {
             let all = moved.is_none();
-            super::bound::answered(&present.observed, &d.id, spec, &c.evidence, all)
+            super::bound::answered(&present.looks(), &d.id, spec, &c.evidence, all)
         }
         Outcome::Unsupported | Outcome::NotApplicable => true,
     };
@@ -208,6 +218,9 @@ fn entry<'a>(
     };
     let got = writfold_core::bind::item_under(Some(row), answered);
     let why = match (got, moved) {
+        (Item::Stale, _) if !same_definition && digest != d.digest => {
+            Some("the scope's members or the definition changed since this row".to_owned())
+        }
         (Item::Stale, _) if !same_definition => {
             Some("the definition changed since this row".to_owned())
         }
@@ -223,6 +236,43 @@ fn entry<'a>(
         _ => None,
     };
     Ok((got, why))
+}
+
+/// Each item of `d` as it stands on `subject`, with its newest row.
+fn entries<'a>(
+    d: &Definition,
+    content: &str,
+    (subject, filings): (&Subject, &'a Filings),
+    present: &mut Present<'_, '_, '_>,
+) -> Result<Vec<Entry<'a>>> {
+    let mut entries = Vec::new();
+    for spec in d.checklist.iter().flat_map(|s| &s.items) {
+        let rows = rows_of(&filings.covers, &d.id, &spec.id, &subject.name);
+        let newest = rows.last().copied();
+        let (item, mut why) = entry(d, spec, content, newest, present)?;
+        let unsnapped = spec.snapshot && newest.is_some_and(|(_, c)| !present.snapshotted(c));
+        if unsnapped && item == Item::Supported {
+            why = Some(
+                "cites no look that kept a snapshot, which `snapshot` asks of this item".into(),
+            );
+        }
+        let recorded = match (item, newest) {
+            (Item::Supported, Some((_, c))) => present.recorded(c),
+            _ => 0,
+        };
+        entries.push(Entry {
+            recorded,
+            spec: spec.clone(),
+            item,
+            row: newest,
+            why,
+            looked: present.looked(&d.id, &spec.id)?,
+            restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
+            bound: Vec::new(),
+            unsnapped,
+        });
+    }
+    Ok(entries)
 }
 
 /// Judge every checklist definition on `subject`; `plain` is the report
@@ -250,34 +300,9 @@ pub fn judge<'a>(
     };
     let mut out = Vec::new();
     for d in definitions {
+        let (d, universe) = super::generated::expand(&session.ws.root, plain, d);
         let content = plain.snapshot.scoped(&d.patterns()).digest;
-        let mut entries = Vec::new();
-        for spec in d.checklist.iter().flat_map(|s| &s.items) {
-            let rows = rows_of(&filings.covers, &d.id, &spec.id, &subject.name);
-            let newest = rows.last().copied();
-            let (item, mut why) = entry(&d, spec, &content, newest, &mut present)?;
-            let unsnapped = spec.snapshot && newest.is_some_and(|(_, c)| !present.snapshotted(c));
-            if unsnapped && item == Item::Supported {
-                why = Some(
-                    "cites no look that kept a snapshot, which `snapshot` asks of this item".into(),
-                );
-            }
-            let recorded = match (item, newest) {
-                (Item::Supported, Some((_, c))) => present.recorded(c),
-                _ => 0,
-            };
-            entries.push(Entry {
-                recorded,
-                spec: spec.clone(),
-                item,
-                row: newest,
-                why,
-                looked: present.looked(&d.id, &spec.id)?,
-                restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
-                bound: Vec::new(),
-                unsnapped,
-            });
-        }
+        let entries = entries(&d, &content, (subject, filings), &mut present)?;
         let cells: Vec<checklist::Entry> = (entries.iter())
             .map(|e| checklist::Entry {
                 item: e.item,
@@ -287,7 +312,18 @@ pub fn judge<'a>(
                 unsnapped: e.unsnapped,
             })
             .collect();
-        let rollup = rollup_under(&cells);
+        let rollup = match (
+            &universe,
+            d.checklist.as_ref().and_then(|s| s.generated.as_ref()),
+        ) {
+            (Some(u), Some(g)) => writfold_core::units::generated(
+                u.present,
+                u.units,
+                g.allow_empty,
+                rollup_under(&cells),
+            ),
+            _ => rollup_under(&cells),
+        };
         let statements = statement::summary(
             &filings.statements,
             &d.id,
@@ -306,10 +342,11 @@ pub fn judge<'a>(
                 rollup,
                 commit: plain.snapshot.commit.as_str().to_owned(),
                 content,
+                universe,
             }),
             definition: d,
         });
     }
-    super::bound::annotate(&present.observed, &mut out);
+    super::bound::annotate(&present.looks(), &mut out);
     Ok(out)
 }

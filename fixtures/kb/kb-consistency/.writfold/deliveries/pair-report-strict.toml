@@ -1,0 +1,5 @@
+# A statement the harnesses here cannot make (context.submitted): a report
+# in this mode stays blocked; nothing downgrades the statement to a check.
+schema = "writfold-delivery-mode/1"
+mode = "pair-report-strict"
+attest = ["context.submitted"]

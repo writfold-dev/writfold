@@ -57,6 +57,7 @@ fn two_profiles_at_one_step_leave_it_owing_the_same() -> TestResult {
             by: None,
             run: Some(RUN.into()),
             repo: Some(w.code.clone()),
+            for_item: None,
         },
     ));
     let (text, exit) = outcome(&w.request(verb));
@@ -109,6 +110,7 @@ fn a_crash_before_the_package_leaves_a_prepared_invocation() -> TestResult {
             by: None,
             run: Some(RUN.into()),
             repo: Some(w.code.clone()),
+            for_item: None,
         },
     ));
     let mut request = w.request(verb);

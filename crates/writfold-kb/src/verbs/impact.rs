@@ -1,4 +1,4 @@
-//! `impact <id> [--depth N] [--direction in|out|both] [--include inferred]`:
+//! `impact <id> [--depth N] [--direction in|out|both] [--include inferred] [--manifest FILE]`:
 //! what does changing X touch. A bounded breadth-first walk ([`crate::walk`])
 //! over authored, field and citation edges whose status is explicit or
 //! confirmed; mentions and inferred links only with `--include inferred`;
@@ -127,9 +127,8 @@ fn start(session: &Session<'_>, target: &str) -> Result<std::result::Result<Stri
 pub fn impact(
     session: &Session<'_>,
     target: &str,
-    depth: usize,
-    direction: Direction,
-    inferred: bool,
+    (depth, direction, inferred): (usize, Direction, bool),
+    manifest: Option<&std::path::Path>,
 ) -> Result<Answer> {
     let start = match start(session, target)? {
         Ok(start) => start,
@@ -143,10 +142,23 @@ pub fn impact(
         &start,
         (depth, limit),
         |node, room| {
-            arcs(session, node, direction, room).unwrap_or_else(|error| {
+            let found = arcs(session, node, direction, room).unwrap_or_else(|error| {
                 failure.get_or_insert(error);
                 (Vec::new(), true)
-            })
+            });
+            match manifest {
+                // A scope is over records: an edge a run's own files declare
+                // (a report, a receipt) is not part of it (#155).
+                Some(_) => (
+                    found
+                        .0
+                        .into_iter()
+                        .filter(|a| !a.edge.path.starts_with("runs/"))
+                        .collect(),
+                    found.1,
+                ),
+                None => found,
+            }
         },
         |edge| follow(edge, inferred),
         terminal,
@@ -157,43 +169,11 @@ pub fn impact(
     let mut answer = Answer::default();
     let mut stale = 0;
     for reached in &result.reached {
-        let edge = &reached.edge;
-        let mut row = node_row(session, &reached.node)?;
-        // The title the row would print elsewhere; a record without one
-        // labels itself by its ID, which is not a title.
-        row.title = Some(std::mem::take(&mut row.text)).filter(|t| !t.is_empty() && *t != row.id);
-        row.edge = Some(Walked {
-            from: edge.src.clone(),
-            rel: edge.rel.clone(),
-            to: edge.dst.clone(),
-            origin: edge.origin.clone(),
-            depth: reached.depth,
-        });
-        row.text = format!(
-            "depth={} {} {} {} ({})",
-            reached.depth, edge.src, edge.rel, edge.dst, edge.origin
-        );
-        row.path = Some(edge.path.clone());
-        row.line = Some(edge.line);
-        let freshness = edge_flags(session, edge)?;
-        stale += usize::from(!freshness.is_empty());
-        row.flags.extend(freshness);
-        if follow(edge, false) != Follow::Yes {
-            row.flags.push("inferred".into());
-        }
+        let (row, moved) = reached_row(session, reached)?;
+        stale += usize::from(moved);
         answer.rows.push(row);
     }
-    answer.counts.push(("frontier", result.frontier));
-    for reason in SKIPS {
-        let count = result.skipped.get(reason).copied().unwrap_or(0);
-        if reason != "other" || count > 0 {
-            answer.counts.push((skip_label(reason), count));
-        }
-    }
-    if stale > 0 {
-        answer.counts.push(("stale", stale));
-    }
-    answer.counts.push(("examined", result.examined));
+    tally(&mut answer, &result, stale);
     answer.partial = !result.complete();
     if result.truncated {
         answer.notes.push(format!(
@@ -208,7 +188,82 @@ pub fn impact(
     if answer.rows.is_empty() {
         answer.notes.push(BOUNDARY.to_owned());
     }
+    if let Some(file) = manifest {
+        answer.notes.push(
+            "a scope over records: edges declared in a run's own files are not walked".into(),
+        );
+        let nodes: Vec<String> = result.reached.iter().map(|r| r.node.clone()).collect();
+        let walked = (start.as_str(), direction.name(), depth);
+        super::impact_manifest::write(session, file, walked, &nodes, result.complete())?;
+        answer
+            .notes
+            .push(format!("manifest written to {}", file.display()));
+    }
     Ok(answer)
+}
+
+/// One reached node's row, and whether its edge's evidence moved.
+fn reached_row(
+    session: &Session<'_>,
+    reached: &writfold_core::walk::Reached<Edge>,
+) -> Result<(crate::emit::Row, bool)> {
+    let edge = &reached.edge;
+    let mut row = node_row(session, &reached.node)?;
+    // The title the row would print elsewhere; a record without one
+    // labels itself by its ID, which is not a title.
+    row.title = Some(std::mem::take(&mut row.text)).filter(|t| !t.is_empty() && *t != row.id);
+    row.edge = Some(Walked {
+        from: edge.src.clone(),
+        rel: edge.rel.clone(),
+        to: edge.dst.clone(),
+        origin: edge.origin.clone(),
+        depth: reached.depth,
+    });
+    row.text = format!(
+        "depth={} {} {} {} ({})",
+        reached.depth, edge.src, edge.rel, edge.dst, edge.origin
+    );
+    row.path = Some(edge.path.clone());
+    row.line = Some(edge.line);
+    let freshness = edge_flags(session, edge)?;
+    let moved = !freshness.is_empty();
+    row.flags.extend(freshness);
+    if follow(edge, false) != Follow::Yes {
+        row.flags.push("inferred".into());
+    }
+    Ok((row, moved))
+}
+
+/// The trailer's counts of a walk.
+fn tally(answer: &mut Answer, result: &writfold_core::walk::Walk<Edge>, stale: usize) {
+    answer.counts.push(("frontier", result.frontier));
+    for reason in SKIPS {
+        let count = result.skipped.get(reason).copied().unwrap_or(0);
+        if reason != "other" || count > 0 {
+            answer.counts.push((skip_label(reason), count));
+        }
+    }
+    if stale > 0 {
+        answer.counts.push(("stale", stale));
+    }
+    answer.counts.push(("examined", result.examined));
+}
+
+/// `impact`'s answer, verb name and frame arguments.
+pub fn answer(
+    session: &Session<'_>,
+    target: &str,
+    walk: (usize, Direction, bool),
+    manifest: Option<&std::path::Path>,
+) -> Result<(Answer, &'static str, Vec<String>)> {
+    let (depth, direction, inferred) = walk;
+    let args = vec![
+        target.to_owned(),
+        format!("depth={depth}"),
+        format!("direction={}", direction.name()),
+        format!("inferred={inferred}"),
+    ];
+    Ok((impact(session, target, walk, manifest)?, "impact", args))
 }
 
 fn skip_label(reason: &str) -> &'static str {

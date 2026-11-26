@@ -62,9 +62,15 @@ pub fn order(a: (&str, &Cover), b: (&str, &Cover)) -> std::cmp::Ordering {
 
 /// Whether `name` is a row file of `gate` and `item`:
 /// `<gate>.<item>-<8 digits>T<6 digits>Z-<6 hex>.json`.
+/// An item as its row's file name holds it: a generated unit names records
+/// (`a/b~c/d`), so each `/` is `_` to keep one directory level (#156).
+pub fn file_item(item: &str) -> String {
+    item.replace('/', "_")
+}
+
 pub fn filed_as(name: &str, gate: &str, item: &str) -> bool {
     let Some(rest) = name
-        .strip_prefix(&format!("{gate}.{item}-"))
+        .strip_prefix(&format!("{gate}.{}-", file_item(item)))
         .and_then(|r| r.strip_suffix(".json"))
     else {
         return false;

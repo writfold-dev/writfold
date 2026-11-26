@@ -203,6 +203,15 @@ pub fn lint(all: &[File]) -> Report {
                 );
             }
         }
+        for gate in (def.needs.iter()).filter(|g| !gate_defined(all, g)) {
+            let why = format!("no gate {gate:?}: define .writfold/gates/{gate}.toml");
+            emit(
+                file,
+                item_span(&file.text, "needs", gate),
+                ("ref.undefined", why),
+                "no such gate",
+            );
+        }
         let mut need = required.clone();
         while let Some(i) = covers(&need, &granted) {
             let tool = String::from_utf8_lossy(&need[i]).into_owned();
@@ -217,6 +226,11 @@ pub fn lint(all: &[File]) -> Report {
         }
     }
     report
+}
+
+/// Whether a gate definition file named `id` is among those read.
+fn gate_defined(all: &[File], id: &str) -> bool {
+    (all.iter()).any(|f| matches!(f.kind, crate::defs::lint::Kind::Gate) && f.stem == id)
 }
 
 fn skill_refs(t: &Table, s: &Def) -> Vec<Ref> {

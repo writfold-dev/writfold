@@ -1,0 +1,15 @@
+# A research scope as a mechanical gate (#155): every record within depth 1
+# of the seed over typed links, read in full, the list kept. A partial walk
+# exits 2, so the gate fails; a timeout is unknown; any added, removed or
+# edited record moves the scope digest, so the receipt reads stale; a clone
+# without the kept manifest never reads it as met. Copy it to
+# .writfold/gates/related-scope.toml in the KB and name your seed.
+schema = "writfold-gate/1"
+id = "related-scope"
+version = 1
+class = "mechanical"
+argv = ["writfold", "kb", "impact", "SEED-1", "--direction", "in", "--depth", "1", "--include", "inferred", "--manifest", "{artifacts}/manifest.json"]
+timeout_seconds = 120
+scope = ["proposals/**", "decisions/**", "ktlo/**", "investigations/**"]
+retain = ["manifest.json"]
+accept = ["satisfied"]

@@ -21,6 +21,7 @@ pub mod batch;
 mod bound;
 pub mod cover;
 pub mod evidence;
+pub mod generated;
 mod judge;
 mod looks;
 mod show;

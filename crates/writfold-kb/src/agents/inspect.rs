@@ -76,10 +76,17 @@ pub fn digest(t: &Table, p: &Def) -> std::result::Result<String, String> {
     field("packet", if p.packet { b"required" } else { b"none" });
     field("model", p.model.as_deref().unwrap_or("").as_bytes());
     field("instructions", &instruction_bytes(p)?);
+    // `needs` joins only when written, so a file without it keeps its digest.
+    for need in &p.needs {
+        field("need", need.as_bytes());
+    }
     for s in p.skills.iter().filter_map(|s| t.find(DefKind::Skill, s)) {
         field("skill", s.id.as_bytes());
         field("instructions", &instruction_bytes(s)?);
         field("plan", s.plan.as_deref().unwrap_or("").as_bytes());
+        for need in &s.needs {
+            field("need", need.as_bytes());
+        }
     }
     let mut tools = p.tools.clone();
     tools.sort();

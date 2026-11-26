@@ -174,6 +174,20 @@ fn rows(
     let mut filings = Filings::for_run(session, rec);
     filings.owed.gates = None;
     let (plain, _) = status::judge_plain(session, subject, &filings)?;
+    // A generated checklist's items and digest come from its scope now.
+    let (expanded, universe) = super::generated::expand(&session.ws.root, &plain, d.clone());
+    if let Some(why) = universe.and_then(|u| u.why).filter(|_| {
+        expanded
+            .checklist
+            .as_ref()
+            .is_some_and(|s| s.items.is_empty())
+    }) {
+        return Err(KbError::Refused(format!(
+            "gate {} has no units: {why}",
+            d.id
+        )));
+    }
+    let d = &expanded;
     let cx = Context {
         session,
         subject,
@@ -197,7 +211,15 @@ fn rows(
                 _ => observations(&cx, c)?,
             };
             if matches!(c.outcome, Outcome::Supported | Outcome::NoneFound) {
-                super::bound::require(&observed, d, &c.item, &evidence)?;
+                super::bound::require(
+                    &super::bound::Looks {
+                        observed: &observed,
+                        root: &session.ws.root,
+                    },
+                    d,
+                    &c.item,
+                    &evidence,
+                )?;
             }
             let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);
             let seq = rows.iter().map(|(_, r)| r.seq).max().unwrap_or(0) + 1;
@@ -212,7 +234,7 @@ fn rows(
                 repo: subject.name.clone(),
                 commit: commit.clone(),
                 content: content.clone(),
-                definition: d.digest.clone(),
+                definition: super::generated::rows_digest(d),
                 evidence,
                 seq,
                 recorded: time::stamp(now),
@@ -268,7 +290,7 @@ pub(super) fn record_all(
             runs::dir(&rec),
             cover::DIR,
             c.gate,
-            c.item,
+            cover::file_item(&c.item),
             unique(now, &format!("{}.{}", c.gate, c.item))
         );
         paths.push(path.clone());

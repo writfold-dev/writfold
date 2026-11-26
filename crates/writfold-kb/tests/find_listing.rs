@@ -142,6 +142,7 @@ fn impact(target: &str, direction: Direction) -> Verb {
         depth: 2,
         direction,
         inferred: false,
+        manifest: None,
     }
 }
 

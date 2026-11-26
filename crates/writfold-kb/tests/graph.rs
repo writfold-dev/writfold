@@ -41,6 +41,7 @@ fn impact(target: &str, depth: usize, direction: Direction, inferred: bool) -> V
         depth,
         direction,
         inferred,
+        manifest: None,
     }
 }
 
