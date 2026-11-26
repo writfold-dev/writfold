@@ -245,6 +245,16 @@ MUTANTS = (
            "        Some(tool) => Err(Refusal::Tool(tool)),",
            "        Some(_) => Ok(()),",
            ("Writfold.Core.Compose.closure_loop_spec",)),
+    # invoke (#148): a required packet that is not complete is refused
+    Mutant("prepare-skips-packet", "invoke.rs",
+           "    if facts.packet_required && !facts.packet_complete {\n        return Err(PrepareRefusal::PacketIncomplete);\n    }\n",
+           "",
+           ("Writfold.Core.Invoke.prepare_check_spec",)),
+    # invoke (#147): a skill's plan template must be in the run
+    Mutant("prepare-skips-plan", "invoke.rs",
+           "    if !facts.plans_in_run {\n        return Err(PrepareRefusal::PlanNotInRun);\n    }\n",
+           "",
+           ("Writfold.Core.Invoke.prepare_check_spec",)),
     # vale (#131): only the pinned executable's run is read
     Mutant("vale-absent-usable", "vale.rs",
            "        Tool::Absent | Tool::Other => return false,",

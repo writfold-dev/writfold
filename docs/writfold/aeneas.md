@@ -1257,6 +1257,14 @@ never turns a refused closure into an admitted one). Mutants
 `covers-ignores-last`, `closure-wrong-kind-found`, `closure-skips-tools`.
 Its protocol is `spec/Invocation.tla` (#145).
 
+Preparing an agent invocation (v0.6.0-dev.22, #147, #148):
+`writfold_core::invoke::prepare_check` (`Invoke.lean`: it names the first of
+six classified facts that does not hold, in a fixed order: the run is open,
+the step is current, the closure is admitted, every skill's plan template is
+in the run, the input was read, a required packet is complete; admitted
+exactly when all hold; a missing plan or an incomplete required packet is
+never admitted). Mutants `prepare-skips-packet`, `prepare-skips-plan`.
+
 What these proofs do not cover: the fold from event files to the list of
 steps (and with it where a splice is placed), template and definition
 parsing, digests, Git and file reads, the write protocol

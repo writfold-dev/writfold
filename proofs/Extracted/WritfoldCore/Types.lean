@@ -346,6 +346,18 @@ inductive investigation.Hypothesis where
 | Refuted : investigation.Hypothesis
 | Unknown : investigation.Hypothesis
 
+/-- [writfold_core::invoke::PrepareRefusal]
+    Source: 'crates/writfold-core/src/invoke.rs', lines 44:0-51:1
+    Visibility: public -/
+@[discriminant isize]
+inductive invoke.PrepareRefusal where
+| RunClosed : invoke.PrepareRefusal
+| NotCurrentStep : invoke.PrepareRefusal
+| Closure : invoke.PrepareRefusal
+| PlanNotInRun : invoke.PrepareRefusal
+| InputUnread : invoke.PrepareRefusal
+| PacketIncomplete : invoke.PrepareRefusal
+
 /-- [writfold_core::pin::Pin]
     Source: 'crates/writfold-core/src/pin.rs', lines 27:0-37:1
     Visibility: public -/

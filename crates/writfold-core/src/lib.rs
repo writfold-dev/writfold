@@ -60,6 +60,7 @@ pub mod handoff;
 pub mod idle;
 pub mod inventory;
 pub mod investigation;
+pub mod invoke;
 pub mod observe;
 pub mod order;
 pub mod packet;

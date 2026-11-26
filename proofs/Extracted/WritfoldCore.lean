@@ -24,6 +24,7 @@ public import Extracted.WritfoldCore.Verdict
 public import Extracted.WritfoldCore.Idle
 public import Extracted.WritfoldCore.Inventory
 public import Extracted.WritfoldCore.Investigation
+public import Extracted.WritfoldCore.Invoke
 public import Extracted.WritfoldCore.Order
 public import Extracted.WritfoldCore.Packet
 public import Extracted.WritfoldCore.Pin

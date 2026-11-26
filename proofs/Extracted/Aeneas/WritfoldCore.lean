@@ -4328,6 +4328,61 @@ def investigation.conclude
       «open»
     }
 
+/-- [writfold_core::invoke::Prepare]
+    Source: 'crates/writfold-core/src/invoke.rs', lines 24:0-39:1
+    Visibility: public -/
+structure invoke.Prepare where
+  run_open : Bool
+  current_step : Bool
+  closure_admitted : Bool
+  plans_in_run : Bool
+  input_read : Bool
+  packet_required : Bool
+  packet_complete : Bool
+
+/-- [writfold_core::invoke::PrepareRefusal]
+    Source: 'crates/writfold-core/src/invoke.rs', lines 44:0-51:1
+    Visibility: public -/
+@[discriminant isize]
+inductive invoke.PrepareRefusal where
+| RunClosed : invoke.PrepareRefusal
+| NotCurrentStep : invoke.PrepareRefusal
+| Closure : invoke.PrepareRefusal
+| PlanNotInRun : invoke.PrepareRefusal
+| InputUnread : invoke.PrepareRefusal
+| PacketIncomplete : invoke.PrepareRefusal
+
+/-- [writfold_core::invoke::prepare_check]:
+    Source: 'crates/writfold-core/src/invoke.rs', lines 54:0-74:1
+    Visibility: public -/
+def invoke.prepare_check
+  (facts : invoke.Prepare) :
+  Result (core.result.Result Unit invoke.PrepareRefusal)
+  := do
+  if facts.run_open
+  then
+    if facts.current_step
+    then
+      if facts.closure_admitted
+      then
+        if facts.plans_in_run
+        then
+          if facts.input_read
+          then
+            if facts.packet_required
+            then
+              if facts.packet_complete
+              then ok (core.result.Result.Ok ())
+              else
+                ok (core.result.Result.Err
+                  invoke.PrepareRefusal.PacketIncomplete)
+            else ok (core.result.Result.Ok ())
+          else ok (core.result.Result.Err invoke.PrepareRefusal.InputUnread)
+        else ok (core.result.Result.Err invoke.PrepareRefusal.PlanNotInRun)
+      else ok (core.result.Result.Err invoke.PrepareRefusal.Closure)
+    else ok (core.result.Result.Err invoke.PrepareRefusal.NotCurrentStep)
+  else ok (core.result.Result.Err invoke.PrepareRefusal.RunClosed)
+
 /-- [writfold_core::observe::embeds]:
     Source: 'crates/writfold-core/src/observe.rs', lines 71:0-78:1
     Visibility: public -/

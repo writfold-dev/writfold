@@ -3024,3 +3024,21 @@ mutants = [
   "closure-wrong-kind-found",
   "closure-skips-tools",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/invoke.rs"
+function = "prepare_check"
+lean = "writfold_core.invoke.prepare_check"
+theorems = [
+  "Writfold.Core.Invoke.prepare_check_spec",
+  "Writfold.Core.Invoke.firstRefusal_none_iff",
+  "Writfold.Core.Invoke.prepare_ok_iff",
+  "Writfold.Core.Invoke.plan_missing_refused",
+  "Writfold.Core.Invoke.packet_incomplete_refused",
+]
+total = "Writfold.Core.Invoke.prepare_check_spec"
+mutants = [
+  "prepare-skips-packet",
+  "prepare-skips-plan",
+]

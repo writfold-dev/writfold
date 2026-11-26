@@ -404,7 +404,7 @@ deferred. One is not a property of a pure function.
 | #154 | `invoke::prepare_check` gains the `needs` facts | `prepare_check_spec` and `prepare_ok_iff` restated; `needs_unknown_refused`, `needs_first`, `no_needs_unchanged` | `prepare-skips-needs`, `needs-unknown-met` |
 | #156 | `units::pairs`, `units::generated`, `ground::of_delivery` | `pairs_spec`, `pairs_len`, `over_cap_refused`, `generated_covered_iff`, `absent_universe_never_covered`, `empty_universe_needs_allow`, `of_delivery_grounded_iff` | `pairs-drops-last`, `pairs-keeps-diagonal`, `generated-absent-covered`, `generated-empty-covered`, `delivery-unready-grounds` |
 
-Status (updated as slices land): the #144 row is proved (`proofs/Writfold/Compose.lean`, with `covers_loop_spec` and `closure_loop_spec`); its mutants are calibrated against the loop specs. The protocol model of §6 is checked (`spec/Invocation.tla`). The other rows are proposed.
+Status (updated as slices land): the #144 row is proved (`proofs/Writfold/Compose.lean`, with `covers_loop_spec` and `closure_loop_spec`); its mutants are calibrated against the loop specs. The #147, #148 row is proved (`proofs/Writfold/Invoke.lean`, with `firstRefusal_none_iff`, `plan_missing_refused` and `packet_incomplete_refused`). The protocol model of §6 is checked (`spec/Invocation.tla`). The other rows are proposed.
 
 Each mutant names the spec theorem whose proof unfolds the mutated
 function. The corollaries follow from it. Each slice passes the proofs
