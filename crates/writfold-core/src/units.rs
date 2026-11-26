@@ -210,8 +210,11 @@ mod tests {
         members: 5,
     };
 
+    /// One fact of `OK` changed.
+    type Change = fn(&mut Scope);
+
     /// `OK` with one fact changed.
-    fn with(change: fn(&mut Scope)) -> Scope {
+    fn with(change: Change) -> Scope {
         let mut facts = OK;
         change(&mut facts);
         facts
@@ -220,7 +223,7 @@ mod tests {
     #[test]
     fn a_universe_needs_every_fact_in_order() {
         assert_eq!(universe(&OK), Ok(()));
-        let cases: [(fn(&mut Scope), Absent); 10] = [
+        let cases: [(Change, Absent); 10] = [
             (|f| f.defined = false, Absent::NoGate),
             (|f| f.standing = Standing::Attested, Absent::NotChecked),
             (|f| f.standing = Standing::Waived, Absent::NotChecked),
