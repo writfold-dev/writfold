@@ -2,6 +2,7 @@
 -- [writfold_core]: every module of the translation
 module
 public import Extracted.WritfoldCore.Types
+public import Extracted.WritfoldCore.Account
 public import Extracted.WritfoldCore.Bytes
 public import Extracted.WritfoldCore.Gate
 public import Extracted.WritfoldCore.Checklist

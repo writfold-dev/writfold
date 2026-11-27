@@ -20,6 +20,15 @@ set_option maxRecDepth 2048
 
 namespace writfold_core
 
+/-- [writfold_core::account::Member]
+    Source: 'crates/writfold-core/src/account.rs', lines 13:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive account.Member where
+| Judged : account.Member
+| DeclaredOut : account.Member
+| Remainder : account.Member
+
 /-- [writfold_core::bind::Bound]
     Source: 'crates/writfold-core/src/bind.rs', lines 26:0-37:1
     Visibility: public -/

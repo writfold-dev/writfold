@@ -20,6 +20,19 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 (`mutants.py` refuses to run when one is missing here), and the headline
 statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
+  -- account (#181)
+  ``Writfold.Core.Account.left_spec,
+  ``Writfold.Core.Account.remainder_loop_spec,
+  ``Writfold.Core.Account.remainder_spec,
+  ``Writfold.Core.Account.whole_iff_no_remainder,
+  ``Writfold.Core.Account.judged_never_counts,
+  ``Writfold.Core.Account.declared_out_never_counts,
+  ``Writfold.Core.Account.append_remainder,
+  ``Writfold.Core.Packet.unread_never_complete,
+  ``Writfold.Core.Packet.no_unread_unchanged,
+  ``Writfold.Core.Packet.complete_implies_whole,
+  ``Writfold.Core.Conform.remainder_implements,
+  ``Writfold.Core.Conform.whole_implements,
   -- links: kernels that implement the calculus (proofs/Writfold/Conform, #206)
   ``Writfold.Core.Conform.policy_met_implements,
   ``Writfold.Core.Conform.narrow_met_iff,

@@ -871,10 +871,14 @@ lean = "writfold_core.packet.complete"
 theorems = [
   "Writfold.Core.Packet.complete_iff",
   "Writfold.Core.Conform.packet_complete_implements",
+  "Writfold.Core.Packet.unread_never_complete",
+  "Writfold.Core.Packet.no_unread_unchanged",
+  "Writfold.Core.Packet.complete_implies_whole",
 ]
 total = "Writfold.Core.Packet.complete_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
+  "complete-ignores-unread",
   "packet-complete-ignores-unreadable",
 ]
 
@@ -3323,4 +3327,52 @@ total = "Writfold.Core.Walk.complete_within_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "within-ignores-truncation",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/account.rs"
+function = "left"
+lean = "writfold_core.account.left"
+theorems = [
+  "Writfold.Core.Account.left_spec",
+]
+total = "Writfold.Core.Account.left_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "declared-out-counts",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/account.rs"
+function = "remainder"
+lean = "writfold_core.account.remainder"
+theorems = [
+  "Writfold.Core.Account.remainder_loop_spec",
+  "Writfold.Core.Account.remainder_spec",
+  "Writfold.Core.Account.judged_never_counts",
+  "Writfold.Core.Account.declared_out_never_counts",
+  "Writfold.Core.Account.append_remainder",
+  "Writfold.Core.Conform.remainder_implements",
+]
+total = "Writfold.Core.Account.remainder_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "remainder-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/account.rs"
+function = "whole"
+lean = "writfold_core.account.whole"
+theorems = [
+  "Writfold.Core.Account.whole_iff_no_remainder",
+  "Writfold.Core.Conform.whole_implements",
+]
+total = "Writfold.Core.Account.whole_iff_no_remainder"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "remainder-skips-last",
 ]

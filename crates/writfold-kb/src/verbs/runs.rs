@@ -12,6 +12,7 @@
 mod idle;
 mod packet;
 mod plan;
+mod unread;
 
 pub use idle::{age as idle_age, idle};
 pub use packet::packet;
@@ -239,6 +240,7 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     answer.rows.extend(tail);
     answer.rows.extend(drafts(session, &rec));
     answer.rows.extend(crate::proposal::rows(session, &rec.id));
+    unread::add(&mut answer, &session.ws.root, &runs::dir(&rec));
     if runs::state(session, &rec) == "closed" {
         answer.notes.push(format!("{} is closed", rec.id));
     }

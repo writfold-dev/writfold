@@ -20,6 +20,145 @@ set_option maxRecDepth 2048
 
 namespace writfold_core
 
+/-- [writfold_core::account::Member]
+    Source: 'crates/writfold-core/src/account.rs', lines 13:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive account.Member where
+| Judged : account.Member
+| DeclaredOut : account.Member
+| Remainder : account.Member
+
+/-- [writfold_core::account::{impl core::clone::Clone for writfold_core::account::Member}::clone]:
+    Source: 'crates/writfold-core/src/account.rs', lines 12:9-12:14
+    Visibility: public -/
+def account.Member.Insts.CoreCloneClone.clone
+  (self : account.Member) : Result account.Member := do
+  ok self
+
+/-- Trait implementation: [writfold_core::account::{impl core::clone::Clone for writfold_core::account::Member}]
+    Source: 'crates/writfold-core/src/account.rs', lines 12:9-12:14 -/
+@[reducible]
+def account.Member.Insts.CoreCloneClone : core.clone.Clone account.Member := {
+  clone := account.Member.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::account::{impl core::marker::Copy for writfold_core::account::Member}]
+    Source: 'crates/writfold-core/src/account.rs', lines 12:16-12:20 -/
+@[reducible]
+def account.Member.Insts.CoreMarkerCopy : core.marker.Copy account.Member := {
+  cloneInst := account.Member.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::account::{impl core::fmt::Debug for writfold_core::account::Member}::fmt]:
+    Source: 'crates/writfold-core/src/account.rs', lines 12:22-12:27
+    Visibility: public -/
+def account.Member.Insts.CoreFmtDebug.fmt
+  (self : account.Member) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | account.Member.Judged => core.fmt.Formatter.write_str f (toStr "Judged")
+  | account.Member.DeclaredOut =>
+    core.fmt.Formatter.write_str f (toStr "DeclaredOut")
+  | account.Member.Remainder =>
+    core.fmt.Formatter.write_str f (toStr "Remainder")
+
+/-- Trait implementation: [writfold_core::account::{impl core::fmt::Debug for writfold_core::account::Member}]
+    Source: 'crates/writfold-core/src/account.rs', lines 12:22-12:27 -/
+@[reducible]
+def account.Member.Insts.CoreFmtDebug : core.fmt.Debug account.Member := {
+  fmt := account.Member.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::account::{impl core::cmp::PartialEq<writfold_core::account::Member> for writfold_core::account::Member}::eq]:
+    Source: 'crates/writfold-core/src/account.rs', lines 12:33-12:42
+    Visibility: public -/
+def account.Member.Insts.CoreCmpPartialEqMember.eq
+  (self : account.Member) (other : account.Member) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [writfold_core::account::{impl core::cmp::PartialEq<writfold_core::account::Member> for writfold_core::account::Member}]
+    Source: 'crates/writfold-core/src/account.rs', lines 12:33-12:42 -/
+@[reducible]
+def account.Member.Insts.CoreCmpPartialEqMember : core.cmp.PartialEq
+  account.Member account.Member := {
+  eq := account.Member.Insts.CoreCmpPartialEqMember.eq
+}
+
+/-- Trait implementation: [writfold_core::account::{impl core::cmp::Eq for writfold_core::account::Member}]
+    Source: 'crates/writfold-core/src/account.rs', lines 12:29-12:31 -/
+@[reducible]
+impl_def account.Member.Insts.CoreCmpEq : core.cmp.Eq account.Member := {
+  partialEqInst := account.Member.Insts.CoreCmpPartialEqMember
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    account.Member.Insts.CoreCmpEq
+}
+
+/-- Trait implementation: [writfold_core::account::{impl core::marker::StructuralPartialEq for writfold_core::account::Member}]
+    Source: 'crates/writfold-core/src/account.rs', lines 12:33-12:42 -/
+@[reducible]
+def account.Member.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq account.Member := {
+}
+
+/-- [writfold_core::account::left]:
+    Source: 'crates/writfold-core/src/account.rs', lines 23:0-28:1
+    Visibility: public -/
+def account.left (m : account.Member) : Result Bool := do
+  match m with
+  | account.Member.Judged => ok false
+  | account.Member.DeclaredOut => ok false
+  | account.Member.Remainder => ok true
+
+/-- [writfold_core::account::remainder]: loop body 0:
+    Source: 'crates/writfold-core/src/account.rs', lines 34:4-39:5
+    Visibility: public -/
+@[rust_loop_body]
+def account.remainder_loop.body
+  (members : Slice account.Member) (count : Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := Slice.len members
+  if index < i
+  then
+    let m ← Slice.index_usize members index
+    let b ← account.left m
+    let count1 ← if b
+                   then count + 1#usize
+                   else ok count
+    let index1 ← index + 1#usize
+    ok (cont (count1, index1))
+  else ok (done count)
+
+/-- [writfold_core::account::remainder]: loop 0:
+    Source: 'crates/writfold-core/src/account.rs', lines 34:4-39:5
+    Visibility: public -/
+@[rust_loop]
+def account.remainder_loop
+  (members : Slice account.Member) (count : Std.Usize) (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (count1, index1) => account.remainder_loop.body members count1 index1)
+    (count, index)
+
+/-- [writfold_core::account::remainder]:
+    Source: 'crates/writfold-core/src/account.rs', lines 31:0-41:1
+    Visibility: public -/
+@[reducible]
+def account.remainder (members : Slice account.Member) : Result Std.Usize := do
+  account.remainder_loop members 0#usize 0#usize
+
+/-- [writfold_core::account::whole]:
+    Source: 'crates/writfold-core/src/account.rs', lines 44:0-46:1
+    Visibility: public -/
+def account.whole (members : Slice account.Member) : Result Bool := do
+  let i ← account.remainder members
+  ok (i = 0#usize)
+
 /-- [writfold_core::bind::Bound]
     Source: 'crates/writfold-core/src/bind.rs', lines 26:0-37:1
     Visibility: public -/
@@ -4660,7 +4799,7 @@ def order.newest (items : Slice order.Keyed) : Result (Option Std.Usize) := do
   order.newest_loop items none 0#usize
 
 /-- [writfold_core::packet::cut]: loop body 0:
-    Source: 'crates/writfold-core/src/packet.rs', lines 20:4-29:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 21:4-30:1
     Visibility: public -/
 @[rust_loop_body]
 def packet.cut_loop.body
@@ -4683,7 +4822,7 @@ def packet.cut_loop.body
        ok (done index1)
 
 /-- [writfold_core::packet::cut]: loop 0:
-    Source: 'crates/writfold-core/src/packet.rs', lines 20:4-29:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 21:4-30:1
     Visibility: public -/
 @[rust_loop]
 def packet.cut_loop
@@ -4696,7 +4835,7 @@ def packet.cut_loop
     (used, index)
 
 /-- [writfold_core::packet::cut]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 17:0-29:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 18:0-30:1
     Visibility: public -/
 @[reducible]
 def packet.cut
@@ -4704,7 +4843,7 @@ def packet.cut
   packet.cut_loop costs budget 0#usize 0#usize
 
 /-- [writfold_core::packet::required_omitted]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 37:0-39:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 38:0-40:1
     Visibility: public -/
 def packet.required_omitted
   (kept : Std.Usize) (required : Std.Usize) : Result Std.Usize := do
@@ -4713,14 +4852,17 @@ def packet.required_omitted
   else required - kept
 
 /-- [writfold_core::packet::complete]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 43:0-45:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 45:0-47:1
     Visibility: public -/
 def packet.complete
-  (kept : Std.Usize) (required : Std.Usize) (unreadable : Std.Usize) :
+  (kept : Std.Usize) (required : Std.Usize) (unreadable : Std.Usize)
+  (unread : Std.Usize) :
   Result Bool
   := do
   if kept >= required
-  then ok (unreadable = 0#usize)
+  then if unreadable = 0#usize
+       then ok (unread = 0#usize)
+       else ok false
   else ok false
 
 /-- [writfold_core::pin::Pin]

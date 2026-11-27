@@ -4,6 +4,7 @@ import Writfold.Walk
 import Writfold.Packet
 import Writfold.Runs
 import Writfold.Inventory
+import Writfold.Account
 
 /-!
 # Links: shipped kernels shown to implement the calculus (#206)
@@ -80,14 +81,37 @@ theorem walk_complete_within_implements (frontier skipped : Usize) (truncated : 
   rw [Bool.eq_iff_iff, hb, Calculus.whole_counts]
   cases truncated <;> simp <;> omega
 
-theorem packet_complete_implements (kept required unreadable : Usize) :
-    packet.complete kept required unreadable ⦃ b =>
+theorem packet_complete_implements (kept required unreadable unread : Usize) :
+    packet.complete kept required unreadable unread ⦃ b =>
       b = Calculus.whole (Calculus.Member.counts kept.val 0
-        ((required.val - kept.val) + unreadable.val)) ⦄ := by
-  apply WP.spec_mono (Core.Packet.complete_iff kept required unreadable)
+        ((required.val - kept.val) + unreadable.val + unread.val)) ⦄ := by
+  apply WP.spec_mono (Core.Packet.complete_iff kept required unreadable unread)
   intro b hb
   rw [Bool.eq_iff_iff, hb, Calculus.whole_counts]
   omega
+
+theorem leftCount_remainder (ms : List account.Member) :
+    Core.Account.leftCount ms = Calculus.remainder (ms.map memberOf) := by
+  induction ms with
+  | nil => rfl
+  | cons m ms ih =>
+    cases m <;> simp_all [Core.Account.leftCount, Core.Account.leftB, Calculus.remainder,
+      memberOf, List.countP_cons]
+
+/-- Born linked (#181): `account::remainder` is `Calculus.remainder`. -/
+theorem remainder_implements (ms : Slice account.Member) :
+    account.remainder ms ⦃ r => r.val = Calculus.remainder (ms.val.map memberOf) ⦄ := by
+  apply WP.spec_mono (Core.Account.remainder_spec ms)
+  intro r hr; rw [hr, leftCount_remainder]
+
+/-- `account::whole` is `Calculus.whole`. -/
+theorem whole_implements (ms : Slice account.Member) :
+    account.whole ms ⦃ b => b = Calculus.whole (ms.val.map memberOf) ⦄ := by
+  unfold account.whole
+  step with remainder_implements as ⟨ r, hr ⟩
+  simp only [WP.spec_ok, Calculus.whole]
+  rw [← hr]
+  cases h : (r == 0#usize) <;> simp_all <;> scalar_tac
 
 theorem runs_complete_implements (u n : Usize) :
     runs.complete u n ⦃ b =>

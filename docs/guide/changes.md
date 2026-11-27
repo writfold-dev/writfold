@@ -6,6 +6,11 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.27
+
+- **fix: a run's unread files** ([#181](https://github.com/writfold-dev/writfold/issues/181)): `resume` and `resume --packet` on a run that holds files in no format Writfold reads (another tool's `observations/`, a stray file, an unknown file in a Writfold directory) print an `unread` row, count `unread=N`, and read `coverage=partial` and `packet=partial` (exit 2) where they read complete (exit 0). A run with only Writfold's own files is unchanged. `--json` gains the count and the row. A hook or script that treats exit 2 from `resume` as a failure will see it for runs another tool wrote.
+- The laws of the calculus have a page, [docs/writfold/laws.md](../writfold/laws.md), generated from the Lean sources, and every kernel is now linked to a law, declared out, or on a backlog that only shrinks ([#206](https://github.com/writfold-dev/writfold/issues/206), [#207](https://github.com/writfold-dev/writfold/issues/207), [#208](https://github.com/writfold-dev/writfold/issues/208)). No answer changes.
+
 ## v0.6.0-dev.26
 
 - **fix: a fork clone's citations** ([#179](https://github.com/writfold-dev/writfold/issues/179)): in a clone with several remotes, citations are judged at the remote whose URL names the cited repository, not at `origin`. Rows that read `gone`, `changed` or `moved` only because `origin` was a stale fork now read what the cited repository says. `kb stale` rows and `kb repos` name the judged ref by its branch (`(origin/main)`, `(upstream/main)`) where they said `(origin/HEAD)`.

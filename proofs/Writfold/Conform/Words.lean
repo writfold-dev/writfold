@@ -3,6 +3,7 @@ import Calculus.Word
 import Calculus.Account
 import Calculus.Evidence
 import Extracted.WritfoldCore.Policy
+import Extracted.WritfoldCore.Account
 
 /-!
 # The dictionary (#206, RFC 2026-11-27-calculus-in-lean)
@@ -92,5 +93,17 @@ def acceptOf (a : policy.Accept) : Calculus.Accept := ⟨a.satisfied, a.attested
 
 theorem acceptOf_onto (a : Calculus.Accept) : ∃ p, acceptOf p = a :=
   ⟨⟨a.satisfied, a.attested, a.waived⟩, rfl⟩
+
+/-- An account's member as the calculus's member. -/
+def memberOf : account.Member → Calculus.Member
+  | .Judged => .judged
+  | .DeclaredOut => .declaredOut
+  | .Remainder => .remainder
+
+theorem memberOf_onto (m : Calculus.Member) : ∃ a, memberOf a = m := by
+  cases m
+  · exact ⟨.Judged, rfl⟩
+  · exact ⟨.DeclaredOut, rfl⟩
+  · exact ⟨.Remainder, rfl⟩
 
 end Writfold.Core.Conform

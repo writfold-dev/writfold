@@ -21,7 +21,7 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::packet::cut]: loop body 0:
-    Source: 'crates/writfold-core/src/packet.rs', lines 20:4-29:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 21:4-30:1
     Visibility: public -/
 @[rust_loop_body]
 def packet.cut_loop.body
@@ -44,7 +44,7 @@ def packet.cut_loop.body
        ok (done index1)
 
 /-- [writfold_core::packet::cut]: loop 0:
-    Source: 'crates/writfold-core/src/packet.rs', lines 20:4-29:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 21:4-30:1
     Visibility: public -/
 @[rust_loop]
 def packet.cut_loop
@@ -57,7 +57,7 @@ def packet.cut_loop
     (used, index)
 
 /-- [writfold_core::packet::cut]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 17:0-29:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 18:0-30:1
     Visibility: public -/
 @[reducible]
 def packet.cut
@@ -65,7 +65,7 @@ def packet.cut
   packet.cut_loop costs budget 0#usize 0#usize
 
 /-- [writfold_core::packet::required_omitted]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 37:0-39:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 38:0-40:1
     Visibility: public -/
 def packet.required_omitted
   (kept : Std.Usize) (required : Std.Usize) : Result Std.Usize := do
@@ -74,14 +74,17 @@ def packet.required_omitted
   else required - kept
 
 /-- [writfold_core::packet::complete]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 43:0-45:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 45:0-47:1
     Visibility: public -/
 def packet.complete
-  (kept : Std.Usize) (required : Std.Usize) (unreadable : Std.Usize) :
+  (kept : Std.Usize) (required : Std.Usize) (unreadable : Std.Usize)
+  (unread : Std.Usize) :
   Result Bool
   := do
   if kept >= required
-  then ok (unreadable = 0#usize)
+  then if unreadable = 0#usize
+       then ok (unread = 0#usize)
+       else ok false
   else ok false
 
 end writfold_core

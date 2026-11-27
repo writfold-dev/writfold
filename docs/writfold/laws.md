@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=14 declared_out=0 remainder=245 of 259`
+`LAW_COVERAGE judged=16 declared_out=1 remainder=245 of 262`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: the backlog in
@@ -302,6 +302,7 @@ The remainder of two parts is the sum of their remainders.
 remainder_append (xs ys : List Member) : remainder (xs ++ ys) = remainder xs + remainder ys
 ```
 
+- Implemented by: `account.remainder`
 - Derived: List.countP_append
 
 ### `Calculus.whole_iff_no_remainder`
@@ -312,7 +313,7 @@ A universe is whole exactly when no member is left over.
 whole_iff_no_remainder (ms : List Member) : whole ms = true ↔ Member.remainder ∉ ms
 ```
 
-- Implemented by: `inventory.complete`, `walk.complete`
+- Implemented by: `account.whole`, `inventory.complete`, `walk.complete`
 - Caught by: `remainder-counts-declared-out`, `whole-ignores-remainder`
 
 ### `Calculus.whole_append`
@@ -323,7 +324,7 @@ Two parts are whole together exactly when each is whole.
 whole_append (xs ys : List Member) : whole (xs ++ ys) = (whole xs && whole ys)
 ```
 
-- Implemented by: `inventory.complete`
+- Implemented by: `account.whole`, `inventory.complete`
 - Derived: remainder_append
 
 ### `Calculus.judged_never_counts`
@@ -334,6 +335,7 @@ A judged member is never part of the remainder.
 judged_never_counts (ms : List Member) : remainder (.judged :: ms) = remainder ms
 ```
 
+- Implemented by: `account.remainder`
 - Derived: the definition of remainder
 
 ### `Calculus.declared_out_never_counts`
@@ -344,6 +346,7 @@ A member declared out is never part of the remainder.
 declared_out_never_counts (ms : List Member) : remainder (.declaredOut :: ms) = remainder ms
 ```
 
+- Implemented by: `account.remainder`
 - Caught by: `remainder-counts-declared-out`
 
 ### `Calculus.remainder_counts`
@@ -816,6 +819,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 
 | Function | Implements | Theorem |
 |---|---|---|
+| `account.remainder` | `Calculus.remainder` | `Writfold.Core.Conform.remainder_implements` |
+| `account.whole` | `Calculus.whole` | `Writfold.Core.Conform.whole_implements` |
 | `guard.combine` | `Calculus.Decision.join` | `Writfold.Core.Conform.combine_implements` |
 | `guard.decide` | `Calculus.admit` | `Writfold.Core.Conform.decide_implements` |
 | `inventory.complete` | `Calculus.whole` | `Writfold.Core.Conform.inventory_complete_implements` |
@@ -835,8 +840,15 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 
 | Rust type | Calculus word | Abstraction |
 |---|---|---|
+| `account.Member` | `Calculus.Member` | `memberOf` (onto: `memberOf_onto`) |
 | `gate.Outcome` | `Calculus.Tri` | `outcomeTri` (onto: `outcomeTri_onto`) |
 | `gate.Standing` | `Calculus.Standing` | `standingOf` (onto: `standingOf_onto`) |
 | `guard.Action` | `Calculus.Action` | `actionOf` (onto: `actionOf_onto`) |
 | `guard.Decision` | `Calculus.Decision` | `decisionOf` (onto: `decisionOf_onto`) |
 | `guard.Fact` | `Calculus.Tri` | `factTri` (onto: `factTri_onto`) |
+
+## Declared out
+
+| Function | Why |
+|---|---|
+| `account.left` | the per-member test inside account::remainder, linked through it (left_spec) |

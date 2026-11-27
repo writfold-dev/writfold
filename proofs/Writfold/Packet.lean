@@ -1,4 +1,5 @@
 import Extracted.WritfoldCore.Packet
+import Writfold.Account
 import Extracted.WritfoldCore.Types
 
 /-!
@@ -145,18 +146,52 @@ theorem omitted_counted (kept required : Usize) :
   rw [hn]
   omega
 
-/-- A packet is complete exactly when no required row was left out and
-nothing it was built from was unreadable. -/
-theorem complete_iff (kept required unreadable : Usize) :
-    packet.complete kept required unreadable ⦃ b =>
-      b = true ↔ required.val ≤ kept.val ∧ unreadable.val = 0 ⦄ := by
+/-- A packet is complete exactly when no required row was left out,
+nothing it was built from was unreadable and no file of the run was left
+unread (#181). -/
+theorem complete_iff (kept required unreadable unread : Usize) :
+    packet.complete kept required unreadable unread ⦃ b =>
+      b = true ↔ required.val ≤ kept.val ∧ unreadable.val = 0 ∧ unread.val = 0 ⦄ := by
   unfold packet.complete
   split
-  · simp only [WP.spec_ok, decide_eq_true_eq]
-    constructor
-    · intro h; exact ⟨by scalar_tac, by scalar_tac⟩
-    · intro h; scalar_tac
+  · split
+    · simp only [WP.spec_ok, decide_eq_true_eq]
+      constructor
+      · intro h; exact ⟨by scalar_tac, by scalar_tac, by scalar_tac⟩
+      · intro h; scalar_tac
+    · simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_and]
+      intro _ h; scalar_tac
   · simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_and]
     intro h; scalar_tac
+
+/-- A file left unread never lets a packet say it is complete. -/
+theorem unread_never_complete (kept required unreadable unread : Usize) (h : 0 < unread.val) :
+    packet.complete kept required unreadable unread ⦃ b => b = false ⦄ := by
+  apply WP.spec_mono (complete_iff kept required unreadable unread)
+  intro b hb
+  cases b
+  · rfl
+  · have := (hb.mp rfl).2.2; omega
+
+/-- With nothing left unread the decision is #109's: a run Writfold wrote
+in full reads as before. -/
+theorem no_unread_unchanged (kept required unreadable : Usize) :
+    packet.complete kept required unreadable 0#usize ⦃ b =>
+      b = true ↔ required.val ≤ kept.val ∧ unreadable.val = 0 ⦄ := by
+  apply WP.spec_mono (complete_iff kept required unreadable 0#usize)
+  intro b hb
+  rw [hb]; simp
+
+/-- Complete with `unread` the run's remainder implies the run's files are
+whole. -/
+theorem complete_implies_whole (kept required unreadable : Usize) (ms : Slice account.Member)
+    (unread : Usize) (hu : unread.val = Writfold.Core.Account.leftCount ms.val) :
+    packet.complete kept required unreadable unread ⦃ b =>
+      b = true → account.Member.Remainder ∉ ms.val ⦄ := by
+  apply WP.spec_mono (complete_iff kept required unreadable unread)
+  intro b hb hbt hm
+  have h0 := (hb.mp hbt).2.2
+  rw [hu, Writfold.Core.Account.leftCount, List.countP_eq_zero] at h0
+  exact absurd (h0 _ hm) (by simp [Writfold.Core.Account.leftB])
 
 end Writfold.Core.Packet

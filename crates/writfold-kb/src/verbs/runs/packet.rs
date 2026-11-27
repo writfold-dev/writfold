@@ -31,7 +31,7 @@ fn unread(row: &Row) -> bool {
 fn required(row: &Row) -> bool {
     let status = row.status.as_deref().unwrap_or_default();
     match row.kind {
-        "run" | "plan" | "draft" | "checkpoint" => true,
+        "run" | "plan" | "draft" | "checkpoint" | "unread" => true,
         "gate" => !matches!(status, "satisfied" | "attested" | "waived"),
         "delivery" => status != "ready",
         _ => unread(row),
@@ -54,9 +54,16 @@ pub fn packet(
     ordered.extend(optional);
     let costs: Vec<usize> = ordered.iter().map(row_cost).collect();
     let kept = cut(&costs, budget);
-    let unreadable = ordered.iter().filter(|r| unread(r)).count() + usize::from(answer.partial);
+    // Files of the run left unread (#181) are their own input to the
+    // verdict; `resume` marks the answer partial for them, which is not an
+    // unreadable input as well.
+    let files = (answer.counts.iter())
+        .find(|(name, _)| *name == "unread")
+        .map_or(0, |(_, n)| *n);
+    let other_partial = answer.partial && files == 0;
+    let unreadable = ordered.iter().filter(|r| unread(r)).count() + usize::from(other_partial);
     let missing = required_omitted(kept, needed);
-    let whole = complete(kept, needed, unreadable);
+    let whole = complete(kept, needed, unreadable, files);
     let dropped = ordered.len().saturating_sub(kept.max(needed));
     ordered.truncate(kept);
     answer.rows = ordered;
@@ -70,11 +77,13 @@ pub fn packet(
         answer.notes.push(format!(
             "{missing} of {needed} required rows did not fit in --budget-tokens {budget}: raise it, or read them all with writfold kb resume {id} (paged with --cursor)"
         ));
-    } else if unreadable > 0 {
+    } else if unreadable > 0 || files > 0 {
         answer.partial = true;
-        answer.notes.push(format!(
-            "{unreadable} input(s) did not read; the packet cannot say it is complete"
-        ));
+        if unreadable > 0 {
+            answer.notes.push(format!(
+                "{unreadable} input(s) did not read; the packet cannot say it is complete"
+            ));
+        }
     }
     if dropped > 0 {
         answer.notes.push(format!(

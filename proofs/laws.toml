@@ -114,3 +114,25 @@ function = "referent.judge"
 implements = "Calculus.judge"
 theorem = "Writfold.Core.Conform.judge_implements"
 laws = ["Calculus.judge_needs"]
+
+[[word]]
+type = "account.Member"
+core = "Calculus.Member"
+abstraction = "memberOf"
+onto = "memberOf_onto"
+
+[[link]]
+function = "account.remainder"
+implements = "Calculus.remainder"
+theorem = "Writfold.Core.Conform.remainder_implements"
+laws = ["Calculus.remainder_append", "Calculus.judged_never_counts", "Calculus.declared_out_never_counts"]
+
+[[link]]
+function = "account.whole"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.whole_implements"
+laws = ["Calculus.whole_iff_no_remainder", "Calculus.whole_append"]
+
+[[out]]
+function = "account.left"
+why = "the per-member test inside account::remainder, linked through it (left_spec)"

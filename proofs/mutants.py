@@ -202,8 +202,22 @@ MUTANTS = (
            ("Writfold.Core.Packet.cut_loop_spec",)),
     # packet: an unreadable input makes the packet partial
     Mutant("packet-complete-ignores-unreadable", "packet.rs",
+           "    kept >= required && unreadable == 0 && unread == 0",
+           "    kept >= required && unread == 0",
+           ("Writfold.Core.Packet.complete_iff",)),
+    # account (#181): every left-over member is counted
+    Mutant("remainder-skips-last", "account.rs",
+           "    while index < members.len() {\n        if left(members[index]) {",
+           "    while index + 1 < members.len() {\n        if left(members[index]) {",
+           ("Writfold.Core.Account.remainder_loop_spec",)),
+    Mutant("declared-out-counts", "account.rs",
+           "        Member::Remainder => true,\n        Member::Judged | Member::DeclaredOut => false,",
+           "        Member::Remainder | Member::DeclaredOut => true,\n        Member::Judged => false,",
+           ("Writfold.Core.Account.left_spec",)),
+    # packet (#181): a file left unread keeps a packet partial
+    Mutant("complete-ignores-unread", "packet.rs",
+           "    kept >= required && unreadable == 0 && unread == 0",
            "    kept >= required && unreadable == 0",
-           "    kept >= required",
            ("Writfold.Core.Packet.complete_iff",)),
     # packet: the left-out required rows are counted
     Mutant("omitted-reads-zero", "packet.rs",

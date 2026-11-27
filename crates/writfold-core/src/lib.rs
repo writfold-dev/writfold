@@ -41,6 +41,7 @@
 
 extern crate alloc;
 
+pub mod account;
 pub mod bind;
 pub mod bytes;
 pub mod catalog;

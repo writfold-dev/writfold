@@ -2,13 +2,13 @@
 rfc: "2026-11-27-run-directory-accounting"
 title: "A handover accounts for every file in the run directory"
 status: accepted
-implementation: not-started
+implementation: complete
 authors:
   - fable
 created: 2026-11-27
 updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/181
-milestone: null
+milestone: "v0.6.0-dev.27"
 supersedes: []
 superseded_by: []
 blocked_on: []

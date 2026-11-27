@@ -19,6 +19,7 @@ tier = "kernel"
 # (proofs/extract.sh).
 [package.metadata.charon]
 start_from = [
+    "writfold_core::account",
     "writfold_core::bytes",
     "writfold_core::plan",
     "writfold_core::policy",

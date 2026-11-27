@@ -6,8 +6,9 @@
 //! tokens). The packet is the longest prefix of that list within the
 //! budget ([`cut`]), so the selection keeps the input order and never
 //! holds an optional row while a required one was dropped. A packet is
-//! complete only when every required row is in it and nothing it was
-//! built from was unreadable ([`complete`]).
+//! complete only when every required row is in it, nothing it was built
+//! from was unreadable and no file of the run was left unread
+//! ([`complete`]).
 //!
 //! In the Charon `start_from` list; `proofs/Writfold/Packet.lean` proves
 //! every function for every input (docs/writfold/aeneas.md).
@@ -38,10 +39,11 @@ pub fn required_omitted(kept: usize, required: usize) -> usize {
     if kept >= required { 0 } else { required - kept }
 }
 
-/// A packet is complete exactly when it holds every required row and no
-/// input it was built from was unreadable.
-pub fn complete(kept: usize, required: usize, unreadable: usize) -> bool {
-    kept >= required && unreadable == 0
+/// A packet is complete exactly when it holds every required row, no input
+/// it was built from was unreadable, and no file of the run was left
+/// unread (#181: `unread` is `account::remainder` of the run's files).
+pub fn complete(kept: usize, required: usize, unreadable: usize, unread: usize) -> bool {
+    kept >= required && unreadable == 0 && unread == 0
 }
 
 #[cfg(test)]
@@ -79,10 +81,12 @@ mod tests {
                     required - kept.min(required)
                 );
                 for unreadable in 0..2 {
-                    assert_eq!(
-                        complete(kept, required, unreadable),
-                        required_omitted(kept, required) == 0 && unreadable == 0
-                    );
+                    for unread in 0..2 {
+                        assert_eq!(
+                            complete(kept, required, unreadable, unread),
+                            required_omitted(kept, required) == 0 && unreadable == 0 && unread == 0
+                        );
+                    }
                 }
             }
         }
