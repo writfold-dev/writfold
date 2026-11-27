@@ -273,6 +273,38 @@ choice.
    `ref=` (#179). This alone fixes the report.
 3. `cite make` and `record decision --commit` (#180).
 
+## Place in the asset boundary
+
+Added on 27 November 2026 by
+[the asset boundary](2026-11-27-asset-boundary.md) (#195), in answer to
+the owner's question whether this RFC ties validation to Git.
+
+- This RFC is the **Git provider's resolver**. `choose` and its types
+  (`Names`, `Tip`, `Remote`, `Pinned`, `Why`, `Choice`) stay in
+  `writfold_core::target` with their theorems and mutants.
+- `settle`, `Relation` and `claims_change` name nothing of Git. They move
+  to `writfold_core::referent`, with `judge` and the theorems listed for
+  `settle` above (#196). Their tables are unchanged.
+- `--json` gains `target_ref`, `target_rule` and `target_reason`.
+  `target_rule` replaces `target_remote`: it names the rule that chose
+  (`map-ref`, `remote-url`, `remote-path`, `remote-base`, `sole-remote`,
+  `head`; later `declared`). The remote's name is in `target_ref` and the
+  printed reason.
+- The levels `Path`, `Base` and `Sole` and the branch-name fallback for a
+  remote without `HEAD` are inference. They stay, and the rule printed
+  says which one chose. Git 2.48 and later create a missing
+  `refs/remotes/<remote>/HEAD` on fetch, so the fallback matters for
+  older Git only.
+- **Known limit:** a remote is `Url` when it equals the `url=` of any
+  token of the repository. A token minted by today's `cite make` in a
+  fork clone carries the fork's URL, so by `choose`'s table that fork
+  outranks an upstream that is only `Path`. Such a token is judged
+  against the repository its text names. A declaration
+  ([declared repositories](2026-11-27-declared-repositories.md), #197)
+  overrides token text; #180 stops new tokens being minted that way.
+
+Behaviour, acceptance and rollout are otherwise as written.
+
 ## Unresolved questions
 
 1. **Owner:** when candidates disagree, should a tip that contains every
@@ -285,3 +317,9 @@ choice.
 
 - 2026-11-27: drafted after reproducing the report on `9afa5942`. Accepted
   under the owner's standing acceptance; not yet reviewed by the owner.
+- 2026-11-27: placed under the asset boundary (#195) after the owner asked
+  whether this ties validation to Git. Kept as the Git provider's
+  resolver. `settle` and `Relation` move to `writfold_core::referent`
+  (#196); the JSON key `target_remote` becomes `target_rule`; one known
+  limit recorded (a fork-minted `url=`), closed by #197. No behaviour in
+  this RFC's acceptance list changes.
