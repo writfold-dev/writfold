@@ -395,6 +395,27 @@
       "version_output": "x86_64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
     },
     {
+      "argv": [
+        "vale",
+        "--version"
+      ],
+      "executable": "/usr/local/bin/vale",
+      "name": "vale",
+      "sha256": "f05f4cba5fc12d9f6972b3cade4a3c61d5bbd5978eacfbe9fb95be49f3856ca4",
+      "version_output": "vale version 3.28.1"
+    },
+    {
+      "argv": [
+        "cargo-tauten",
+        "tauten",
+        "--version"
+      ],
+      "executable": "/opt/tauten/bin/cargo-tauten",
+      "name": "cargo-tauten",
+      "sha256": "b36782b4ffbfbb5246c81b2aa8cf9f4588bf5c90827f7634816292955c8defc2",
+      "version_output": "cargo-tauten 0.2.0"
+    },
+    {
       "artifact": "/opt/tla/tla2tools.jar",
       "name": "tlc",
       "sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",

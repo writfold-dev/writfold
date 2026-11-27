@@ -9,7 +9,9 @@ about 1050 of 1115 seconds). This builds the same executables with
 each in its package directory with the variables cargo sets, then runs the
 doctests as `cargo test --doc` does. Each executable's output is printed
 whole, in build order, so the `test result:` lines the gate counts are the
-ones `cargo test` prints. The exit status is 101 when any test failed, as
+ones `cargo test` prints. Each runs with WRITFOLD_REQUIRE_VALE=1, so the
+real-Vale conformance test fails rather than skips when the pinned Vale is
+missing. The exit status is 101 when any test failed, as
 cargo's is; a failed build exits with cargo's status.
 
 Extra arguments are passed to cargo (the gate passes none).
@@ -53,7 +55,9 @@ def executables(extra: list[str]) -> list[tuple[str, Path, Path]]:
 
 def run(entry: tuple[str, Path, Path]) -> tuple[str, int, str]:
     name, executable, package = entry
-    env = dict(os.environ, CARGO_MANIFEST_DIR=str(package))
+    # The tools image carries the pinned Vale, so its conformance test must
+    # run rather than skip (#133).
+    env = dict(os.environ, CARGO_MANIFEST_DIR=str(package), WRITFOLD_REQUIRE_VALE="1")
     result = subprocess.run([str(executable)], cwd=package, env=env, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, text=True, errors="replace", check=False)
     return name, result.returncode, result.stdout

@@ -42,6 +42,16 @@ ADD --checksum=sha256:9ec303873e00deed44d1b2b52b85ab7aa55d849588d7242298748390ea
 RUN tar -xzf /tmp/uv.tar.gz -C /tmp \
     && install -m 755 /tmp/uv-x86_64-unknown-linux-gnu/uv /usr/local/bin/uv \
     && rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-gnu
+# Vale (MIT), the pinned release the prose.vale conformance test runs (#133).
+ADD --checksum=sha256:068954ad869ebec24b8dec6ebcd1cbb1fd5f5a83e966a35baedfae8b2cdc093a https://github.com/vale-cli/vale/releases/download/v3.28.1/vale_3.28.1_Linux_64-bit.tar.gz /tmp/vale.tar.gz
+RUN mkdir /tmp/vale && tar -xzf /tmp/vale.tar.gz -C /tmp/vale \
+    && install -m 755 /tmp/vale/vale /usr/local/bin/vale \
+    && rm -rf /tmp/vale.tar.gz /tmp/vale
+# cargo-tauten (MIT), a released version from crates.io with its
+# own lockfile (#100); cargo verifies each crate's registry checksum.
+RUN cargo install --locked cargo-tauten --version 0.2.0 --root /opt/tauten \
+    && rm -rf /opt/cargo/registry/cache /opt/cargo/registry/src
+ENV PATH=/opt/tauten/bin:$PATH
 WORKDIR /work/writfold
 RUN git config --system user.email writfold-qualification@example.invalid \
     && git config --system user.name 'Writfold qualification' \

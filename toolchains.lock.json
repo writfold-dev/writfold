@@ -3,8 +3,8 @@
   "admitted": true,
   "scope": "Exact executable/image identity admitted for local development qualification. This is not a passed WF01 offline-closure or product proof claim.",
   "image": {
-    "reference": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
-    "id": "sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
+    "reference": "writfold-tools@sha256:5198a49ff107e94b9acc4da46ac19e064b024da6ca6f91263d371ce1087967f5",
+    "id": "sha256:5198a49ff107e94b9acc4da46ac19e064b024da6ca6f91263d371ce1087967f5",
     "platform": "linux/amd64",
     "base": "ubuntu:24.04@sha256:a61567bd31828687156d735ea8eb01ba4e37636e225dd6a48ba94136a70d9d61",
     "dockerfile_frontend": "docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e",
@@ -12,7 +12,7 @@
   },
   "observation": {
     "path": "qualification/toolchain-observation.json",
-    "sha256": "1d4bc6552abf2dfd381636f5c6f1d9dcd2feb81c3359520341939cecb9450683"
+    "sha256": "f342a6be7d24412171257bb60ebd27e243b7f1ae13244daf1738c62d01fab57b"
   },
   "target": "x86_64-unknown-linux-musl",
   "compiler": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
@@ -106,6 +106,26 @@
       "executable_sha256": "83f28650272b5543e939debbc7a5578d087952399fd945e9267b1db0ccc27d33",
       "license": "Apache-2.0 OR MIT",
       "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "vale",
+      "version": "3.28.1",
+      "platform": "linux/amd64",
+      "url": "https://github.com/vale-cli/vale/releases/download/v3.28.1/vale_3.28.1_Linux_64-bit.tar.gz",
+      "archive_sha256": "068954ad869ebec24b8dec6ebcd1cbb1fd5f5a83e966a35baedfae8b2cdc093a",
+      "executable_sha256": "f05f4cba5fc12d9f6972b3cade4a3c61d5bbd5978eacfbe9fb95be49f3856ca4",
+      "license": "MIT",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "cargo-tauten",
+      "version": "0.2.0",
+      "platform": "linux/amd64",
+      "url": "https://crates.io/crates/cargo-tauten/0.2.0",
+      "archive_sha256": null,
+      "executable_sha256": "b36782b4ffbfbb5246c81b2aa8cf9f4588bf5c90827f7634816292955c8defc2",
+      "license": "MIT",
+      "provenance": "Built in docker/Dockerfile.tools by `cargo install --locked` from the crates.io release; cargo checks each crate against the registry index checksum. Executed identity retained in qualification/toolchain-observation.json."
     }
   ],
   "distro_packages_sha256": "f7948475c22632baa61663fd5cdc279eaf9e923981c26cf76d9905fe491a1cf0",

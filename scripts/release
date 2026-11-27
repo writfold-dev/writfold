@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REPO = "writfold-dev/writfold"
 SITE_REPO = "writfold-dev/writfold-dev.github.io"
 ASSET = "writfold-x86_64-linux-musl"
-TOOLS = "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6"
+TOOLS = "writfold-tools@sha256:5198a49ff107e94b9acc4da46ac19e064b024da6ca6f91263d371ce1087967f5"
 OUT = Path.home() / ".cache" / "writfold-release"
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 

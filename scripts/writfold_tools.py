@@ -56,6 +56,8 @@ def main() -> None:
         observe("python", ["python3", "--version"]),
         observe("uv", ["uv", "--version"]),
         observe("musl-gcc", ["musl-gcc", "--version"]),
+        observe("vale", ["vale", "--version"]),
+        observe("cargo-tauten", ["cargo-tauten", "tauten", "--version"]),
     ]
     jar = Path("/opt/tla/tla2tools.jar")
     tools.append({"name": "tlc", "artifact": str(jar), "sha256": sha(jar),
