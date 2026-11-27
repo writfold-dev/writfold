@@ -3370,6 +3370,7 @@ lean = "writfold_core.account.whole"
 theorems = [
   "Writfold.Core.Account.whole_iff_no_remainder",
   "Writfold.Core.Conform.whole_implements",
+  "Writfold.Core.Account.remainder_loop_spec",
 ]
 total = "Writfold.Core.Account.whole_iff_no_remainder"
 subsumes = ["TAU-N001", "TAU-P003"]
