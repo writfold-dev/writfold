@@ -307,6 +307,20 @@ Reported for tauten; nothing in tauten was changed.
 9. **Mutant semantics differ.** tauten's template counts a theorem as broken when its proof fails or it depends on `sorry`; writfold's `mutants.py` counts direct failures only and requires the exact named set. The adapter reports writfold's narrower set, which is conservative (for example `newest-last-of-equal` breaks `newer_spec`; under tauten's rule it would also break `newest_loop_spec`, which uses it), but it is why eight mutants had to be added.
 10. **The `total` shape is not too strict for writfold.** 229 theorems already had it (most `*_spec` triples are hypothesis-free); only loop helpers and index-taking helpers did not.
 
+## State on 27 November 2026 and the plan from here
+
+Measured on `main` at `9afa5942` with `cargo-tauten` 0.2.0 (crates.io):
+`scripts/tauten-check` exits 1 with 188 errors, 217 accepted by the
+baseline. 182 are kernel TAU-N001/TAU-P003 findings that are errors only
+because `proofs/claims.json` is still the dev.20 record (`9095a233`, 180
+claims) while seven later commits changed `crates/writfold-core/` and
+`proofs/` (195 claims in `claims.toml`). Six are new edge findings
+(`deliver/vale.rs`, two test files, `tests/units_support/mod.rs`). Three
+spent `[[amend]]` entries print TAU-R002. The sections above and the path
+below are history; the end state and the ordered steps are in the
+[adoption RFC](../rfcs/2026-11-27-tauten-adoption.md), tracked in
+[#171](https://github.com/writfold-dev/writfold/issues/171).
+
 ## Path to stage 3 (tightening the ratchet)
 
 1. Pin `cargo-tauten` (a release at or after `3b7512e`) in the tools image and
