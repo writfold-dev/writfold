@@ -3179,12 +3179,14 @@ theorems = [
   "Writfold.Core.Target.other_never_chosen",
   "Writfold.Core.Target.pin_decides",
   "Writfold.Core.Target.disagreement_is_ambiguous",
+  "Writfold.Core.Target.first_at_loop_spec",
 ]
 total = "Writfold.Core.Target.choose_spec"
 mutants = [
   "pin-missing-falls-back",
   "nohead-takes-head",
   "disagree-takes-first",
+  "first-remote-wins",
 ]
 
 [[claim]]
