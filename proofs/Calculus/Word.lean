@@ -41,14 +41,19 @@ def and : Tri → Tri → Tri
 guards the empty case itself (`Calculus.universal`). -/
 def all (ts : List Tri) : Tri := ts.foldr and yes
 
+/-- Law 3.5: unknown never admits. -/
 theorem unknown_never_admits : admits unknown = false := rfl
 
+/-- Only `yes` admits. -/
 theorem admits_iff (t : Tri) : t.admits = true ↔ t = yes := by
   cases t <;> simp [admits]
 
+/-- The knowledge order is reflexive. -/
 theorem le_refl (a : Tri) : a ≤ a := by cases a <;> decide
+/-- The knowledge order is transitive. -/
 theorem le_trans {a b c : Tri} : a ≤ b → b ≤ c → a ≤ c := by
   cases a <;> cases b <;> cases c <;> decide
+/-- The knowledge order is antisymmetric. -/
 theorem le_antisymm {a b : Tri} : a ≤ b → b ≤ a → a = b := by
   cases a <;> cases b <;> decide
 
@@ -56,21 +61,29 @@ theorem le_antisymm {a b : Tri} : a ≤ b → b ≤ a → a = b := by
 theorem refines_only_unknown {a b : Tri} (h : a ≤ b) : a = b ∨ a = unknown := by
   revert h; cases a <;> cases b <;> decide
 
+/-- Conjunction does not depend on order. -/
 theorem and_comm (a b : Tri) : and a b = and b a := by cases a <;> cases b <;> rfl
+/-- Conjunction groups freely. -/
 theorem and_assoc (a b c : Tri) : and (and a b) c = and a (and b c) := by
   cases a <;> cases b <;> cases c <;> rfl
+/-- Saying a word twice changes nothing. -/
 theorem and_idem (a : Tri) : and a a = a := by cases a <;> rfl
+/-- `yes` is the unit of conjunction. -/
 theorem and_yes (a : Tri) : and yes a = a := by cases a <;> rfl
 
+/-- Knowing more about either side never contradicts what was known. -/
 theorem and_mono {a a' b b' : Tri} : a ≤ a' → b ≤ b' → and a b ≤ and a' b' := by
   cases a <;> cases a' <;> cases b <;> cases b' <;> decide
 
+/-- Both hold exactly when each holds. -/
 theorem and_eq_yes {a b : Tri} : and a b = yes ↔ a = yes ∧ b = yes := by
   cases a <;> cases b <;> simp [and]
 
+/-- A conjunction is refused exactly when one side is refused. -/
 theorem and_eq_no {a b : Tri} : and a b = no ↔ a = no ∨ b = no := by
   cases a <;> cases b <;> simp [and]
 
+/-- All hold exactly when each one holds. -/
 theorem all_eq_yes (ts : List Tri) : all ts = yes ↔ ∀ t ∈ ts, t = yes := by
   induction ts with
   | nil => simp [all]
@@ -86,6 +99,7 @@ theorem all_eq_no (ts : List Tri) : all ts = no ↔ no ∈ ts := by
     have : all (t :: ts) = and t (all ts) := rfl
     rw [this, and_eq_no, ih]; simp [eq_comm]
 
+/-- All of two lists is the conjunction of each. -/
 theorem all_append (xs ys : List Tri) : all (xs ++ ys) = and (all xs) (all ys) := by
   induction xs with
   | nil => simp [all, and_yes]
@@ -135,11 +149,16 @@ def join : Decision → Decision → Decision
   | _, ask => ask
   | pass, pass => pass
 
+/-- Several rules: the order they are read in does not matter. -/
 theorem join_comm (a b : Decision) : join a b = join b a := by cases a <;> cases b <;> rfl
+/-- Several rules group freely. -/
 theorem join_assoc (a b c : Decision) : join (join a b) c = join a (join b c) := by
   cases a <;> cases b <;> cases c <;> rfl
+/-- A rule repeated changes nothing. -/
 theorem join_idem (a : Decision) : join a a = a := by cases a <;> rfl
+/-- A pass adds nothing to another decision. -/
 theorem pass_join (a : Decision) : join pass a = a := by cases a <;> rfl
+/-- Several rules pass exactly when each passes. -/
 theorem join_eq_pass {a b : Decision} : join a b = pass ↔ a = pass ∧ b = pass := by
   cases a <;> cases b <;> simp [join]
 
@@ -159,6 +178,7 @@ one of them holds; otherwise the rule's action stands. -/
 def admit (action : Action) (reqs : List Tri) : Decision :=
   if (Tri.all reqs).admits then .pass else action.decision
 
+/-- An operation passes exactly when every requirement holds. -/
 theorem admit_pass_iff (a : Action) (reqs : List Tri) :
     admit a reqs = .pass ↔ ∀ t ∈ reqs, t = .yes := by
   unfold admit

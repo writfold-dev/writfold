@@ -870,6 +870,7 @@ function = "complete"
 lean = "writfold_core.packet.complete"
 theorems = [
   "Writfold.Core.Packet.complete_iff",
+  "Writfold.Core.Conform.packet_complete_implements",
 ]
 total = "Writfold.Core.Packet.complete_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -1080,6 +1081,7 @@ theorems = [
   "Writfold.Core.Guard.combine_deny_iff",
   "Writfold.Core.Guard.combine_pass_iff",
   "Writfold.Core.Guard.combine_spec",
+  "Writfold.Core.Conform.combine_implements",
 ]
 total = "Writfold.Core.Guard.combine_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -1096,6 +1098,8 @@ theorems = [
   "Writfold.Core.Guard.decide_pass_iff",
   "Writfold.Core.Guard.decide_spec",
   "Writfold.Core.Guard.unknown_never_passes",
+  "Writfold.Core.Conform.decide_implements",
+  "Writfold.Core.Conform.guard_unknown_never_passes",
 ]
 total = "Writfold.Core.Guard.decide_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2675,6 +2679,7 @@ function = "complete"
 lean = "writfold_core.walk.complete"
 theorems = [
   "Writfold.Core.Walk.complete_iff",
+  "Writfold.Core.Conform.walk_complete_implements",
 ]
 total = "Writfold.Core.Walk.complete_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2691,6 +2696,7 @@ theorems = [
   "Writfold.Core.Inventory.complete_loop_spec",
   "Writfold.Core.Inventory.complete_spec",
   "Writfold.Core.Inventory.complete_total",
+  "Writfold.Core.Conform.inventory_complete_implements",
 ]
 total = "Writfold.Core.Inventory.complete_total"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2889,6 +2895,7 @@ function = "complete"
 lean = "writfold_core.runs.complete"
 theorems = [
   "Writfold.Core.Runs.complete_spec",
+  "Writfold.Core.Conform.runs_complete_implements",
 ]
 total = "Writfold.Core.Runs.complete_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -3292,4 +3299,20 @@ total = "Writfold.Core.Target.agree_at_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "agree-ignores-level",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/walk.rs"
+function = "complete_within"
+lean = "writfold_core.walk.complete_within"
+theorems = [
+  "Writfold.Core.Walk.complete_within_iff",
+  "Writfold.Core.Walk.truncated_never_complete",
+  "Writfold.Core.Conform.walk_complete_within_implements",
+]
+total = "Writfold.Core.Walk.complete_within_iff"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "within-ignores-truncation",
 ]

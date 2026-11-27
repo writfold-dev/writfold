@@ -20,6 +20,15 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 (`mutants.py` refuses to run when one is missing here), and the headline
 statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
+  -- links: kernels that implement the calculus (proofs/Writfold/Conform, #206)
+  ``Writfold.Core.Conform.decide_implements,
+  ``Writfold.Core.Conform.guard_unknown_never_passes,
+  ``Writfold.Core.Conform.combine_implements,
+  ``Writfold.Core.Conform.walk_complete_implements,
+  ``Writfold.Core.Conform.walk_complete_within_implements,
+  ``Writfold.Core.Conform.packet_complete_implements,
+  ``Writfold.Core.Conform.runs_complete_implements,
+  ``Writfold.Core.Conform.inventory_complete_implements,
   -- the calculus (proofs/Calculus, #205)
   ``Calculus.Tri.unknown_never_admits,
   ``Calculus.Tri.admits_iff,

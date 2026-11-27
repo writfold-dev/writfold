@@ -15,23 +15,28 @@ def remainder (ms : List Member) : Nat := ms.countP (· = .remainder)
 /-- Nothing is left over. -/
 def whole (ms : List Member) : Bool := remainder ms == 0
 
+/-- The remainder of two parts is the sum of their remainders. -/
 theorem remainder_append (xs ys : List Member) :
     remainder (xs ++ ys) = remainder xs + remainder ys := by
   simp [remainder, List.countP_append]
 
+/-- A universe is whole exactly when no member is left over. -/
 theorem whole_iff_no_remainder (ms : List Member) :
     whole ms = true ↔ Member.remainder ∉ ms := by
   simp only [whole, remainder, beq_iff_eq, List.countP_eq_zero, decide_eq_true_eq]
   exact ⟨fun h hm => h _ hm rfl, fun h a ha e => h (e ▸ ha)⟩
 
+/-- Two parts are whole together exactly when each is whole. -/
 theorem whole_append (xs ys : List Member) :
     whole (xs ++ ys) = (whole xs && whole ys) := by
   simp only [whole, remainder_append]
   cases remainder xs <;> cases remainder ys <;> simp
 
+/-- A judged member is never part of the remainder. -/
 theorem judged_never_counts (ms : List Member) :
     remainder (.judged :: ms) = remainder ms := by simp [remainder]
 
+/-- A member declared out is never part of the remainder. -/
 theorem declared_out_never_counts (ms : List Member) :
     remainder (.declaredOut :: ms) = remainder ms := by simp [remainder]
 
@@ -40,9 +45,11 @@ def Member.counts (judged out rest : Nat) : List Member :=
   List.replicate judged .judged ++ List.replicate out .declaredOut ++
     List.replicate rest .remainder
 
+/-- An account by counts has exactly the remainder it was given. -/
 theorem remainder_counts (j o r : Nat) : remainder (Member.counts j o r) = r := by
   simp [Member.counts, remainder, List.countP_append, List.countP_replicate]
 
+/-- An account by counts is whole exactly when its remainder is zero. -/
 theorem whole_counts (j o r : Nat) : whole (Member.counts j o r) = true ↔ r = 0 := by
   simp [whole, remainder_counts]
 
@@ -69,6 +76,7 @@ structure Universal (allowEmpty : Bool) (ms : List (Member × Tri)) (word : Tri)
   each : word = .yes → ∀ t ∈ judgedOf ms, t = .yes
   inhabited : word = .yes → allowEmpty = true ∨ judgedOf ms ≠ []
 
+/-- Law U: a universal word holds exactly when the universe is whole, every judged member holds, and it is inhabited unless the empty universe was allowed. -/
 theorem universal_yes_iff (e : Bool) (ms : List (Member × Tri)) :
     universal e ms = .yes ↔
       whole (ms.map (·.1)) = true ∧ (∀ t ∈ judgedOf ms, t = .yes) ∧
@@ -106,6 +114,7 @@ theorem empty_never_yes (ms : List (Member × Tri)) (h : judgedOf ms = []) :
   · cases h'
   · exact h' h
 
+/-- `universal` satisfies the law it is the reference for. -/
 theorem universal_sound (e : Bool) (ms : List (Member × Tri)) :
     Universal e ms (universal e ms) :=
   ⟨fun h => ((universal_yes_iff e ms).mp h).1, fun h => ((universal_yes_iff e ms).mp h).2.1,
@@ -121,6 +130,7 @@ A witness is enough in any universe; saying there is none needs all of it. -/
 def search (isWhole found : Bool) : Tri :=
   if found then .yes else if isWhole then .no else .unknown
 
+/-- An existential word holds exactly when a witness was found. -/
 theorem search_yes_iff (w f : Bool) : search w f = .yes ↔ f = true := by
   cases w <;> cases f <;> simp [search]
 

@@ -112,6 +112,9 @@ An RFC that changes decision logic lists, before its design:
    break them.
 3. What stays tested and unproved: parsers, file and Git IO, rendering. Say
    how each part is tested.
+4. The calculus operation each kernel function implements and the laws of
+   [`laws.md`](../writfold/laws.md) it is subject to, or why none applies
+   (#206): its link theorem, or its `[[out]]` reason in `proofs/laws.toml`.
 
 The proofs gate (drift, `lake build`, axiom audit, mutants) must pass before
 the kernel is wired into a verb ([aeneas.md](../writfold/aeneas.md)).

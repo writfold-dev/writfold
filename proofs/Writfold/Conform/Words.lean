@@ -1,0 +1,69 @@
+import Extracted.WritfoldCore.Types
+import Calculus.Word
+import Calculus.Account
+
+/-!
+# The dictionary (#206, RFC 2026-11-27-calculus-in-lean)
+
+One abstraction per Rust word type onto a word of the calculus, each with
+an `_onto` theorem: every core word is the image of some Rust word, so no
+abstraction is a constant that would make a link vacuous.
+-/
+
+open writfold_core
+
+namespace Writfold.Core.Conform
+
+/-- A guard requirement: met, unmet or not judged. -/
+def factTri : guard.Fact → Calculus.Tri
+  | .Met => .yes
+  | .Unmet => .no
+  | .Unknown => .unknown
+
+theorem factTri_onto (t : Calculus.Tri) : ∃ f, factTri f = t := by
+  cases t
+  · exact ⟨.Met, rfl⟩
+  · exact ⟨.Unmet, rfl⟩
+  · exact ⟨.Unknown, rfl⟩
+
+/-- A site's answer. -/
+def decisionOf : guard.Decision → Calculus.Decision
+  | .Pass => .pass
+  | .Ask => .ask
+  | .Deny => .deny
+
+theorem decisionOf_onto (d : Calculus.Decision) : ∃ g, decisionOf g = d := by
+  cases d
+  · exact ⟨.Pass, rfl⟩
+  · exact ⟨.Ask, rfl⟩
+  · exact ⟨.Deny, rfl⟩
+
+/-- What a refusing rule does. -/
+def actionOf : guard.Action → Calculus.Action
+  | .Ask => .ask
+  | .Deny => .deny
+
+theorem actionOf_onto (a : Calculus.Action) : ∃ g, actionOf g = a := by
+  cases a
+  · exact ⟨.Ask, rfl⟩
+  · exact ⟨.Deny, rfl⟩
+
+/-- A check's outcome: a pass, a fail or unknown. -/
+def outcomeTri : gate.Outcome → Calculus.Tri
+  | .Pass => .yes
+  | .Fail => .no
+  | .Unknown => .unknown
+
+theorem outcomeTri_onto (t : Calculus.Tri) : ∃ o, outcomeTri o = t := by
+  cases t
+  · exact ⟨.Pass, rfl⟩
+  · exact ⟨.Fail, rfl⟩
+  · exact ⟨.Unknown, rfl⟩
+
+/-- An inventory root as a member of the inventory's universe: read (listed
+or absent) is judged, unreadable is the remainder. -/
+def rootMember : inventory.Root → Calculus.Member
+  | .Unreadable => .remainder
+  | _ => .judged
+
+end Writfold.Core.Conform

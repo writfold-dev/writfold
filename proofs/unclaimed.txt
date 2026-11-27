@@ -60,8 +60,6 @@ Writfold.Core.Publish.repair_replace_iff
 Writfold.Core.Publish.drift_never_replaces
 Writfold.Core.Publish.equal_keeps
 Writfold.Core.Publish.derived_replace_iff
-Writfold.Core.Walk.complete_within_iff
-Writfold.Core.Walk.truncated_never_complete
 Writfold.Core.Graph.affected_iff
 Writfold.Core.Graph.delta_eq_full_keyed
 Writfold.Core.Graph.plan_skip_iff

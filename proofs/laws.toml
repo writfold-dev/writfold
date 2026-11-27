@@ -1,0 +1,68 @@
+# The register of the calculus's links (#206, docs/rfcs/2026-11-27-calculus-in-lean.md).
+# Checked by proofs/law_coverage.py; docs/writfold/laws.md is generated from it.
+
+[[word]]
+type = "guard.Fact"
+core = "Calculus.Tri"
+abstraction = "factTri"
+onto = "factTri_onto"
+
+[[word]]
+type = "guard.Decision"
+core = "Calculus.Decision"
+abstraction = "decisionOf"
+onto = "decisionOf_onto"
+
+[[word]]
+type = "guard.Action"
+core = "Calculus.Action"
+abstraction = "actionOf"
+onto = "actionOf_onto"
+
+[[word]]
+type = "gate.Outcome"
+core = "Calculus.Tri"
+abstraction = "outcomeTri"
+onto = "outcomeTri_onto"
+
+[[link]]
+function = "guard.decide"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.decide_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "guard.combine"
+implements = "Calculus.Decision.join"
+theorem = "Writfold.Core.Conform.combine_implements"
+laws = ["Calculus.Decision.join_comm", "Calculus.Decision.join_eq_pass"]
+
+[[link]]
+function = "walk.complete"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.walk_complete_implements"
+laws = ["Calculus.whole_counts", "Calculus.whole_iff_no_remainder"]
+
+[[link]]
+function = "walk.complete_within"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.walk_complete_within_implements"
+laws = ["Calculus.whole_counts"]
+
+[[link]]
+function = "packet.complete"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.packet_complete_implements"
+laws = ["Calculus.whole_counts"]
+
+[[link]]
+function = "runs.complete"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.runs_complete_implements"
+laws = ["Calculus.whole_counts"]
+
+[[link]]
+function = "inventory.complete"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.inventory_complete_implements"
+laws = ["Calculus.whole_iff_no_remainder", "Calculus.whole_append"]

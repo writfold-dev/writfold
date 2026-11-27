@@ -1337,6 +1337,14 @@ Since v0.6.0-dev.26 ([#205](https://github.com/writfold-dev/writfold/issues/205)
 
 It is a specification, not a copy of the code: no file under `proofs/Calculus/` imports the translation, Aeneas, Mathlib or `Writfold` (`mutants.py` refuses any other import). Its theorems are audited with the kernels' and are required claims. Core mutants mutate a definition under `proofs/Calculus/` and build only the `Calculus` library; every calculus claim is named by one or listed in `DERIVED` in `mutants.py` with the claim it follows from. From #206 on, each kernel is linked to it.
 
+## Links: each kernel shown to implement the calculus
+
+Since v0.6.0-dev.27 ([#206](https://github.com/writfold-dev/writfold/issues/206)), `proofs/Writfold/Conform/` holds the dictionary (one abstraction per Rust word type onto a calculus word, each with an `_onto` theorem, so no abstraction is a constant) and the link theorems: each is a Hoare triple over a translated function whose postcondition names a calculus operation, derived from the kernel's existing spec theorem (`guard::decide` implements `Calculus.admit`; `walk::complete`, `packet::complete`, `runs::complete` and `inventory::complete` implement `Calculus.whole`). A law then holds of the kernel in one step (`guard_unknown_never_passes`).
+
+`proofs/laws.toml` registers words, local types, links and functions declared out; `proofs/unlinked.txt` is the backlog (its `# entries: N` line must equal its length, so it only shrinks visibly). `proofs/law_coverage.py` refuses a translated function in none of them, a link that is not a required claim or does not name its function and operation, a word result declared out, an enum not registered, and prints `LAW_COVERAGE judged=… declared_out=… remainder=… of …` (proofs gate and quality gate). `proofs/laws_page.py` generates [`laws.md`](laws.md), every law with its doc comment, statement, implementing kernels and the mutants that catch it; the quality gate refuses a stale page.
+
+**To add a link:** state the link theorem in `proofs/Writfold/Conform/`, add it to the function's `[[claim]]` and to `Audit.lean`'s claims, add a `[[link]]` in `laws.toml`, remove the function from `unlinked.txt` and lower its `# entries:` line, then `python3 proofs/laws_page.py --write`.
+
 ## Trust base
 
 The Charon/Aeneas translation of the Rust (pinned: Charon `8cae8fd`, Aeneas

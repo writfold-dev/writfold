@@ -1934,16 +1934,25 @@ def declarations(path: Path) -> list[tuple[int, str]]:
     """(line, fully qualified name) of every declaration in a theorem file."""
     stack: list[str] = []
     found = []
+    # Lean reports a declaration's error at the start of its doc comment.
+    doc: int | None = None
     for number, line in enumerate(path.read_text().splitlines(), start=1):
         if match := NAMESPACE.match(line):
             stack.append(match.group("name"))
+            doc = None
             continue
         if line.startswith("end ") and stack:
             stack.pop()
+            doc = None
             continue
+        if line.startswith("/--") and doc is None:
+            doc = number
         if match := DECLARATION.match(line):
             prefix = "".join(f"{n}." for n in stack)
-            found.append((number, prefix + match.group("name")))
+            found.append((doc or number, prefix + match.group("name")))
+            doc = None
+        elif not line.strip():
+            doc = None
     return found
 
 

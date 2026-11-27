@@ -320,6 +320,9 @@ class Producer:
         # Every required theorem is claimed or in a backlog that only
         # shrinks (#124).
         self.simple("claims-coverage", [sys.executable, "proofs/claims_coverage.py"])
+        self.simple("law-coverage", [sys.executable, "proofs/law_coverage.py"])
+        self.simple("laws-page", [sys.executable, "proofs/laws_page.py"])
+        self.simple("law-coverage-tests", [sys.executable, "proofs/test_law_coverage.py"])
         # The translation splitter keeps every declaration (#95).
         self.simple("split-translation", [sys.executable, "proofs/split.py", "--self-test"])
         self.flush()

@@ -39,3 +39,5 @@ import Writfold.Invoke
 import Writfold.Units
 import Writfold.Referent
 import Writfold.Target
+import Writfold.Conform.Words
+import Writfold.Conform.Links

@@ -28,6 +28,9 @@ stamp "axiom audit"
 lake env lean Audit.lean
 cd ..
 
+stamp "law coverage"
+python3 proofs/law_coverage.py
+
 stamp "mutant calibration"
 python3 proofs/mutants.py "$@"
 
