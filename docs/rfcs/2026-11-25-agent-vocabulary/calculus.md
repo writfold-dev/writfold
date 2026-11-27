@@ -14,6 +14,11 @@ coverage. The [grooming review](grooming.md) found they are one algebra,
 and that most of it is already shipped and proved. This file states that
 one calculus, names the theorem behind each law, and says what is new.
 
+Extended on 27 November 2026 by
+[referents, remainders and sites](../2026-11-27-referents-remainders-sites.md)
+(§3.11 to §3.13): which thing a fact is about, what a universal word
+ranges over, and where a decision is asked.
+
 Nothing new below is proved yet. Every theorem marked **shipped** is in
 `proofs/Writfold/` today. Every theorem marked **new** is an obligation of
 the issue named beside it.
