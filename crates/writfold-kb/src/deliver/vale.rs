@@ -35,10 +35,8 @@ static PROGRAM: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 /// and embedders, which cannot set `WRITFOLD_VALE`); the first call wins.
 pub fn use_program(path: &str) {
     // A second call keeps the first program, as documented: its error is
-    // the value it would have set.
-    if PROGRAM.set(path.to_owned()).is_err() {
-        return;
-    }
+    // the value it would have set, and is not needed.
+    PROGRAM.set(path.to_owned()).ok();
 }
 
 /// The executable: [`use_program`]'s, else `WRITFOLD_VALE`, else `vale` on

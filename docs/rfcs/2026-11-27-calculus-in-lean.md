@@ -2,13 +2,13 @@
 rfc: "2026-11-27-calculus-in-lean"
 title: "The calculus in Lean: a formal core, every kernel shown to implement it, and a law-coverage check"
 status: accepted
-implementation: not-started
+implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
 updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/204
-milestone: null
+milestone: "v0.6.0-dev.26"
 supersedes: []
 superseded_by: []
 blocked_on: []

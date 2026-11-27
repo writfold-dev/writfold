@@ -12,6 +12,10 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 - **fix:** a qualified `repo=org/name` whose clone has no remote naming `org/name` (a fork-only clone), or whose naming remotes disagree or have no default branch, reads `unverifiable (target-ambiguous: …)`. `kb repos` shows such a row `[ambiguous]`, counts it (`ambiguous=N`) and exits 2.
 - **fix:** a citation whose cited commit is ahead of the judged commit reads `unverifiable (target-behind: …)` where it read `gone`, `changed` or `moved`.
 - New: `ref=<ref>` after the path on a line of the local repository map names the commit to judge that clone at.
+- `cite make` cites the commit `stale` will judge at and writes that remote's URL as `url=`; in an ambiguous clone it refuses (exit 3) with the reason ([#180](https://github.com/writfold-dev/writfold/issues/180)). `record decision --commit` checks the commit against the same target.
+- The asset boundary ([#196](https://github.com/writfold-dev/writfold/issues/196), [RFC](../rfcs/2026-11-27-asset-boundary.md)): what a chosen target can support is decided by a provider-neutral proved kernel, `writfold_core::referent`. Answers are as listed above.
+- The calculus in Lean ([#205](https://github.com/writfold-dev/writfold/issues/205)): `proofs/Calculus/` states the words of a judgment and the accounted universe with their laws, audited with the kernel proofs. No answer changes.
+- The installer names Claude Code's configuration directory and where it came from; with `CLAUDE_CONFIG_DIR` set, the plugin step runs only with `--plugin` ([#185](https://github.com/writfold-dev/writfold/issues/185)).
 
 ## v0.6.0-dev.25
 

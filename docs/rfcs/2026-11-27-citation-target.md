@@ -2,13 +2,13 @@
 rfc: "2026-11-27-citation-target"
 title: "The commit a citation is judged against is a decision: the remote that names the cited repository, and never one behind the cited commit"
 status: accepted
-implementation: not-started
+implementation: complete
 authors:
   - fable
 created: 2026-11-27
 updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/179
-milestone: null
+milestone: "v0.6.0-dev.26"
 supersedes: []
 superseded_by: []
 blocked_on: []
@@ -323,3 +323,12 @@ Behaviour, acceptance and rollout are otherwise as written.
   (#196); the JSON key `target_remote` becomes `target_rule`; one known
   limit recorded (a fork-minted `url=`), closed by #197. No behaviour in
   this RFC's acceptance list changes.
+- 2026-11-27 (as built, v0.6.0-dev.26): the kernel is `target::choose`;
+  `settle` lives in `referent` (#196). Two provider rules the RFC left
+  open: a clone with no fetched remote (no remote-tracking ref of any
+  remote: bare, mirror, never fetched) is judged at `HEAD`, as before;
+  the ancestry cap is per repository (64 distinct cited revisions), not
+  per run. `kb repos --json` carries the rule and reason in the `target`
+  line's text rather than separate keys. The wiring calls `settle`, not
+  `judge`, because the verdict word is computed by the existing kernels
+  before the relation is known.

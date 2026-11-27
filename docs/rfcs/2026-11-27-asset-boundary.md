@@ -2,13 +2,13 @@
 rfc: "2026-11-27-asset-boundary"
 title: "Assets and how they are validated: identity, a declared line, and facts from a provider; Git is the first provider, not the model"
 status: accepted
-implementation: not-started
+implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
 updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/195
-milestone: null
+milestone: "v0.6.0-dev.26"
 supersedes: []
 superseded_by: []
 blocked_on: []
