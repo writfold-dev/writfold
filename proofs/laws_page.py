@@ -26,6 +26,9 @@ NAMESPACE = re.compile(r"^namespace\s+(?P<name>\S+)")
 SECTIONS = {
     "Word.lean": "Words, decisions and admission",
     "Account.lean": "The accounted universe (law U)",
+    "Evidence.lean": "Evidence: classes, policy, one record decides",
+    "Site.lean": "Sites and postures (law S)",
+    "Referent.lean": "Referents and the asset boundary (laws R and A)",
 }
 
 

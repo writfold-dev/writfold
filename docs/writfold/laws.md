@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=7 declared_out=0 remainder=252 of 259`
+`LAW_COVERAGE judged=14 declared_out=0 remainder=245 of 259`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: the backlog in
@@ -437,6 +437,381 @@ absence_needs_whole (w f : Bool) (h : search w f = .no) : w = true
 
 - Caught by: `search-partial-says-no`
 
+## Evidence: classes, policy, one record decides
+
+From `proofs/Calculus/Evidence.lean`.
+
+### `Calculus.class_never_promoted`
+
+A class is never promoted.
+
+```lean
+class_never_promoted (c : Class) (p : Bool) (o : Tri) (c' : Class) (h : (stand c p o).cls = some c') : c' = c
+```
+
+- Caught by: `attested-reads-satisfied`
+
+### `Calculus.satisfied_only_by_current_pass`
+
+Only a current mechanical pass is satisfied.
+
+```lean
+satisfied_only_by_current_pass (c : Class) (p : Bool) (o : Tri) (h : stand c p o = .satisfied) : c = .checked ∧ p = true ∧ o = .yes
+```
+
+- Caught by: `attested-reads-satisfied`
+
+### `Calculus.met_inf`
+
+3.4: narrowing is a meet, exactly.
+
+```lean
+met_inf (s : Standing) (a b : Accept) : met s (a.inf b) = (met s a && met s b)
+```
+
+- Implemented by: `policy.met`
+- Caught by: `inf-is-or`
+
+### `Calculus.met_narrows`
+
+A narrower policy meets no more than a wider one.
+
+```lean
+met_narrows (s : Standing) {a b : Accept} (h : a.le b) : met s a = true → met s b = true
+```
+
+- Implemented by: `policy.met`
+- Derived: decided over the standings and the policy's three fields
+
+### `Calculus.reported_never_met`
+
+Law S: a reported fact meets no policy.
+
+```lean
+reported_never_met (a : Accept) : met .reported a = false
+```
+
+- Implemented by: `policy.met`
+- Caught by: `reported-accepted`
+
+### `Calculus.unknown_never_met`
+
+Unknown meets no policy.
+
+```lean
+unknown_never_met (a : Accept) : met .unknown a = false
+```
+
+- Implemented by: `policy.met`
+- Derived: the definition of met
+
+### `Calculus.inf_comm`
+
+Narrowing does not depend on order.
+
+```lean
+inf_comm (a b : Accept) : a.inf b = b.inf a
+```
+
+- Caught by: `inf-is-or`
+
+### `Calculus.inf_assoc`
+
+Narrowing groups freely.
+
+```lean
+inf_assoc (a b c : Accept) : (a.inf b).inf c = a.inf (b.inf c)
+```
+
+- Caught by: `inf-is-or`
+
+### `Calculus.inf_idem`
+
+Narrowing by the same policy changes nothing.
+
+```lean
+inf_idem (a : Accept) : a.inf a = a
+```
+
+- Derived: decided over the policy's three fields
+
+### `Calculus.inf_top`
+
+Narrowing by the widest policy changes nothing.
+
+```lean
+inf_top (a : Accept) : a.inf .top = a
+```
+
+- Caught by: `inf-is-or`
+
+### `Calculus.deciding_none_iff`
+
+No record decides exactly when none counts.
+
+```lean
+deciding_none_iff {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) : deciding seq counts rs = none ↔ ∀ r ∈ rs, counts r = false
+```
+
+- Caught by: `deciding-takes-oldest`, `deciding-counts-unbound`
+
+### `Calculus.uncounted_never_decides`
+
+A record that does not count never changes which record decides.
+
+```lean
+uncounted_never_decides {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (r : α) (h : counts r = false) : deciding seq counts (r :: rs) = deciding seq counts rs
+```
+
+- Caught by: `deciding-counts-unbound`
+
+### `Calculus.deciding_mem`
+
+The deciding record is one of the records that count.
+
+```lean
+deciding_mem {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (r : α) (h : deciding seq counts rs = some r) : r ∈ rs ∧ counts r = true
+```
+
+- Caught by: `deciding-takes-oldest`, `deciding-counts-unbound`
+
+### `Calculus.deciding_is_newest`
+
+3.2: the deciding record is the newest of those that count.
+
+```lean
+deciding_is_newest {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (r : α) (h : deciding seq counts rs = some r) : ∀ r' ∈ rs, counts r' = true → seq r' ≤ seq r
+```
+
+- Caught by: `deciding-takes-oldest`, `deciding-counts-unbound`
+
+### `Calculus.older_never_outvotes`
+
+3.2: a record that counts never loses to an older one.
+
+```lean
+older_never_outvotes {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (newer older : α) (hn : newer ∈ rs) (hc : counts newer = true) (hlt : seq older < seq newer) : deciding seq counts rs ≠ some older
+```
+
+- Derived: deciding_is_newest
+
+## Sites and postures (law S)
+
+From `proofs/Calculus/Site.lean`.
+
+### `Calculus.judged_unchanged`
+
+A posture never changes a judged decision.
+
+```lean
+judged_unchanged (d : Decision) (p q : Posture) : Site.decide (.judged d) p = Site.decide (.judged d) q
+```
+
+- Caught by: `posture-overrides-judged`
+
+### `Calculus.closed_pass_iff`
+
+Under a closed posture an undecided event never passes.
+
+```lean
+closed_pass_iff (b : Basis) (p : Posture) (h : p ≠ .open) : Site.decide b p = .pass ↔ b = .noRules ∨ b = .noMatch ∨ b = .judged .pass
+```
+
+- Caught by: `undecided-passes-closed`, `posture-overrides-judged`
+
+### `Calculus.posture_only_narrows`
+
+A posture only narrows: what passes under any posture passes under `open`.
+
+```lean
+posture_only_narrows (b : Basis) (p : Posture) (h : Site.decide b p = .pass) : Site.decide b .open = .pass
+```
+
+- Derived: decided over the bases and postures
+
+### `Calculus.stricter_never_loosens`
+
+The posture is the decision's upper bound in `join`: a stricter posture never loosens a decision.
+
+```lean
+stricter_never_loosens (b : Basis) (p q : Posture) : Decision.join (Site.decide b p) (Site.decide b (p.stricter q)) = Site.decide b (p.stricter q)
+```
+
+- Caught by: `posture-overrides-judged`
+
+### `Calculus.stricter_comm`
+
+Combining postures does not depend on order.
+
+```lean
+stricter_comm (a b : Posture) : a.stricter b = b.stricter a
+```
+
+- Caught by: `stricter-takes-first`
+
+### `Calculus.stricter_assoc`
+
+Postures combine freely.
+
+```lean
+stricter_assoc (a b c : Posture) : (a.stricter b).stricter c = a.stricter (b.stricter c)
+```
+
+- Derived: decided over the postures
+
+### `Calculus.stricter_open_left`
+
+`open` adds nothing to another posture.
+
+```lean
+stricter_open_left (a : Posture) : Posture.open.stricter a = a
+```
+
+- Caught by: `stricter-takes-first`
+
+### `Calculus.open_is_declared`
+
+Under `open`, the only pass without a decision is the undecided row: the exemption is declared, never implied.
+
+```lean
+open_is_declared (b : Basis) (h : Site.decide b .open = .pass) (hn : b ≠ .noRules) (hm : b ≠ .noMatch) (hj : b ≠ .judged .pass) : b = .undecided
+```
+
+- Caught by: `posture-overrides-judged`
+
+## Referents and the asset boundary (laws R and A)
+
+From `proofs/Calculus/Referent.lean`.
+
+### `Calculus.resolve_nil`
+
+Law R: with no candidate there is no referent.
+
+```lean
+resolve_nil : resolve ([] : List (Candidate ρ)) = .none
+```
+
+- Implemented by: `store.claim`
+- Derived: the definition of resolve
+
+### `Calculus.resolve_one_mem`
+
+What `resolve` chose was offered, at the deciding level.
+
+```lean
+resolve_one_mem {cs : List (Candidate ρ)} {r : ρ} (h : resolve cs = .one r) : ∃ c ∈ cs, Candidate.top cs c = true ∧ c.referent = some r
+```
+
+- Implemented by: `pointer.level`, `pointer.open`, `subject.pick`
+- Caught by: `resolve-first-wins`, `resolve-falls-back`
+
+### `Calculus.resolve_one_agree`
+
+Every candidate at the deciding level agreed: two that disagree, or one that offers nothing, never give a referent.
+
+```lean
+resolve_one_agree {cs : List (Candidate ρ)} {r : ρ} (h : resolve cs = .one r) {c : Candidate ρ} (hc : c ∈ cs) (ht : Candidate.top cs c = true) : c.referent = some r
+```
+
+- Implemented by: `pointer.level`, `pointer.open`, `store.claim`, `subject.pick`
+- Caught by: `resolve-first-wins`, `resolve-falls-back`, `resolve-ignores-missing-offer`
+
+### `Calculus.resolve_order_free`
+
+The choice does not depend on the order the candidates were found in: two listings with the same members never resolve to different referents.
+
+```lean
+resolve_order_free {cs ds : List (Candidate ρ)} {r s : ρ} (hmem : ∀ c, c ∈ cs ↔ c ∈ ds) (hc : resolve cs = .one r) (hd : resolve ds = .one s) : r = s
+```
+
+- Implemented by: `pointer.level`, `subject.pick`
+- Derived: resolve_one_mem, resolve_one_agree
+
+### `Calculus.settle_only_withholds`
+
+The boundary takes verdicts away; it never makes one.
+
+```lean
+settle_only_withholds (r f : Bool) (w : W) : settle ws r f w = w ∨ settle ws r f w = ws.unknown
+```
+
+- Implemented by: `referent.settle`
+- Derived: decided over the definition of settle
+
+### `Calculus.unresolved_never_judged`
+
+Law A: an unresolved referent supports no verdict.
+
+```lean
+unresolved_never_judged (f : Bool) (w : W) : settle ws false f w = ws.unknown
+```
+
+- Implemented by: `referent.settle`
+- Caught by: `settle-judges-unresolved`
+
+### `Calculus.change_needs_refutable`
+
+A claim of change needs a resolved referent that could have shown the opposite.
+
+```lean
+change_needs_refutable (r f : Bool) (w : W) (h : ws.claimsChange (settle ws r f w) = true) : r = true ∧ f = true
+```
+
+- Implemented by: `referent.settle`
+- Caught by: `settle-keeps-change-behind`, `settle-judges-unresolved`
+
+### `Calculus.settle_identity`
+
+A resolved referent that could refute supports every verdict.
+
+```lean
+settle_identity (w : W) : settle ws true true w = w
+```
+
+- Caught by: `settle-drops-fresh`
+
+### `Calculus.unclaimed_survives`
+
+Words that claim no change survive a referent that is behind.
+
+```lean
+unclaimed_survives (f : Bool) (w : W) (h : ws.claimsChange w = false) : settle ws true f w = w
+```
+
+- Caught by: `settle-drops-fresh`
+
+### `Calculus.settle_refines`
+
+Knowing more about the referent changes a verdict only where it was unknown: a provider that knows less never contradicts one that knows more.
+
+```lean
+settle_refines (r f r' f' : Bool) (w : W) (hr : r = true → r' = true) (hf : f = true → f' = true) : settle ws r f w = settle ws r' f' w ∨ settle ws r f w = ws.unknown
+```
+
+- Implemented by: `referent.settle`
+- Derived: decided over the definition of settle
+
+### `Calculus.judge_needs`
+
+Law A: a verdict other than unknown needs a resolved referent and is what the provider observed.
+
+```lean
+judge_needs (observe : Fact → W) (r f : Bool) (fact : Fact) (h : judge ws observe r f fact ≠ ws.unknown) : r = true ∧ judge ws observe r f fact = observe fact
+```
+
+- Implemented by: `referent.judge`
+- Caught by: `settle-judges-unresolved`
+
+### `Calculus.unresolved_unknown`
+
+A judgment about an unresolved referent is unknown.
+
+```lean
+unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h : res.resolved = false) : about res judgeAt = .unknown
+```
+
+- Derived: the definition of about
+
 ## Links
 
 | Function | Implements | Theorem |
@@ -445,7 +820,14 @@ absence_needs_whole (w f : Bool) (h : search w f = .no) : w = true
 | `guard.decide` | `Calculus.admit` | `Writfold.Core.Conform.decide_implements` |
 | `inventory.complete` | `Calculus.whole` | `Writfold.Core.Conform.inventory_complete_implements` |
 | `packet.complete` | `Calculus.whole` | `Writfold.Core.Conform.packet_complete_implements` |
+| `pointer.level` | `Calculus.resolve` | `Writfold.Core.Conform.level_implements` |
+| `pointer.open` | `Calculus.resolve` | `Writfold.Core.Conform.open_implements` |
+| `policy.met` | `Calculus.met` | `Writfold.Core.Conform.policy_met_implements` |
+| `referent.judge` | `Calculus.judge` | `Writfold.Core.Conform.judge_implements` |
+| `referent.settle` | `Calculus.settle` | `Writfold.Core.Conform.settle_implements` |
 | `runs.complete` | `Calculus.whole` | `Writfold.Core.Conform.runs_complete_implements` |
+| `store.claim` | `Calculus.resolve` | `Writfold.Core.Conform.claim_implements` |
+| `subject.pick` | `Calculus.resolve` | `Writfold.Core.Conform.pick_implements` |
 | `walk.complete` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_implements` |
 | `walk.complete_within` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_within_implements` |
 
@@ -454,6 +836,7 @@ absence_needs_whole (w f : Bool) (h : search w f = .no) : w = true
 | Rust type | Calculus word | Abstraction |
 |---|---|---|
 | `gate.Outcome` | `Calculus.Tri` | `outcomeTri` (onto: `outcomeTri_onto`) |
+| `gate.Standing` | `Calculus.Standing` | `standingOf` (onto: `standingOf_onto`) |
 | `guard.Action` | `Calculus.Action` | `actionOf` (onto: `actionOf_onto`) |
 | `guard.Decision` | `Calculus.Decision` | `decisionOf` (onto: `decisionOf_onto`) |
 | `guard.Fact` | `Calculus.Tri` | `factTri` (onto: `factTri_onto`) |

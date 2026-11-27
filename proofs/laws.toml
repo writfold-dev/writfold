@@ -66,3 +66,51 @@ function = "inventory.complete"
 implements = "Calculus.whole"
 theorem = "Writfold.Core.Conform.inventory_complete_implements"
 laws = ["Calculus.whole_iff_no_remainder", "Calculus.whole_append"]
+
+[[word]]
+type = "gate.Standing"
+core = "Calculus.Standing"
+abstraction = "standingOf"
+onto = "standingOf_onto"
+
+[[link]]
+function = "policy.met"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.policy_met_implements"
+laws = ["Calculus.met_inf", "Calculus.met_narrows", "Calculus.reported_never_met", "Calculus.unknown_never_met"]
+
+[[link]]
+function = "pointer.level"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.level_implements"
+laws = ["Calculus.resolve_one_mem", "Calculus.resolve_one_agree", "Calculus.resolve_order_free"]
+
+[[link]]
+function = "pointer.open"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.open_implements"
+laws = ["Calculus.resolve_one_mem", "Calculus.resolve_one_agree"]
+
+[[link]]
+function = "subject.pick"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.pick_implements"
+laws = ["Calculus.resolve_one_mem", "Calculus.resolve_one_agree", "Calculus.resolve_order_free"]
+
+[[link]]
+function = "store.claim"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.claim_implements"
+laws = ["Calculus.resolve_nil", "Calculus.resolve_one_agree"]
+
+[[link]]
+function = "referent.settle"
+implements = "Calculus.settle"
+theorem = "Writfold.Core.Conform.settle_implements"
+laws = ["Calculus.settle_only_withholds", "Calculus.unresolved_never_judged", "Calculus.change_needs_refutable", "Calculus.settle_refines"]
+
+[[link]]
+function = "referent.judge"
+implements = "Calculus.judge"
+theorem = "Writfold.Core.Conform.judge_implements"
+laws = ["Calculus.judge_needs"]

@@ -1,5 +1,8 @@
 import Calculus.Word
 import Calculus.Account
+import Calculus.Evidence
+import Calculus.Site
+import Calculus.Referent
 
 /-!
 # The calculus (docs/rfcs/2026-11-27-calculus-in-lean.md)

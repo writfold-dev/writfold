@@ -102,6 +102,8 @@ a context epoch or another repository are pins, not new coordinates.
 
 ### 3.2 One record decides
 
+*Stated in `proofs/Calculus/Evidence.lean` (`deciding_is_newest`, `older_never_outvotes`, #207).*
+
 For each obligation one record decides: the newest, by `seq`, that is
 bound and about the present. There is no "some passing record exists".
 
@@ -120,6 +122,8 @@ withdrawn. Read `E ⊢ o` as: `deciding(E, o)` exists and passes.
 
 ### 3.3 A class is never promoted
 
+*Stated in `proofs/Calculus/Evidence.lean` (`class_never_promoted`, #207).*
+
 A statement is never a passed check. A waiver is never evidence. A report
 is never a mechanical result.
 
@@ -135,6 +139,8 @@ So the drafts' `judgment_not_mechanical_pass` and `judgment_not_promoted`
 need no new theorem.
 
 ### 3.4 Policy narrows, and narrowing is a meet
+
+*Stated in `proofs/Calculus/Evidence.lean` (`met_inf`); `narrow_met_iff` is proved over the translated `policy::met` through its link (#207).*
 
 `Accept` is three booleans: satisfied, attested, waived. Order policies by
 `a ≤ b` when every word `a` takes, `b` takes. Then

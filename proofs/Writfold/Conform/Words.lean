@@ -1,6 +1,8 @@
 import Extracted.WritfoldCore.Types
 import Calculus.Word
 import Calculus.Account
+import Calculus.Evidence
+import Extracted.WritfoldCore.Policy
 
 /-!
 # The dictionary (#206, RFC 2026-11-27-calculus-in-lean)
@@ -65,5 +67,30 @@ or absent) is judged, unreadable is the remainder. -/
 def rootMember : inventory.Root → Calculus.Member
   | .Unreadable => .remainder
   | _ => .judged
+
+/-- A gate's standing as the calculus's standing. -/
+def standingOf : gate.Standing → Calculus.Standing
+  | .Checked .Satisfied => .satisfied
+  | .Checked .Unknown => .unknown
+  | .Checked _ => .unmet
+  | .Attested => .attested
+  | .Waived => .waived
+
+/-- Onto every standing a gate can reach: `reported` (law S) is a class a
+gate never records, so it has no Rust word. -/
+theorem standingOf_onto (s : Calculus.Standing) (h : s ≠ .reported) : ∃ g, standingOf g = s := by
+  cases s
+  · exact ⟨.Checked .Satisfied, rfl⟩
+  · exact ⟨.Attested, rfl⟩
+  · exact ⟨.Waived, rfl⟩
+  · exact absurd rfl h
+  · exact ⟨.Checked .Open, rfl⟩
+  · exact ⟨.Checked .Unknown, rfl⟩
+
+/-- A policy's accepted standings. -/
+def acceptOf (a : policy.Accept) : Calculus.Accept := ⟨a.satisfied, a.attested, a.waived⟩
+
+theorem acceptOf_onto (a : Calculus.Accept) : ∃ p, acceptOf p = a :=
+  ⟨⟨a.satisfied, a.attested, a.waived⟩, rfl⟩
 
 end Writfold.Core.Conform

@@ -744,3 +744,19 @@ None blocks step 1. Owner questions, each with the default taken, are in
   acceptance (21 November 2026); not yet reviewed by the owner. Aligned
   with the asset boundary RFC of the same day: its law A is the core's
   `judge`, and no step here holds #196 or #179.
+- 2026-11-27 (as built, v0.6.0-dev.27): #206, #207 and #208 landed
+  together. The register adds two rules the RFC left open: the backlog
+  also holds enums (`type:<name>`), and its first line `# entries: N` must
+  equal its length, so growing it is a visible edit. The check reads the
+  translation and the Lean sources as text instead of the built
+  environment (`proofs/law_coverage.py`, tested). The generated page
+  `docs/writfold/laws.md` (owner, 27 November: a home for the laws a
+  reviewer can read and flag) lists every law with its statement, links
+  and mutants; the quality gate refuses a stale page (the proofs image
+  holds no `docs/`). `standingOf_onto` is onto every standing but
+  `reported`, which no gate records. `guard_unknown_never_passes` is a new
+  theorem in `Conform`, since `Guard.lean` cannot import the links that
+  import it. `target::choose` stays on the backlog: its `Head` row (a
+  clone with no fetched remote) and its pin row map onto `resolve` only
+  with an extra candidate per row; the link lands with #212 and
+  `choose_in` (#197).

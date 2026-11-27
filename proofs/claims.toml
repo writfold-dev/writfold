@@ -1797,6 +1797,7 @@ theorems = [
   "Writfold.Core.Pointer.level_spec",
   "Writfold.Core.Pointer.open_spec",
   "Writfold.Core.Pointer.session_decides",
+  "Writfold.Core.Conform.level_implements",
 ]
 total = "Writfold.Core.Pointer.level_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -1817,6 +1818,7 @@ theorems = [
   "Writfold.Core.Pointer.open_spec",
   "Writfold.Core.Pointer.session_decides",
   "Writfold.Core.Pointer.shared_alone",
+  "Writfold.Core.Conform.open_implements",
 ]
 total = "Writfold.Core.Pointer.open_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -1958,6 +1960,8 @@ lean = "writfold_core.policy.met"
 theorems = [
   "Writfold.Core.Policy.met_default",
   "Writfold.Core.Policy.met_spec",
+  "Writfold.Core.Conform.policy_met_implements",
+  "Writfold.Core.Conform.narrow_met_iff",
 ]
 total = "Writfold.Core.Policy.met_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2266,6 +2270,7 @@ theorems = [
   "Writfold.Core.Store.claim_listed_iff",
   "Writfold.Core.Store.claim_needs_store",
   "Writfold.Core.Store.claim_unknown_iff",
+  "Writfold.Core.Conform.claim_implements",
 ]
 total = "Writfold.Core.Store.claim_ambiguous_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2397,6 +2402,7 @@ theorems = [
   "Writfold.Core.Subject.recorded_never_kb_checkout",
   "Writfold.Core.Subject.some_subject",
   "Writfold.Core.Subject.unchanged_unless_checkout",
+  "Writfold.Core.Conform.pick_implements",
 ]
 total = "Writfold.Core.Subject.pick_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -3217,6 +3223,7 @@ theorems = [
   "Writfold.Core.Referent.settle_identity",
   "Writfold.Core.Referent.settle_only_withholds",
   "Writfold.Core.Referent.settleOf_withholds",
+  "Writfold.Core.Conform.settle_implements",
 ]
 total = "Writfold.Core.Referent.settle_spec"
 mutants = [
@@ -3235,6 +3242,7 @@ theorems = [
   "Writfold.Core.Referent.judge_fresh_needs",
   "Writfold.Core.Referent.judge_refines",
   "Writfold.Core.Referent.settleOf_refines",
+  "Writfold.Core.Conform.judge_implements",
 ]
 total = "Writfold.Core.Referent.judge_spec"
 mutants = [
