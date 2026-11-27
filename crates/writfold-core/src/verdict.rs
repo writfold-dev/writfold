@@ -21,6 +21,8 @@ pub enum Located {
     Absent,
     /// The file is longer than the search limit.
     Unsearched,
+    /// The file's bytes are not in this clone (a partial clone, #182).
+    Unfetched,
 }
 
 /// What a code citation's path holds at the target commit.
@@ -54,6 +56,8 @@ pub enum Absence {
     NoRev,
     /// Not followed: over the per-run limit of cited commits.
     Capped,
+    /// Following a rename with edits needs blobs this clone lacks (#182).
+    Unfetched,
 }
 
 /// Everything a check can observe about one citation.
@@ -167,6 +171,7 @@ pub fn other_blob(known: bool, located: Option<Located>) -> Verdict {
         Some(Located::Same) => Verdict::Fresh,
         Some(Located::At(_, _)) => Verdict::Moved,
         Some(Located::Absent) => Verdict::Changed,
+        Some(Located::Unfetched) => Verdict::Unverifiable,
         _ => {
             if known {
                 Verdict::Changed
@@ -185,12 +190,14 @@ pub fn missing(absence: Absence) -> Verdict {
         Absence::Followed(located) => match located {
             Some(Located::Same) => Verdict::Moved,
             Some(Located::At(_, _)) => Verdict::Moved,
+            Some(Located::Unfetched) => Verdict::Unverifiable,
             _ => Verdict::Gone,
         },
         Absence::NoRename => Verdict::Gone,
         Absence::RevAbsent => Verdict::Unverifiable,
         Absence::NoRev => Verdict::Unverifiable,
         Absence::Capped => Verdict::Unverifiable,
+        Absence::Unfetched => Verdict::Unverifiable,
     }
 }
 

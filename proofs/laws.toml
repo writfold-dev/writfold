@@ -136,3 +136,43 @@ laws = ["Calculus.whole_iff_no_remainder", "Calculus.whole_append"]
 [[out]]
 function = "account.left"
 why = "the per-member test inside account::remainder, linked through it (left_spec)"
+
+[[link]]
+function = "target.choose_in"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.choose_in_implements"
+laws = ["Calculus.resolve_one_mem", "Calculus.resolve_one_agree", "Calculus.resolve_order_free"]
+
+[[link]]
+function = "target.choose"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.choose_implements"
+laws = ["Calculus.resolve_one_mem", "Calculus.resolve_one_agree", "Calculus.resolve_order_free"]
+
+[[out]]
+function = "target.rank"
+why = "a remote's naming level, inside choose_in; linked through it (rank_spec)"
+
+[[out]]
+function = "target.best"
+why = "the strongest level, inside choose_in; linked through it (best_spec)"
+
+[[out]]
+function = "target.headless_at"
+why = "inside choose_in; linked through it (headless_at_spec)"
+
+[[out]]
+function = "target.first_at"
+why = "inside choose_in; linked through it (first_at_spec)"
+
+[[out]]
+function = "target.agree_at"
+why = "inside choose_in; linked through it (agree_at_spec)"
+
+[[out]]
+function = "target.tip_commit"
+why = "a tip's commit, inside choose_in (tip_commit_spec)"
+
+[[out]]
+function = "target.tip_is"
+why = "a tip compared with a commit, inside choose_in (tip_is_spec)"

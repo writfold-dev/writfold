@@ -531,30 +531,47 @@ def target.Choice.Insts.CoreMarkerStructuralPartialEq :
 }
 
 /-- [writfold_core::target::rank]:
-    Source: 'crates/writfold-core/src/target.rs', lines 84:0-93:1
+    Source: 'crates/writfold-core/src/target.rs', lines 85:0-94:1
     Visibility: public -/
-def target.rank (names : target.Names) : Result Std.U8 := do
+def target.rank (names : target.Names) (declared : Bool) : Result Std.U8 := do
   match names with
   | target.Names.Url => ok 4#u8
-  | target.Names.Path => ok 3#u8
-  | target.Names.Base => ok 2#u8
-  | target.Names.Sole => ok 1#u8
-  | target.Names.Other => ok 0#u8
-  | target.Names.Unread => ok 0#u8
+  | target.Names.Path =>
+    massert ((¬ declared) || declared)
+    if declared
+    then ok 0#u8
+    else ok 3#u8
+  | target.Names.Base =>
+    massert ((¬ declared) || declared)
+    if declared
+    then ok 0#u8
+    else ok 2#u8
+  | target.Names.Sole =>
+    massert ((¬ declared) || declared)
+    if declared
+    then ok 0#u8
+    else ok 1#u8
+  | target.Names.Other => if declared
+                          then ok 0#u8
+                          else ok 0#u8
+  | target.Names.Unread => if declared
+                           then ok 0#u8
+                           else ok 0#u8
 
 /-- [writfold_core::target::best]: loop body 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 100:4-106:5
+    Source: 'crates/writfold-core/src/target.rs', lines 101:4-107:5
     Visibility: public -/
 @[rust_loop_body]
 def target.best_loop.body
-  (remotes : Slice target.Remote) (top : Std.U8) (i : Std.Usize) :
+  (remotes : Slice target.Remote) (declared : Bool) (top : Std.U8)
+  (i : Std.Usize) :
   Result (ControlFlow (Std.U8 × Std.Usize) Std.U8)
   := do
   let i1 := Slice.len remotes
   if i < i1
   then
     let r ← Slice.index_usize remotes i
-    let level ← target.rank r.names
+    let level ← target.rank r.names declared
     let top1 ← if level > top
                  then ok level
                  else ok top
@@ -563,26 +580,28 @@ def target.best_loop.body
   else ok (done top)
 
 /-- [writfold_core::target::best]: loop 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 100:4-106:5
+    Source: 'crates/writfold-core/src/target.rs', lines 101:4-107:5
     Visibility: public -/
 @[rust_loop]
 def target.best_loop
-  (remotes : Slice target.Remote) (top : Std.U8) (i : Std.Usize) :
+  (remotes : Slice target.Remote) (declared : Bool) (top : Std.U8)
+  (i : Std.Usize) :
   Result Std.U8
   := do
   loop
-    (fun (top1, i1) => target.best_loop.body remotes top1 i1)
+    (fun (top1, i1) => target.best_loop.body remotes declared top1 i1)
     (top, i)
 
 /-- [writfold_core::target::best]:
-    Source: 'crates/writfold-core/src/target.rs', lines 97:0-108:1
+    Source: 'crates/writfold-core/src/target.rs', lines 98:0-109:1
     Visibility: public -/
 @[reducible]
-def target.best (remotes : Slice target.Remote) : Result Std.U8 := do
-  target.best_loop remotes 0#u8 0#usize
+def target.best
+  (remotes : Slice target.Remote) (declared : Bool) : Result Std.U8 := do
+  target.best_loop remotes declared 0#u8 0#usize
 
 /-- [writfold_core::target::tip_commit]:
-    Source: 'crates/writfold-core/src/target.rs', lines 111:0-116:1
+    Source: 'crates/writfold-core/src/target.rs', lines 112:0-117:1
     Visibility: public -/
 def target.tip_commit (tip : target.Tip) : Result (Option Std.U32) := do
   match tip with
@@ -590,7 +609,7 @@ def target.tip_commit (tip : target.Tip) : Result (Option Std.U32) := do
   | target.Tip.NoHead => ok none
 
 /-- [writfold_core::target::tip_is]:
-    Source: 'crates/writfold-core/src/target.rs', lines 119:0-124:1
+    Source: 'crates/writfold-core/src/target.rs', lines 120:0-125:1
     Visibility: public -/
 def target.tip_is (tip : target.Tip) (k : Std.U32) : Result Bool := do
   match tip with
@@ -598,18 +617,19 @@ def target.tip_is (tip : target.Tip) (k : Std.U32) : Result Bool := do
   | target.Tip.NoHead => ok false
 
 /-- [writfold_core::target::headless_at]: loop body 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 129:4-137:1
+    Source: 'crates/writfold-core/src/target.rs', lines 130:4-138:1
     Visibility: public -/
 @[rust_loop_body]
 def target.headless_at_loop.body
-  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  (remotes : Slice target.Remote) (level : Std.U8) (declared : Bool)
+  (i : Std.Usize) :
   Result (ControlFlow Std.Usize Bool)
   := do
   let i1 := Slice.len remotes
   if i < i1
   then
     let r ← Slice.index_usize remotes i
-    let i2 ← target.rank r.names
+    let i2 ← target.rank r.names declared
     if i2 = level
     then
       let o ← target.tip_commit r.tip
@@ -623,38 +643,42 @@ def target.headless_at_loop.body
   else ok (done false)
 
 /-- [writfold_core::target::headless_at]: loop 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 129:4-137:1
+    Source: 'crates/writfold-core/src/target.rs', lines 130:4-138:1
     Visibility: public -/
 @[rust_loop]
 def target.headless_at_loop
-  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  (remotes : Slice target.Remote) (level : Std.U8) (declared : Bool)
+  (i : Std.Usize) :
   Result Bool
   := do
   loop
-    (fun i1 => target.headless_at_loop.body remotes level i1)
+    (fun i1 => target.headless_at_loop.body remotes level declared i1)
     i
 
 /-- [writfold_core::target::headless_at]:
-    Source: 'crates/writfold-core/src/target.rs', lines 127:0-137:1
+    Source: 'crates/writfold-core/src/target.rs', lines 128:0-138:1
     Visibility: public -/
 @[reducible]
 def target.headless_at
-  (remotes : Slice target.Remote) (level : Std.U8) : Result Bool := do
-  target.headless_at_loop remotes level 0#usize
+  (remotes : Slice target.Remote) (level : Std.U8) (declared : Bool) :
+  Result Bool
+  := do
+  target.headless_at_loop remotes level declared 0#usize
 
 /-- [writfold_core::target::first_at]: loop body 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 143:4-154:1
+    Source: 'crates/writfold-core/src/target.rs', lines 144:4-155:1
     Visibility: public -/
 @[rust_loop_body]
 def target.first_at_loop.body
-  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  (remotes : Slice target.Remote) (level : Std.U8) (declared : Bool)
+  (i : Std.Usize) :
   Result (ControlFlow Std.Usize (Option (Std.Usize × Std.U32)))
   := do
   let i1 := Slice.len remotes
   if i < i1
   then
     let r ← Slice.index_usize remotes i
-    let i2 ← target.rank r.names
+    let i2 ← target.rank r.names declared
     if i2 = level
     then
       let o ← target.tip_commit r.tip
@@ -666,41 +690,42 @@ def target.first_at_loop.body
   else ok (done none)
 
 /-- [writfold_core::target::first_at]: loop 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 143:4-154:1
+    Source: 'crates/writfold-core/src/target.rs', lines 144:4-155:1
     Visibility: public -/
 @[rust_loop]
 def target.first_at_loop
-  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  (remotes : Slice target.Remote) (level : Std.U8) (declared : Bool)
+  (i : Std.Usize) :
   Result (Option (Std.Usize × Std.U32))
   := do
   loop
-    (fun i1 => target.first_at_loop.body remotes level i1)
+    (fun i1 => target.first_at_loop.body remotes level declared i1)
     i
 
 /-- [writfold_core::target::first_at]:
-    Source: 'crates/writfold-core/src/target.rs', lines 141:0-154:1
+    Source: 'crates/writfold-core/src/target.rs', lines 142:0-155:1
     Visibility: public -/
 @[reducible]
 def target.first_at
-  (remotes : Slice target.Remote) (level : Std.U8) :
+  (remotes : Slice target.Remote) (level : Std.U8) (declared : Bool) :
   Result (Option (Std.Usize × Std.U32))
   := do
-  target.first_at_loop remotes level 0#usize
+  target.first_at_loop remotes level declared 0#usize
 
 /-- [writfold_core::target::agree_at]: loop body 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 159:4-167:1
+    Source: 'crates/writfold-core/src/target.rs', lines 160:4-168:1
     Visibility: public -/
 @[rust_loop_body]
 def target.agree_at_loop.body
   (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32)
-  (i : Std.Usize) :
+  (declared : Bool) (i : Std.Usize) :
   Result (ControlFlow Std.Usize Bool)
   := do
   let i1 := Slice.len remotes
   if i < i1
   then
     let r ← Slice.index_usize remotes i
-    let i2 ← target.rank r.names
+    let i2 ← target.rank r.names declared
     if i2 = level
     then
       let b ← target.tip_is r.tip k
@@ -713,59 +738,72 @@ def target.agree_at_loop.body
   else ok (done true)
 
 /-- [writfold_core::target::agree_at]: loop 0:
-    Source: 'crates/writfold-core/src/target.rs', lines 159:4-167:1
+    Source: 'crates/writfold-core/src/target.rs', lines 160:4-168:1
     Visibility: public -/
 @[rust_loop]
 def target.agree_at_loop
   (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32)
-  (i : Std.Usize) :
+  (declared : Bool) (i : Std.Usize) :
   Result Bool
   := do
   loop
-    (fun i1 => target.agree_at_loop.body remotes level k i1)
+    (fun i1 => target.agree_at_loop.body remotes level k declared i1)
     i
 
 /-- [writfold_core::target::agree_at]:
-    Source: 'crates/writfold-core/src/target.rs', lines 157:0-167:1
+    Source: 'crates/writfold-core/src/target.rs', lines 158:0-168:1
     Visibility: public -/
 @[reducible]
 def target.agree_at
-  (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32) :
+  (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32)
+  (declared : Bool) :
   Result Bool
   := do
-  target.agree_at_loop remotes level k 0#usize
+  target.agree_at_loop remotes level k declared 0#usize
 
-/-- [writfold_core::target::choose]:
-    Source: 'crates/writfold-core/src/target.rs', lines 172:0-195:1
+/-- [writfold_core::target::choose_in]:
+    Source: 'crates/writfold-core/src/target.rs', lines 180:0-206:1
     Visibility: public -/
-def target.choose
-  (pinned : target.Pinned) (remotes : Slice target.Remote) :
+def target.choose_in
+  (pinned : target.Pinned) (declared : Bool) (remotes : Slice target.Remote) :
   Result target.Choice
   := do
   match pinned with
   | target.Pinned.No =>
     let b ← core.slice.Slice.is_empty remotes
     if b
-    then ok target.Choice.Head
+    then
+      if declared
+      then ok (target.Choice.Ambiguous target.Why.NoRemoteNames)
+      else ok target.Choice.Head
     else
-      let level ← target.best remotes
+      let level ← target.best remotes declared
       if level = 0#u8
       then ok (target.Choice.Ambiguous target.Why.NoRemoteNames)
       else
-        let b1 ← target.headless_at remotes level
+        let b1 ← target.headless_at remotes level declared
         if b1
         then ok (target.Choice.Ambiguous target.Why.NoDefaultBranch)
         else
-          let o ← target.first_at remotes level
+          let o ← target.first_at remotes level declared
           match o with
           | none => ok (target.Choice.Ambiguous target.Why.NoDefaultBranch)
           | some p =>
             let (i, k) := p
-            let b2 ← target.agree_at remotes level k
+            let b2 ← target.agree_at remotes level k declared
             if b2
             then ok (target.Choice.Remote i)
             else ok (target.Choice.Ambiguous target.Why.Disagree)
   | target.Pinned.Resolves => ok target.Choice.Pinned
   | target.Pinned.Missing => ok (target.Choice.Ambiguous target.Why.PinMissing)
+
+/-- [writfold_core::target::choose]:
+    Source: 'crates/writfold-core/src/target.rs', lines 173:0-175:1
+    Visibility: public -/
+def target.choose
+  (pinned : target.Pinned) (remotes : Slice target.Remote) :
+  Result target.Choice
+  := do
+  target.choose_in pinned false remotes
 
 end writfold_core

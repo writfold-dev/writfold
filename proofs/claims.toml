@@ -2521,10 +2521,14 @@ function = "other_blob"
 lean = "writfold_core.verdict.other_blob"
 theorems = [
   "Writfold.Core.Verdict.other_blob_spec",
+  "Writfold.Core.Verdict.unfetched_never_decides",
+  "Writfold.Core.Verdict.fetch_only_refines",
 ]
 total = "Writfold.Core.Verdict.other_blob_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
+  "unfetched-changed",
+  "unfetched-fresh",
   "moved-span-fresh",
   "no-blob-no-span-changed",
   "unsearched-fresh",
@@ -2537,10 +2541,12 @@ function = "missing"
 lean = "writfold_core.verdict.missing"
 theorems = [
   "Writfold.Core.Verdict.missing_spec",
+  "Writfold.Core.Verdict.identity_needs_no_bytes",
 ]
 total = "Writfold.Core.Verdict.missing_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
+  "unfetched-gone",
   "capped-gone",
   "followed-span-fresh",
   "rev-absent-gone",
@@ -3205,6 +3211,10 @@ theorems = [
   "Writfold.Core.Target.agreeL_false",
   "Writfold.Core.Target.chooseOf_disagree",
   "Writfold.Core.Target.one_remote_unchanged",
+  "Writfold.Core.Target.choose_in_spec",
+  "Writfold.Core.Target.pin_decides_in",
+  "Writfold.Core.Conform.choose_implements",
+  "Writfold.Core.Conform.choose_in_resolves",
 ]
 total = "Writfold.Core.Target.choose_spec"
 mutants = [
@@ -3376,4 +3386,26 @@ total = "Writfold.Core.Account.whole_iff_no_remainder"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "remainder-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/target.rs"
+function = "choose_in"
+lean = "writfold_core.target.choose_in"
+theorems = [
+  "Writfold.Core.Target.choose_in_spec",
+  "Writfold.Core.Target.undeclared_is_choose",
+  "Writfold.Core.Target.declared_only_url",
+  "Writfold.Core.Target.declared_never_head",
+  "Writfold.Core.Target.pin_decides_in",
+  "Writfold.Core.Target.rank_spec",
+  "Writfold.Core.Conform.choose_in_implements",
+]
+total = "Writfold.Core.Target.choose_in_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "declared-admits-path",
+  "declared-takes-head",
+  "declared-ignores-pin",
 ]

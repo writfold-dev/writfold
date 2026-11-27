@@ -1,7 +1,7 @@
 //! Exhaustive tests of the verdict kernel.
 use super::{
     Absence, Checker, Described, Handshake, Lifetime, Located, Observed, Said, Target, Verdict,
-    aged, decide, exchange, handshake, lifetime, locate, observed,
+    aged, decide, exchange, handshake, lifetime, locate, missing, observed, other_blob,
 };
 
 #[test]
@@ -17,14 +17,32 @@ fn locate_tries_the_cited_lines_first() {
     assert_eq!(locate(6, 1, 2, 5, at([1, 2])), Located::Unsearched);
 }
 
-const ABSENCES: [Absence; 6] = [
+const ABSENCES: [Absence; 8] = [
     Absence::Renamed,
     Absence::Followed(None),
     Absence::NoRename,
     Absence::RevAbsent,
     Absence::NoRev,
     Absence::Capped,
+    Absence::Unfetched,
+    Absence::Followed(Some(Located::Unfetched)),
 ];
+
+/// #182: bytes this clone lacks decide nothing, for either value of known.
+#[test]
+fn unfetched_bytes_never_decide() {
+    for known in [true, false] {
+        assert_eq!(
+            other_blob(known, Some(Located::Unfetched)),
+            Verdict::Unverifiable
+        );
+    }
+    assert_eq!(missing(Absence::Unfetched), Verdict::Unverifiable);
+    assert_eq!(
+        missing(Absence::Followed(Some(Located::Unfetched))),
+        Verdict::Unverifiable
+    );
+}
 
 /// #90: no stale verdict from missing history, and a negative verdict has
 /// a witness (the theorems are in proofs/Writfold/Verdict.lean).

@@ -390,7 +390,7 @@ inductive pin.Pin where
 | Unreadable : pin.Pin
 
 /-- [writfold_core::verdict::Lifetime]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 291:0-300:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 298:0-307:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Lifetime (T : Type _) where
@@ -577,7 +577,7 @@ inductive referent.Relation where
 | Unknown : referent.Relation
 
 /-- [writfold_core::verdict::Verdict]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 113:0-127:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 117:0-131:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Verdict where
@@ -592,7 +592,7 @@ inductive verdict.Verdict where
 | Due : verdict.Verdict
 
 /-- [writfold_core::verdict::Located]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 15:0-24:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 15:0-26:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Located where
@@ -600,9 +600,10 @@ inductive verdict.Located where
 | At : Std.U32 → Std.U32 → verdict.Located
 | Absent : verdict.Located
 | Unsearched : verdict.Located
+| Unfetched : verdict.Located
 
 /-- [writfold_core::verdict::Absence]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 42:0-57:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 44:0-61:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Absence where
@@ -612,9 +613,10 @@ inductive verdict.Absence where
 | RevAbsent : verdict.Absence
 | NoRev : verdict.Absence
 | Capped : verdict.Absence
+| Unfetched : verdict.Absence
 
 /-- [writfold_core::verdict::Said]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 86:0-92:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 90:0-96:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Said where
@@ -625,7 +627,7 @@ inductive verdict.Said where
 | Unverifiable : verdict.Said
 
 /-- [writfold_core::verdict::Checker]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 96:0-109:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 100:0-113:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Checker where
@@ -636,7 +638,7 @@ inductive verdict.Checker where
 | Expired : verdict.Checker
 
 /-- [writfold_core::verdict::Target]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 28:0-38:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 30:0-40:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Target where
@@ -645,7 +647,7 @@ inductive verdict.Target where
 | Missing : verdict.Absence → verdict.Target
 
 /-- [writfold_core::verdict::Observed]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 61:0-82:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 65:0-86:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Observed where
@@ -919,7 +921,7 @@ inductive verdict.recorded.Pick where
 | Recorded : Std.Usize → verdict.recorded.Pick
 
 /-- [writfold_core::verdict::Handshake]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 210:0-218:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 217:0-225:1
     Visibility: public -/
 @[discriminant isize]
 inductive verdict.Handshake where

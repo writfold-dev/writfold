@@ -29,13 +29,12 @@ open writfold_core
 namespace Writfold.Core.Target
 
 /-- A naming level: 4 for `Url` down to 1 for `Sole`; 0 is never a candidate. -/
-def rankN : target.Names → Nat
-  | .Url => 4
-  | .Path => 3
-  | .Base => 2
-  | .Sole => 1
-  | .Other => 0
-  | .Unread => 0
+def rankN : target.Names → Bool → Nat
+  | .Url, _ => 4
+  | .Path, false => 3
+  | .Base, false => 2
+  | .Sole, false => 1
+  | _, _ => 0
 
 /-- The commit a tip is at, if any. -/
 def tipN : target.Tip → Option Nat
@@ -43,26 +42,26 @@ def tipN : target.Tip → Option Nat
   | .NoHead => none
 
 /-- The strongest naming level among the remotes. -/
-def bestL : List target.Remote → Nat
+def bestL (d : Bool) : List target.Remote → Nat
   | [] => 0
-  | r :: rs => max (rankN r.names) (bestL rs)
+  | r :: rs => max (rankN r.names d) (bestL d rs)
 
 /-- Some remote at `lv` has no default branch. -/
-def headlessL (lv : Nat) : List target.Remote → Bool
+def headlessL (d : Bool) (lv : Nat) : List target.Remote → Bool
   | [] => false
-  | r :: rs => (rankN r.names == lv && (tipN r.tip).isNone) || headlessL lv rs
+  | r :: rs => (rankN r.names d == lv && (tipN r.tip).isNone) || headlessL d lv rs
 
 /-- The first remote at `lv`, numbered from `n`, and its tip; `none` when
 there is none or it has no default branch. -/
-def firstL (lv : Nat) : Nat → List target.Remote → Option (Nat × Nat)
+def firstL (d : Bool) (lv : Nat) : Nat → List target.Remote → Option (Nat × Nat)
   | _, [] => none
   | n, r :: rs =>
-    if rankN r.names = lv then (tipN r.tip).map (fun k => (n, k)) else firstL lv (n + 1) rs
+    if rankN r.names d = lv then (tipN r.tip).map (fun k => (n, k)) else firstL d lv (n + 1) rs
 
 /-- Every remote at `lv` is at commit `k`. -/
-def agreeL (lv k : Nat) : List target.Remote → Bool
+def agreeL (d : Bool) (lv k : Nat) : List target.Remote → Bool
   | [] => true
-  | r :: rs => (rankN r.names != lv || tipN r.tip == some k) && agreeL lv k rs
+  | r :: rs => (rankN r.names d != lv || tipN r.tip == some k) && agreeL d lv k rs
 
 /-- `target::Choice` with a natural-number index. -/
 inductive ChoiceN where
@@ -77,21 +76,24 @@ def toN : target.Choice → ChoiceN
   | .Head => .head
   | .Ambiguous w => .ambiguous w
 
-/-- The table. -/
-def chooseOf (p : target.Pinned) (l : List target.Remote) : ChoiceN :=
+/-- The table, for a repository declared in the KB (`d`) or not. -/
+def chooseOfIn (p : target.Pinned) (d : Bool) (l : List target.Remote) : ChoiceN :=
   match p with
   | .Resolves => .pinned
   | .Missing => .ambiguous .PinMissing
   | .No =>
-    if l.isEmpty then .head
-    else if bestL l = 0 then .ambiguous .NoRemoteNames
-    else if headlessL (bestL l) l then .ambiguous .NoDefaultBranch
-    else match firstL (bestL l) 0 l with
+    if l.isEmpty then (if d then .ambiguous .NoRemoteNames else .head)
+    else if bestL d l = 0 then .ambiguous .NoRemoteNames
+    else if headlessL d (bestL d l) l then .ambiguous .NoDefaultBranch
+    else match firstL d (bestL d l) 0 l with
       | none => .ambiguous .NoDefaultBranch
-      | some (i, k) => if agreeL (bestL l) k l then .remote i else .ambiguous .Disagree
+      | some (i, k) => if agreeL d (bestL d l) k l then .remote i else .ambiguous .Disagree
 
-theorem rank_spec (n : target.Names) : target.rank n ⦃ r => r.val = rankN n ⦄ := by
-  unfold target.rank; cases n <;> simp [rankN]
+/-- `choose`'s table: an undeclared repository. -/
+def chooseOf (p : target.Pinned) (l : List target.Remote) : ChoiceN := chooseOfIn p false l
+
+theorem rank_spec (n : target.Names) (d : Bool) : target.rank n d ⦃ r => r.val = rankN n d ⦄ := by
+  unfold target.rank; cases n <;> cases d <;> simp [rankN]
 
 theorem tip_commit_spec (t : target.Tip) :
     target.tip_commit t ⦃ o => o.map (·.val) = tipN t ⦄ := by
@@ -109,21 +111,21 @@ theorem tip_is_spec (t : target.Tip) (k : U32) :
       simp [h, this]
   | NoHead => simp [tipN]
 
-theorem bestL_bound (l : List target.Remote) : bestL l ≤ 4 := by
+theorem bestL_bound (d : Bool) (l : List target.Remote) : bestL d l ≤ 4 := by
   induction l with
   | nil => simp [bestL]
-  | cons r rs ih => simp only [bestL]; cases r.names <;> simp [rankN] <;> omega
+  | cons r rs ih => simp only [bestL]; cases r.names <;> cases d <;> simp [rankN] <;> omega
 
 theorem drop_cons {α} (l : List α) (i : Nat) (h : i < l.length) :
     l.drop i = l[i] :: l.drop (i + 1) := List.drop_eq_getElem_cons h
 
-theorem best_loop_spec (rs : Slice target.Remote) (top : U8) (i : Usize)
+theorem best_loop_spec (rs : Slice target.Remote) (d : Bool) (top : U8) (i : Usize)
     (hi : i.val ≤ rs.val.length) :
-    target.best_loop rs top i ⦃ r => r.val = max top.val (bestL (rs.val.drop i.val)) ⦄ := by
+    target.best_loop rs d top i ⦃ r => r.val = max top.val (bestL d (rs.val.drop i.val)) ⦄ := by
   unfold target.best_loop
   apply loop.spec_decr_nat (fun p : U8 × Usize => rs.val.length - p.2.val)
     (fun p : U8 × Usize => p.2.val ≤ rs.val.length ∧
-      max p.1.val (bestL (rs.val.drop p.2.val)) = max top.val (bestL (rs.val.drop i.val)))
+      max p.1.val (bestL d (rs.val.drop p.2.val)) = max top.val (bestL d (rs.val.drop i.val)))
   · rintro ⟨t, j⟩ ⟨hj, hinv⟩
     unfold target.best_loop.body
     dsimp only at hj hinv ⊢
@@ -153,19 +155,19 @@ theorem best_loop_spec (rs : Slice target.Remote) (top : U8) (i : Usize)
       simp [bestL]
   · exact ⟨hi, rfl⟩
 
-theorem best_spec (rs : Slice target.Remote) :
-    target.best rs ⦃ r => r.val = bestL rs.val ⦄ := by
+theorem best_spec (rs : Slice target.Remote) (d : Bool) :
+    target.best rs d ⦃ r => r.val = bestL d rs.val ⦄ := by
   unfold target.best
-  apply WP.spec_mono (best_loop_spec rs 0#u8 0#usize (by simp))
+  apply WP.spec_mono (best_loop_spec rs d 0#u8 0#usize (by simp))
   intro r hr; simp_all
 
-theorem headless_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
+theorem headless_at_loop_spec (rs : Slice target.Remote) (lv : U8) (d : Bool) (i : Usize)
     (hi : i.val ≤ rs.val.length) :
-    target.headless_at_loop rs lv i ⦃ b => b = headlessL lv.val (rs.val.drop i.val) ⦄ := by
+    target.headless_at_loop rs lv d i ⦃ b => b = headlessL d lv.val (rs.val.drop i.val) ⦄ := by
   unfold target.headless_at_loop
   apply loop.spec_decr_nat (fun j : Usize => rs.val.length - j.val)
     (fun j : Usize => j.val ≤ rs.val.length ∧
-      headlessL lv.val (rs.val.drop j.val) = headlessL lv.val (rs.val.drop i.val))
+      headlessL d lv.val (rs.val.drop j.val) = headlessL d lv.val (rs.val.drop i.val))
   · rintro j ⟨hj, hinv⟩
     unfold target.headless_at_loop.body
     dsimp only at hj hinv ⊢
@@ -177,9 +179,9 @@ theorem headless_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
       split
       · rename_i heq
         step with tip_commit_spec as ⟨ o, ho ⟩
-        have hxv : rankN rs.val[j.val].names = lv.val := by rw [← hr, ← hx, heq]
-        have hl : headlessL lv.val (rs.val.drop j.val) =
-            ((tipN rs.val[j.val].tip).isNone || headlessL lv.val (rs.val.drop (j.val + 1))) := by
+        have hxv : rankN rs.val[j.val].names d = lv.val := by rw [← hr, ← hx, heq]
+        have hl : headlessL d lv.val (rs.val.drop j.val) =
+            ((tipN rs.val[j.val].tip).isNone || headlessL d lv.val (rs.val.drop (j.val + 1))) := by
           rw [drop_cons _ _ hjl]; simp [headlessL, hxv]
         rw [hl] at hinv
         rw [← hr] at hinv
@@ -198,7 +200,7 @@ theorem headless_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
         step as ⟨ j', hj' ⟩
         refine ⟨by scalar_tac, ?_, by scalar_tac⟩
         rw [show j'.val = j.val + 1 by scalar_tac, ← hinv]
-        have hxv : rankN rs.val[j.val].names ≠ lv.val := by
+        have hxv : rankN rs.val[j.val].names d ≠ lv.val := by
           rw [← hr, ← hx]; intro h; exact hne (UScalar.eq_of_val_eq h)
         rw [drop_cons _ _ hjl]; simp [headlessL, hxv]
     · rename_i hge
@@ -207,20 +209,20 @@ theorem headless_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
       simp [headlessL]
   · exact ⟨hi, rfl⟩
 
-theorem headless_at_spec (rs : Slice target.Remote) (lv : U8) :
-    target.headless_at rs lv ⦃ b => b = headlessL lv.val rs.val ⦄ := by
+theorem headless_at_spec (rs : Slice target.Remote) (lv : U8) (d : Bool) :
+    target.headless_at rs lv d ⦃ b => b = headlessL d lv.val rs.val ⦄ := by
   unfold target.headless_at
-  apply WP.spec_mono (headless_at_loop_spec rs lv 0#usize (by simp))
+  apply WP.spec_mono (headless_at_loop_spec rs lv d 0#usize (by simp))
   intro b hb; simp_all
 
-theorem first_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
+theorem first_at_loop_spec (rs : Slice target.Remote) (lv : U8) (d : Bool) (i : Usize)
     (hi : i.val ≤ rs.val.length) :
-    target.first_at_loop rs lv i ⦃ o =>
-      o.map (fun p => (p.1.val, p.2.val)) = firstL lv.val i.val (rs.val.drop i.val) ⦄ := by
+    target.first_at_loop rs lv d i ⦃ o =>
+      o.map (fun p => (p.1.val, p.2.val)) = firstL d lv.val i.val (rs.val.drop i.val) ⦄ := by
   unfold target.first_at_loop
   apply loop.spec_decr_nat (fun j : Usize => rs.val.length - j.val)
     (fun j : Usize => j.val ≤ rs.val.length ∧
-      firstL lv.val j.val (rs.val.drop j.val) = firstL lv.val i.val (rs.val.drop i.val))
+      firstL d lv.val j.val (rs.val.drop j.val) = firstL d lv.val i.val (rs.val.drop i.val))
   · rintro j ⟨hj, hinv⟩
     unfold target.first_at_loop.body
     dsimp only at hj hinv ⊢
@@ -233,7 +235,7 @@ theorem first_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
       split
       · rename_i heq
         step with tip_commit_spec as ⟨ o, ho ⟩
-        have hxv : rankN rs.val[j.val].names = lv.val := by rw [← hr, ← hx, heq]
+        have hxv : rankN rs.val[j.val].names d = lv.val := by rw [← hr, ← hx, heq]
         rw [← hinv]; simp only [firstL, hxv, ite_true]
         rw [← hr, ← ho]
         cases o <;> simp
@@ -241,7 +243,7 @@ theorem first_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
         step as ⟨ j', hj' ⟩
         refine ⟨by scalar_tac, ?_, by scalar_tac⟩
         rw [show j'.val = j.val + 1 by scalar_tac, ← hinv]
-        have hxv : rankN rs.val[j.val].names ≠ lv.val := by
+        have hxv : rankN rs.val[j.val].names d ≠ lv.val := by
           rw [← hr, ← hx]; intro h; exact hne (UScalar.eq_of_val_eq h)
         simp [firstL, hxv]
     · rename_i hge
@@ -250,19 +252,19 @@ theorem first_at_loop_spec (rs : Slice target.Remote) (lv : U8) (i : Usize)
       simp [firstL]
   · exact ⟨hi, rfl⟩
 
-theorem first_at_spec (rs : Slice target.Remote) (lv : U8) :
-    target.first_at rs lv ⦃ o => o.map (fun p => (p.1.val, p.2.val)) = firstL lv.val 0 rs.val ⦄ := by
+theorem first_at_spec (rs : Slice target.Remote) (lv : U8) (d : Bool) :
+    target.first_at rs lv d ⦃ o => o.map (fun p => (p.1.val, p.2.val)) = firstL d lv.val 0 rs.val ⦄ := by
   unfold target.first_at
-  apply WP.spec_mono (first_at_loop_spec rs lv 0#usize (by simp))
+  apply WP.spec_mono (first_at_loop_spec rs lv d 0#usize (by simp))
   intro o ho; simp_all
 
-theorem agree_at_loop_spec (rs : Slice target.Remote) (lv : U8) (k : U32) (i : Usize)
+theorem agree_at_loop_spec (rs : Slice target.Remote) (lv : U8) (k : U32) (d : Bool) (i : Usize)
     (hi : i.val ≤ rs.val.length) :
-    target.agree_at_loop rs lv k i ⦃ b => b = agreeL lv.val k.val (rs.val.drop i.val) ⦄ := by
+    target.agree_at_loop rs lv k d i ⦃ b => b = agreeL d lv.val k.val (rs.val.drop i.val) ⦄ := by
   unfold target.agree_at_loop
   apply loop.spec_decr_nat (fun j : Usize => rs.val.length - j.val)
     (fun j : Usize => j.val ≤ rs.val.length ∧
-      agreeL lv.val k.val (rs.val.drop j.val) = agreeL lv.val k.val (rs.val.drop i.val))
+      agreeL d lv.val k.val (rs.val.drop j.val) = agreeL d lv.val k.val (rs.val.drop i.val))
   · rintro j ⟨hj, hinv⟩
     unfold target.agree_at_loop.body
     dsimp only at hj hinv ⊢
@@ -275,7 +277,7 @@ theorem agree_at_loop_spec (rs : Slice target.Remote) (lv : U8) (k : U32) (i : U
       split
       · rename_i heq
         step with tip_is_spec as ⟨ b, hb ⟩
-        have hxv : rankN rs.val[j.val].names = lv.val := by rw [← hr, ← hx, heq]
+        have hxv : rankN rs.val[j.val].names d = lv.val := by rw [← hr, ← hx, heq]
         split
         · rename_i hbt
           step as ⟨ j', hj' ⟩
@@ -291,7 +293,7 @@ theorem agree_at_loop_spec (rs : Slice target.Remote) (lv : U8) (k : U32) (i : U
         step as ⟨ j', hj' ⟩
         refine ⟨by scalar_tac, ?_, by scalar_tac⟩
         rw [show j'.val = j.val + 1 by scalar_tac, ← hinv]
-        have hxv : rankN rs.val[j.val].names ≠ lv.val := by
+        have hxv : rankN rs.val[j.val].names d ≠ lv.val := by
           rw [← hr, ← hx]; intro h; exact hne (UScalar.eq_of_val_eq h)
         simp [agreeL, hxv]
     · rename_i hge
@@ -300,42 +302,44 @@ theorem agree_at_loop_spec (rs : Slice target.Remote) (lv : U8) (k : U32) (i : U
       simp [agreeL]
   · exact ⟨hi, rfl⟩
 
-theorem agree_at_spec (rs : Slice target.Remote) (lv : U8) (k : U32) :
-    target.agree_at rs lv k ⦃ b => b = agreeL lv.val k.val rs.val ⦄ := by
+theorem agree_at_spec (rs : Slice target.Remote) (lv : U8) (k : U32) (d : Bool) :
+    target.agree_at rs lv k d ⦃ b => b = agreeL d lv.val k.val rs.val ⦄ := by
   unfold target.agree_at
-  apply WP.spec_mono (agree_at_loop_spec rs lv k 0#usize (by simp))
+  apply WP.spec_mono (agree_at_loop_spec rs lv k d 0#usize (by simp))
   intro b hb; simp_all
 
-theorem choose_spec (p : target.Pinned) (rs : Slice target.Remote) :
-    target.choose p rs ⦃ c => toN c = chooseOf p rs.val ⦄ := by
-  unfold target.choose
+theorem choose_in_spec (p : target.Pinned) (d : Bool) (rs : Slice target.Remote) :
+    target.choose_in p d rs ⦃ c => toN c = chooseOfIn p d rs.val ⦄ := by
+  unfold target.choose_in
   cases p with
-  | Resolves => simp [toN, chooseOf]
-  | Missing => simp [toN, chooseOf]
+  | Resolves => simp [toN, chooseOfIn]
+  | Missing => simp [toN, chooseOfIn]
   | No =>
-    simp only [chooseOf]
+    simp only [chooseOfIn]
     step as ⟨ e, he ⟩
     split
     · rename_i het
-      simp_all [toN]
+      have hemp : rs.val.isEmpty = true := by simp_all
+      simp only [hemp, ite_true]
+      cases d <;> simp [toN]
     · rename_i hef
       have hne : rs.val.isEmpty = false := by simp_all
       simp only [hne]
       step with best_spec as ⟨ lv, hlv ⟩
       split
       · rename_i h0
-        have : bestL rs.val = 0 := by rw [← hlv, h0]; rfl
+        have : bestL d rs.val = 0 := by rw [← hlv, h0]; rfl
         simp [toN, this]
       · rename_i h0
-        have h0' : bestL rs.val ≠ 0 := by
+        have h0' : bestL d rs.val ≠ 0 := by
           rw [← hlv]; intro h; exact h0 (UScalar.eq_of_val_eq (by simpa using h))
-        simp only [h0', ite_false]
+        simp only [h0', ite_false, Bool.false_eq_true]
         step with headless_at_spec as ⟨ b, hb ⟩
         rw [hlv] at hb
         split
         · rename_i hbt; simp_all [toN]
         · rename_i hbt
-          have hbf : headlessL (bestL rs.val) rs.val = false := by simp_all
+          have hbf : headlessL d (bestL d rs.val) rs.val = false := by simp_all
           simp only [hbf]
           step with first_at_spec as ⟨ o, ho ⟩
           rw [hlv] at ho
@@ -354,11 +358,20 @@ theorem choose_spec (p : target.Pinned) (rs : Slice target.Remote) :
             · rename_i hat; simp_all [toN]
             · rename_i hat; simp_all [toN]
 
+/-- `choose` is `choose_in` for an undeclared repository (#197). -/
+theorem undeclared_is_choose (p : target.Pinned) (rs : Slice target.Remote) :
+    target.choose p rs = target.choose_in p false rs := by
+  unfold target.choose; rfl
+
+theorem choose_spec (p : target.Pinned) (rs : Slice target.Remote) :
+    target.choose p rs ⦃ c => toN c = chooseOf p rs.val ⦄ := by
+  rw [undeclared_is_choose]; exact choose_in_spec p false rs
+
 /-! ## Consequences of the table -/
 
-theorem firstL_found (lv : Nat) : ∀ (l : List target.Remote) (n i k : Nat),
-    firstL lv n l = some (i, k) →
-    n ≤ i ∧ ∃ h : i - n < l.length, rankN l[i - n].names = lv ∧ tipN l[i - n].tip = some k := by
+theorem firstL_found (d : Bool) (lv : Nat) : ∀ (l : List target.Remote) (n i k : Nat),
+    firstL d lv n l = some (i, k) →
+    n ≤ i ∧ ∃ h : i - n < l.length, rankN l[i - n].names d = lv ∧ tipN l[i - n].tip = some k := by
   intro l
   induction l with
   | nil => intro n i k h; simp [firstL] at h
@@ -380,51 +393,85 @@ theorem firstL_found (lv : Nat) : ∀ (l : List target.Remote) (n i k : Nat),
       · simp only [he, List.getElem_cons_succ]; exact hrk
       · simp only [he, List.getElem_cons_succ]; exact htp
 
-theorem chooseOf_remote_facts (l : List target.Remote) (i : Nat)
-    (h : chooseOf .No l = .remote i) :
-    ∃ k, firstL (bestL l) 0 l = some (i, k) ∧ agreeL (bestL l) k l = true := by
-  simp only [chooseOf] at h
+theorem chooseOf_remote_facts (d : Bool) (l : List target.Remote) (i : Nat)
+    (h : chooseOfIn .No d l = .remote i) :
+    ∃ k, firstL d (bestL d l) 0 l = some (i, k) ∧ agreeL d (bestL d l) k l = true := by
+  simp only [chooseOfIn] at h
   by_cases h1 : l.isEmpty = true
-  · simp [h1] at h
-  by_cases h2 : bestL l = 0
+  · cases d <;> simp [h1] at h
+  by_cases h2 : bestL d l = 0
   · simp [h1, h2] at h
-  by_cases h3 : headlessL (bestL l) l = true
+  by_cases h3 : headlessL d (bestL d l) l = true
   · simp [h1, h2, h3] at h
   simp only [h1, h2, h3, Bool.false_eq_true, ite_false] at h
-  rcases hq : firstL (bestL l) 0 l with _ | ⟨i', k⟩ <;> simp only [hq] at h
+  rcases hq : firstL d (bestL d l) 0 l with _ | ⟨i', k⟩ <;> simp only [hq] at h
   · cases h
   · refine ⟨k, ?_⟩
-    by_cases hag : agreeL (bestL l) k l = true
+    by_cases hag : agreeL d (bestL d l) k l = true
     · simp only [hag, ite_true, ChoiceN.remote.injEq] at h
       subst h; exact ⟨rfl, hag⟩
     · simp [hag] at h
 
-theorem chooseOf_remote (l : List target.Remote) (i : Nat)
-    (h : chooseOf .No l = .remote i) :
-    ∃ hi : i < l.length, 0 < rankN l[i].names ∧ (tipN l[i].tip).isSome := by
-  obtain ⟨k, hq, _⟩ := chooseOf_remote_facts l i h
-  have hb : bestL l ≠ 0 := by
-    intro h0; simp only [chooseOf] at h
-    by_cases h1 : l.isEmpty = true <;> simp_all
-  obtain ⟨_, hlt, hrk, htp⟩ := firstL_found _ l 0 _ _ hq
+theorem chooseOf_remote (d : Bool) (l : List target.Remote) (i : Nat)
+    (h : chooseOfIn .No d l = .remote i) :
+    ∃ hi : i < l.length, 0 < rankN l[i].names d ∧ (tipN l[i].tip).isSome := by
+  obtain ⟨k, hq, _⟩ := chooseOf_remote_facts d l i h
+  have hb : bestL d l ≠ 0 := by
+    intro h0; simp only [chooseOfIn] at h
+    by_cases h1 : l.isEmpty = true <;> cases d <;> simp_all
+  obtain ⟨_, hlt, hrk, htp⟩ := firstL_found d _ l 0 _ _ hq
   simp only [Nat.sub_zero] at hlt hrk htp
   exact ⟨hlt, by omega, by simp [htp]⟩
 
 theorem other_never_chosen (rs : Slice target.Remote) :
     target.choose .No rs ⦃ c => ∀ i, c = .Remote i →
-      ∃ hi : i.val < rs.val.length, 0 < rankN rs.val[i.val].names ∧
+      ∃ hi : i.val < rs.val.length, 0 < rankN rs.val[i.val].names false ∧
         (tipN rs.val[i.val].tip).isSome ⦄ := by
   apply WP.spec_mono (choose_spec .No rs)
   intro c hc i hi; subst hi
-  exact chooseOf_remote rs.val i.val (by simpa [toN] using hc.symm)
+  exact chooseOf_remote false rs.val i.val (by simpa [toN, chooseOf] using hc.symm)
+
+/-- #197: a declared repository's target is a remote at its declared URL,
+with a tip: no fork and no namesake. -/
+theorem declared_only_url (rs : Slice target.Remote) :
+    target.choose_in .No true rs ⦃ c => ∀ i, c = .Remote i →
+      ∃ hi : i.val < rs.val.length, rs.val[i.val].names = .Url ∧
+        (tipN rs.val[i.val].tip).isSome ⦄ := by
+  apply WP.spec_mono (choose_in_spec .No true rs)
+  intro c hc i hi; subst hi
+  obtain ⟨hl, hr, ht⟩ := chooseOf_remote true rs.val i.val (by simpa [toN] using hc.symm)
+  refine ⟨hl, ?_, ht⟩
+  revert hr; cases rs.val[i.val].names <;> simp [rankN]
+
+/-- #197: a declared repository is never judged at a clone's own `HEAD`. -/
+theorem declared_never_head (p : target.Pinned) (rs : Slice target.Remote) :
+    target.choose_in p true rs ⦃ c => c ≠ .Head ⦄ := by
+  apply WP.spec_mono (choose_in_spec p true rs)
+  intro c hc hh; subst hh
+  simp only [toN] at hc
+  revert hc
+  cases p <;> simp only [chooseOfIn] <;> try simp
+  split
+  · simp
+  · split
+    · simp
+    · split
+      · simp
+      · split <;> (try split) <;> simp
 
 theorem pin_decides (rs : Slice target.Remote) :
     target.choose .Resolves rs ⦃ c => c = .Pinned ⦄ ∧
     target.choose .Missing rs ⦃ c => c = .Ambiguous .PinMissing ⦄ := by
-  constructor <;> (unfold target.choose; simp)
+  constructor <;> (unfold target.choose target.choose_in; simp)
 
-theorem agreeL_false (lv k : Nat) : ∀ (l : List target.Remote) (a : Nat) (ha : a < l.length),
-    rankN l[a].names = lv → tipN l[a].tip ≠ some k → agreeL lv k l = false := by
+/-- #197: the map's pin decides whether or not the repository is declared. -/
+theorem pin_decides_in (d : Bool) (rs : Slice target.Remote) :
+    target.choose_in .Resolves d rs ⦃ c => c = .Pinned ⦄ ∧
+    target.choose_in .Missing d rs ⦃ c => c = .Ambiguous .PinMissing ⦄ := by
+  constructor <;> (unfold target.choose_in; simp)
+
+theorem agreeL_false (d : Bool) (lv k : Nat) : ∀ (l : List target.Remote) (a : Nat) (ha : a < l.length),
+    rankN l[a].names d = lv → tipN l[a].tip ≠ some k → agreeL d lv k l = false := by
   intro l
   induction l with
   | nil => intro a ha; simp at ha
@@ -436,38 +483,39 @@ theorem agreeL_false (lv k : Nat) : ∀ (l : List target.Remote) (a : Nat) (ha :
       simp only [agreeL, Bool.and_eq_false_iff]
       right; exact ih a (by simpa using ha) (by simpa using hr) (by simpa using ht)
 
-theorem chooseOf_disagree (l : List target.Remote) (a b : Nat) (ha : a < l.length)
-    (hb : b < l.length) (hra : rankN l[a].names = bestL l) (hrb : rankN l[b].names = bestL l)
+theorem chooseOf_disagree (d : Bool) (l : List target.Remote) (a b : Nat) (ha : a < l.length)
+    (hb : b < l.length) (hra : rankN l[a].names d = bestL d l) (hrb : rankN l[b].names d = bestL d l)
     (ka kb : Nat) (hka : tipN l[a].tip = some ka) (hkb : tipN l[b].tip = some kb)
-    (hd : ka ≠ kb) : ∀ i, chooseOf .No l ≠ .remote i := by
+    (hd : ka ≠ kb) : ∀ i, chooseOfIn .No d l ≠ .remote i := by
   intro i h
-  obtain ⟨k, _, hag⟩ := chooseOf_remote_facts l i h
+  obtain ⟨k, _, hag⟩ := chooseOf_remote_facts d l i h
   by_cases hk : ka = k
   · subst hk
-    have := agreeL_false (bestL l) ka l b hb hrb (by rw [hkb]; simp; exact fun e => hd e.symm)
+    have := agreeL_false d (bestL d l) ka l b hb hrb (by rw [hkb]; simp; exact fun e => hd e.symm)
     simp_all
-  · have := agreeL_false (bestL l) k l a ha hra (by rw [hka]; simp; exact hk)
+  · have := agreeL_false d (bestL d l) k l a ha hra (by rw [hka]; simp; exact hk)
     simp_all
 
 theorem disagreement_is_ambiguous (rs : Slice target.Remote) (a b : Nat)
     (ha : a < rs.val.length) (hb : b < rs.val.length)
-    (hra : rankN rs.val[a].names = bestL rs.val) (hrb : rankN rs.val[b].names = bestL rs.val)
+    (hra : rankN rs.val[a].names false = bestL false rs.val)
+    (hrb : rankN rs.val[b].names false = bestL false rs.val)
     (ka kb : Nat) (hka : tipN rs.val[a].tip = some ka) (hkb : tipN rs.val[b].tip = some kb)
     (hd : ka ≠ kb) :
     target.choose .No rs ⦃ c => ∀ i, c ≠ .Remote i ⦄ := by
   apply WP.spec_mono (choose_spec .No rs)
   intro c hc i hi; subst hi
-  exact chooseOf_disagree rs.val a b ha hb hra hrb ka kb hka hkb hd i.val
-    (by simpa [toN] using hc.symm)
+  exact chooseOf_disagree false rs.val a b ha hb hra hrb ka kb hka hkb hd i.val
+    (by simpa [toN, chooseOf] using hc.symm)
 
 theorem one_remote_unchanged (r : target.Remote) (k : Nat)
-    (hr : 0 < rankN r.names) (ht : tipN r.tip = some k) :
+    (hr : 0 < rankN r.names false) (ht : tipN r.tip = some k) :
     chooseOf .No [r] = .remote 0 ∧ chooseOf .No [] = .head := by
   constructor
-  · have hb : bestL [r] = rankN r.names := by simp [bestL]
-    simp only [chooseOf, List.isEmpty_cons, Bool.false_eq_true, ite_false, hb]
-    have h0 : rankN r.names ≠ 0 := by omega
+  · have hb : bestL false [r] = rankN r.names false := by simp [bestL]
+    simp only [chooseOf, chooseOfIn, List.isEmpty_cons, Bool.false_eq_true, ite_false, hb]
+    have h0 : rankN r.names false ≠ 0 := by omega
     simp [h0, headlessL, firstL, agreeL, ht]
-  · simp [chooseOf]
+  · simp [chooseOf, chooseOfIn]
 
 end Writfold.Core.Target

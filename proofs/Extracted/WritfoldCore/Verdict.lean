@@ -22,7 +22,7 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::verdict::expired]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 341:0-349:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 348:0-356:1
     Visibility: public -/
 def verdict.expired
   (now : Std.I64) (seen : Std.I64) (ttl : Std.I64) : Result Bool := do
@@ -53,7 +53,7 @@ def verdict.expired
          ok (i > ttl)
 
 /-- [writfold_core::verdict::missing]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 182:0-195:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 187:0-202:1
     Visibility: public -/
 def verdict.missing (absence : verdict.Absence) : Result verdict.Verdict := do
   match absence with
@@ -67,13 +67,15 @@ def verdict.missing (absence : verdict.Absence) : Result verdict.Verdict := do
       | verdict.Located.At _ _ => ok verdict.Verdict.Moved
       | verdict.Located.Absent => ok verdict.Verdict.Gone
       | verdict.Located.Unsearched => ok verdict.Verdict.Gone
+      | verdict.Located.Unfetched => ok verdict.Verdict.Unverifiable
   | verdict.Absence.NoRename => ok verdict.Verdict.Gone
   | verdict.Absence.RevAbsent => ok verdict.Verdict.Unverifiable
   | verdict.Absence.NoRev => ok verdict.Verdict.Unverifiable
   | verdict.Absence.Capped => ok verdict.Verdict.Unverifiable
+  | verdict.Absence.Unfetched => ok verdict.Verdict.Unverifiable
 
 /-- [writfold_core::verdict::other_blob]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 165:0-178:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 169:0-183:1
     Visibility: public -/
 def verdict.other_blob
   (known : Bool) (located : Option verdict.Located) :
@@ -93,9 +95,10 @@ def verdict.other_blob
       if known
       then ok verdict.Verdict.Changed
       else ok verdict.Verdict.Unverifiable
+    | verdict.Located.Unfetched => ok verdict.Verdict.Unverifiable
 
 /-- [writfold_core::verdict::observed]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 130:0-160:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 134:0-164:1
     Visibility: public -/
 def verdict.observed (fact : verdict.Observed) : Result verdict.Verdict := do
   match fact with
@@ -436,7 +439,7 @@ def verdict.recorded.newest
       else ok (some (verdict.recorded.Pick.Recorded i))
 
 /-- [writfold_core::verdict::Described]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 199:0-206:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 206:0-213:1
     Visibility: public -/
 structure verdict.Described where
   protocol : Bool
@@ -444,7 +447,7 @@ structure verdict.Described where
   has_op : Bool
 
 /-- [writfold_core::verdict::handshake]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 223:0-238:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 230:0-245:1
     Visibility: public -/
 def verdict.handshake
   (described : Option verdict.Described) : Result verdict.Handshake := do
@@ -462,7 +465,7 @@ def verdict.handshake
     else ok verdict.Handshake.Protocol
 
 /-- [writfold_core::verdict::reply]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 263:0-268:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 270:0-275:1
     Visibility: public -/
 def verdict.reply (reply : Option verdict.Said) : Result verdict.Checker := do
   match reply with
@@ -470,7 +473,7 @@ def verdict.reply (reply : Option verdict.Said) : Result verdict.Checker := do
   | some said => ok (verdict.Checker.Said said)
 
 /-- [writfold_core::verdict::exchange]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 244:0-260:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 251:0-267:1
     Visibility: public -/
 def verdict.exchange
   (handshake : verdict.Handshake) (clean_exit : Bool) (readable : Bool)
@@ -499,7 +502,7 @@ def verdict.exchange
   else ok verdict.Checker.Failed
 
 /-- [writfold_core::verdict::aged]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 273:0-287:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 280:0-294:1
     Visibility: public -/
 def verdict.aged
   (cached : verdict.Checker) (age : Option Std.I64) (max_age : Option Std.I64)
@@ -517,7 +520,7 @@ def verdict.aged
       else ok verdict.Checker.Expired
 
 /-- [writfold_core::verdict::lifetime]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 304:0-315:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 311:0-322:1
     Visibility: public -/
 def verdict.lifetime
   {T : Type _} (immutable : Bool) (token : Option T) (default : Option T) :
@@ -534,7 +537,7 @@ def verdict.lifetime
     | some ttl => ok (verdict.Lifetime.Token ttl)
 
 /-- [writfold_core::verdict::with_mark]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 324:0-335:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 331:0-342:1
     Visibility: public -/
 def verdict.with_mark
   (reached : verdict.Verdict) (marked : Bool) : Result verdict.Verdict := do
@@ -568,7 +571,7 @@ def verdict.with_mark
     else ok verdict.Verdict.Due
 
 /-- [writfold_core::verdict::decide]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 319:0-321:1
+    Source: 'crates/writfold-core/src/verdict.rs', lines 326:0-328:1
     Visibility: public -/
 def verdict.decide
   (fact : verdict.Observed) (marked : Bool) : Result verdict.Verdict := do

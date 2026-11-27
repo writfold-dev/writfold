@@ -1,4 +1,4 @@
-# entries: 330
+# entries: 322
 # Translated functions and enums not yet linked to the calculus (#206).
 # This list only shrinks: law_coverage.py refuses a registered or vanished entry,
 # and the ceiling above must equal the number of entries.
@@ -209,14 +209,6 @@ store.recorded
 store.resolve
 store.snapshot
 store.use_recorded
-target.agree_at
-target.best
-target.choose
-target.first_at
-target.headless_at
-target.rank
-target.tip_commit
-target.tip_is
 units.generated
 units.pairs
 units.unit_moved

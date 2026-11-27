@@ -80,25 +80,26 @@ pub enum Choice {
 }
 
 /// A naming level: 4 for `Url` down to 1 for `Sole`; 0 is never a
-/// candidate.
-pub fn rank(names: Names) -> u8 {
-    match names {
-        Names::Url => 4,
-        Names::Path => 3,
-        Names::Base => 2,
-        Names::Sole => 1,
-        Names::Other => 0,
-        Names::Unread => 0,
+/// candidate. For a repository declared in the KB (#197) only a remote at
+/// its declared URL names it.
+pub fn rank(names: Names, declared: bool) -> u8 {
+    match (names, declared) {
+        (Names::Url, _) => 4,
+        (Names::Path, false) => 3,
+        (Names::Base, false) => 2,
+        (Names::Sole, false) => 1,
+        (Names::Path | Names::Base | Names::Sole, true) => 0,
+        (Names::Other | Names::Unread, _) => 0,
     }
 }
 
 /// The strongest naming level among the remotes; 0 when none names the
 /// repository.
-pub fn best(remotes: &[Remote]) -> u8 {
+pub fn best(remotes: &[Remote], declared: bool) -> u8 {
     let mut top = 0;
     let mut i = 0;
     while i < remotes.len() {
-        let level = rank(remotes[i].names);
+        let level = rank(remotes[i].names, declared);
         if level > top {
             top = level;
         }
@@ -124,11 +125,11 @@ pub fn tip_is(tip: Tip, k: u32) -> bool {
 }
 
 /// Whether some remote at `level` has no default branch.
-pub fn headless_at(remotes: &[Remote], level: u8) -> bool {
+pub fn headless_at(remotes: &[Remote], level: u8, declared: bool) -> bool {
     let mut i = 0;
     while i < remotes.len() {
         let r = remotes[i];
-        if rank(r.names) == level && tip_commit(r.tip).is_none() {
+        if rank(r.names, declared) == level && tip_commit(r.tip).is_none() {
             return true;
         }
         i += 1;
@@ -138,11 +139,11 @@ pub fn headless_at(remotes: &[Remote], level: u8) -> bool {
 
 /// The first remote at `level` and its tip; `None` when there is none or
 /// it has no default branch.
-pub fn first_at(remotes: &[Remote], level: u8) -> Option<(usize, u32)> {
+pub fn first_at(remotes: &[Remote], level: u8, declared: bool) -> Option<(usize, u32)> {
     let mut i = 0;
     while i < remotes.len() {
         let r = remotes[i];
-        if rank(r.names) == level {
+        if rank(r.names, declared) == level {
             return match tip_commit(r.tip) {
                 Some(k) => Some((i, k)),
                 None => None,
@@ -154,11 +155,11 @@ pub fn first_at(remotes: &[Remote], level: u8) -> Option<(usize, u32)> {
 }
 
 /// Whether every remote at `level` is at commit `k`.
-pub fn agree_at(remotes: &[Remote], level: u8, k: u32) -> bool {
+pub fn agree_at(remotes: &[Remote], level: u8, k: u32, declared: bool) -> bool {
     let mut i = 0;
     while i < remotes.len() {
         let r = remotes[i];
-        if rank(r.names) == level && !tip_is(r.tip, k) {
+        if rank(r.names, declared) == level && !tip_is(r.tip, k) {
             return false;
         }
         i += 1;
@@ -167,27 +168,37 @@ pub fn agree_at(remotes: &[Remote], level: u8, k: u32) -> bool {
 }
 
 /// The target, in the RFC's order: the pin, no remotes, the candidates at
-/// the strongest level, a candidate without a default branch, and
+/// the strongest level present, a candidate without a default branch, and
 /// candidates that disagree.
 pub fn choose(pinned: Pinned, remotes: &[Remote]) -> Choice {
+    choose_in(pinned, false, remotes)
+}
+
+/// [`choose`], for a repository that may be declared in the KB (#197):
+/// with `declared`, only a remote at the declared URL is a candidate, and a
+/// clone with no remote is at no declared URL (ambiguous, not `HEAD`).
+pub fn choose_in(pinned: Pinned, declared: bool, remotes: &[Remote]) -> Choice {
     match pinned {
         Pinned::Resolves => return Choice::Pinned,
         Pinned::Missing => return Choice::Ambiguous(Why::PinMissing),
         Pinned::No => {}
     }
     if remotes.is_empty() {
-        return Choice::Head;
+        return match declared {
+            true => Choice::Ambiguous(Why::NoRemoteNames),
+            false => Choice::Head,
+        };
     }
-    let level = best(remotes);
+    let level = best(remotes, declared);
     if level == 0 {
         return Choice::Ambiguous(Why::NoRemoteNames);
     }
-    if headless_at(remotes, level) {
+    if headless_at(remotes, level, declared) {
         return Choice::Ambiguous(Why::NoDefaultBranch);
     }
-    match first_at(remotes, level) {
+    match first_at(remotes, level, declared) {
         None => Choice::Ambiguous(Why::NoDefaultBranch),
-        Some((i, k)) => match agree_at(remotes, level, k) {
+        Some((i, k)) => match agree_at(remotes, level, k, declared) {
             true => Choice::Remote(i),
             false => Choice::Ambiguous(Why::Disagree),
         },
@@ -249,5 +260,18 @@ mod tests {
         );
         let unread = [r(Names::Unread, Some(0)), r(Names::Sole, Some(0))];
         assert_eq!(choose(Pinned::No, &unread), Choice::Remote(1));
+        // Declared: only the URL names it; no remote is not HEAD.
+        let fork = [r(Names::Url, Some(0)), r(Names::Path, Some(1))];
+        assert_eq!(choose_in(Pinned::No, true, &fork), Choice::Remote(0));
+        let namesake = [r(Names::Path, Some(1))];
+        assert_eq!(
+            choose_in(Pinned::No, true, &namesake),
+            Choice::Ambiguous(Why::NoRemoteNames)
+        );
+        assert_eq!(
+            choose_in(Pinned::No, true, &none),
+            Choice::Ambiguous(Why::NoRemoteNames)
+        );
+        assert_eq!(choose_in(Pinned::Resolves, true, &none), Choice::Pinned);
     }
 }
