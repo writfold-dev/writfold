@@ -19,6 +19,13 @@ Extended on 27 November 2026 by
 (§3.11 to §3.13): which thing a fact is about, what a universal word
 ranges over, and where a decision is asked.
 
+Being stated in Lean since 27 November 2026:
+[the calculus in Lean](../2026-11-27-calculus-in-lean.md) (#204) puts the
+laws below into a core under `proofs/Calculus` as theorems and links each
+kernel to the operation it implements. Its audit lists which laws here
+are theorems today and which are prose. Until its steps land, this file
+is the statement of record.
+
 Nothing new below is proved yet. Every theorem marked **shipped** is in
 `proofs/Writfold/` today. Every theorem marked **new** is an obligation of
 the issue named beside it.
