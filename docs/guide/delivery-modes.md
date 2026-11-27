@@ -187,10 +187,10 @@ checks = ["paragraphs.bounded", "prose.rules"]
 prose = "plain"
 ```
 
-Rules use the deny list's `name: pattern` form: ASCII regular expressions, case-insensitive. They are matched line by line against **prose only**. Lines inside code fences and indented code blocks are skipped, and inline code spans and URLs are blanked first, so a rule never fires on code.
+Rules use the deny list's `name: pattern` form: ASCII regular expressions, case-insensitive. They are matched line by line against **prose only**. A leading YAML front-matter block (a first line `---` up to the next `---` or `...`), lines inside code fences and indented code blocks are skipped, and inline code spans and URLs are blanked first, so a rule never fires on code.
 
 - **A blocking match** fails the check, like a deny-list match. It is drawn against the line with the rule and column, and it is waivable only if the mode says so.
-- **Advice** is recorded in the receipt (`result.advice`, `advice_total`) and shown, but it never changes the outcome, the exit status or a `next:` line. `deliver status` adds `2 advisory: line 3 filler, line 5 hedge`, and `deliver check` draws each piece as `advice[prose.rules]: filler (column 9)` with its location. Advice from a receipt about other bytes is not shown.
+- **Advice** is recorded in the receipt (`result.advice`, `advice_total`) and shown, but it never changes the outcome, the exit status or a `next:` line. `deliver status` adds `2 advisory: line 3 filler, line 5 hedge`, and `deliver check` draws each piece as `advice[prose.rules]: filler (column 9)` with its location. Advice from a receipt about other bytes is not shown. A receipt keeps the first 20 findings and the first 20 pieces of advice with exact totals; with more matches than that, the note ends with a count per rule (`; by rule: 41 filler, 12 hedge`).
 - **No rules** (both lists empty) is `unknown`, never a pass.
 
 Editing a pattern, renaming a rule or moving a rule between `advise` and `block` makes earlier receipts stale. `prose` is required when `checks` lists `prose.rules` and refused otherwise. A missing or broken rule file is refused when the mode loads.

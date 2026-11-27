@@ -199,3 +199,28 @@ fn a_script_gate_keeps_its_output_on_a_pass_as_advice() -> TestResult {
     assert_eq!(r["result"]["advice"][0]["detail"], "just");
     Ok(())
 }
+
+/// #135: a document's front matter is not prose, and with more matches than
+/// a receipt keeps the note tallies them by rule.
+#[test]
+fn front_matter_is_skipped_and_many_matches_are_tallied() -> TestResult {
+    let w = world(&[])?;
+    rules(&w, &format!("{FILLER}, \"hedge: \\\\bmaybe\\\\b\""), TODO)?;
+    mode(&w, "[\"prose.rules\"]", "prose = \"plain\"\n")?;
+    let body: String = (0..30)
+        .map(|i| match i % 3 {
+            0 => "Maybe so.\n",
+            _ => "We just did.\n",
+        })
+        .collect();
+    prepare(&w, "note", &format!("---\ntitle: TODO just\n---\n{body}"))?;
+    let (text, exit) = checked(&w, NOW + 60)?;
+    assert_eq!(exit, 0, "the TODO in front matter is not prose: {text}");
+    let r = &receipts(&w)?[0];
+    assert_eq!(r["result"]["outcome"], "pass");
+    assert_eq!(r["result"]["advice_total"], 30);
+    assert_eq!(r["result"]["advice"][0]["line"], 4);
+    let note = r["result"]["note"].as_str().unwrap_or_default();
+    assert!(note.ends_with("; by rule: 20 filler, 10 hedge"), "{note}");
+    Ok(())
+}

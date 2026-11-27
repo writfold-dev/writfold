@@ -41,7 +41,13 @@ impl Rules {
         let lines: Vec<String> = (self.rules.iter())
             .map(|(w, r)| format!("{}\t{}\t{}", tier(*w), r.name, r.pattern))
             .collect();
-        format!("set={}\n{}", self.name, lines.join("\n"))
+        // The marker records that a leading YAML front-matter block is not
+        // prose (#135); receipts from before it read stale once.
+        format!(
+            "set={}\nfront-matter=skipped\n{}",
+            self.name,
+            lines.join("\n")
+        )
     }
 }
 
@@ -90,13 +96,28 @@ pub fn check(name: &str, path: &str, text: &str) -> Result<Rules, Report> {
     c.finish(set)
 }
 
+/// The number of lines a leading YAML front-matter block takes: a first
+/// line `---` up to and including the next `---` or `...`. Without a
+/// closing line there is no front matter.
+fn front_matter(text: &str) -> usize {
+    let mut lines = text.lines();
+    if lines.next().map(str::trim_end) != Some("---") {
+        return 0;
+    }
+    lines
+        .position(|l| matches!(l.trim_end(), "---" | "..."))
+        .map_or(0, |at| at + 2)
+}
+
 /// The prose lines of a payload, numbered from 1, with inline code spans
-/// and URLs blanked. Code fences and indented code blocks are skipped.
+/// and URLs blanked. A leading YAML front-matter block, code fences and
+/// indented code blocks are skipped.
 pub fn prose_lines(text: &str) -> Vec<(u32, String)> {
     let mut out = Vec::new();
     let mut fenced: Option<&str> = None;
     let mut previous_blank = true;
-    for (index, line) in text.lines().enumerate() {
+    let skip = front_matter(text);
+    for (index, line) in text.lines().enumerate().skip(skip) {
         let trimmed = line.trim_start();
         let opener = ["```", "~~~"].into_iter().find(|f| trimmed.starts_with(f));
         match (fenced, opener) {
@@ -167,7 +188,7 @@ pub fn evaluate(text: &str, rules: &Rules) -> Evaluated {
     let outcome = verdict(rules.rules.len(), &weights);
     let note = match rules.rules.len() {
         0 => format!("{} has no rules", rules.path),
-        n => format!("{n} rules in {}", rules.path),
+        n => format!("{n} rules in {}{}", rules.path, tally(&findings, &advice)),
     };
     Evaluated {
         outcome,
@@ -177,9 +198,40 @@ pub fn evaluate(text: &str, rules: &Rules) -> Evaluated {
     }
 }
 
+/// With more matches than a receipt keeps, each rule's count, most first
+/// (`; by rule: 41 filler, 12 hedge`), so the totals are not lost.
+fn tally(findings: &[Finding], advice: &[Finding]) -> String {
+    if findings.len() + advice.len() <= super::checks::MAX_FINDINGS {
+        return String::new();
+    }
+    let mut counts: Vec<(usize, &str)> = Vec::new();
+    for f in findings.iter().chain(advice) {
+        match counts.iter_mut().find(|(_, r)| *r == f.rule) {
+            Some((n, _)) => *n += 1,
+            None => counts.push((1, &f.rule)),
+        }
+    }
+    counts.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(b.1)));
+    let each: Vec<String> = counts.iter().map(|(n, r)| format!("{n} {r}")).collect();
+    format!("; by rule: {}", each.join(", "))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{check, prose_lines};
+    use super::{check, front_matter, prose_lines};
+
+    #[test]
+    fn front_matter_is_not_prose() {
+        let text = "---\ntitle: just a title\n---\nJust prose.\n";
+        assert_eq!(front_matter(text), 3);
+        let lines: Vec<u32> = prose_lines(text).iter().map(|(n, _)| *n).collect();
+        assert_eq!(lines, [4]);
+        assert_eq!(front_matter("---\na: b\n...\nx\n"), 3);
+        // No closing line, or not on the first line: no front matter.
+        assert_eq!(front_matter("---\njust text\n"), 0);
+        assert_eq!(front_matter("x\n---\na: b\n---\n"), 0);
+        assert_eq!(prose_lines("---\njust text\n").len(), 2);
+    }
 
     #[test]
     fn code_and_urls_are_not_prose() {

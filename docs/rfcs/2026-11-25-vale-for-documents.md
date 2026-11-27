@@ -2,11 +2,11 @@
 rfc: "2026-11-25-vale-for-documents"
 title: "Vale for documents: a built-in check with a pinned, bound profile"
 status: accepted
-implementation: in-progress
+implementation: complete
 authors:
   - opus
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/117
 milestone: "v0.6.0-dev.21"
 supersedes: []
@@ -195,7 +195,18 @@ ran.
   Tests select it with `writfold_kb::deliver::vale::use_program`; the
   binary reads `WRITFOLD_VALE`.
 - Planted `VALE_CONFIG_PATH`, `VALE_STYLES_PATH` and a global config are
-  exercised by the real-Vale test only.
+  exercised by the real-Vale test only. Library tests cannot set
+  environment variables, so `deliver_vale_real.rs` reruns its own test in a
+  child process that inherits the planted values.
+- Run against the real Vale 3.28.1 (27 November 2026), the JSON shape, the
+  exit statuses and the exit-2 error object on standard error are as read
+  from its source. The tools image (`writfold-tools@sha256:5198a49f…`) adds
+  the release tarball, checked against its published sha256, and
+  cargo-tauten 0.2.0 (#100) as two new layers over the previous image; the
+  distro packages are unchanged. `scripts/unit_tests.py` sets
+  `WRITFOLD_REQUIRE_VALE=1`.
+- #132's golden line is `deliver_receipt_golden.rs`: its golden file was
+  written at the last commit without `prose.vale` and matches on main.
 
 ## Decision log
 
@@ -204,3 +215,6 @@ ran.
   (AGENTS.md). It amends the "Vale later" position of
   2026-11-25-prose-rules-and-advice. The owner questions are in #136, and
   the work proceeds on their defaults.
+- 2026-11-27: the owner gave the go-ahead for the tools-image rebuild
+  (#136 question 7). The real-Vale conformance test and the image landed;
+  the RFC is implemented.
