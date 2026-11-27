@@ -157,6 +157,8 @@ start_from = [
     "writfold_core::units::generated",
     "writfold_core::units::universe",
     "writfold_core::units::unit_moved",
+    "writfold_core::target",
+    "writfold_core::referent",
     "writfold_core::diag::blocks",
     "writfold_core::subject::pick",
     "writfold_core::order::less",

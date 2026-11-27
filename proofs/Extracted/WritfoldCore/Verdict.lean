@@ -52,6 +52,101 @@ def verdict.expired
     else let i ← now - seen
          ok (i > ttl)
 
+/-- [writfold_core::verdict::missing]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 182:0-195:1
+    Visibility: public -/
+def verdict.missing (absence : verdict.Absence) : Result verdict.Verdict := do
+  match absence with
+  | verdict.Absence.Renamed => ok verdict.Verdict.Renamed
+  | verdict.Absence.Followed located =>
+    match located with
+    | none => ok verdict.Verdict.Gone
+    | some l =>
+      match l with
+      | verdict.Located.Same => ok verdict.Verdict.Moved
+      | verdict.Located.At _ _ => ok verdict.Verdict.Moved
+      | verdict.Located.Absent => ok verdict.Verdict.Gone
+      | verdict.Located.Unsearched => ok verdict.Verdict.Gone
+  | verdict.Absence.NoRename => ok verdict.Verdict.Gone
+  | verdict.Absence.RevAbsent => ok verdict.Verdict.Unverifiable
+  | verdict.Absence.NoRev => ok verdict.Verdict.Unverifiable
+  | verdict.Absence.Capped => ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::verdict::other_blob]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 165:0-178:1
+    Visibility: public -/
+def verdict.other_blob
+  (known : Bool) (located : Option verdict.Located) :
+  Result verdict.Verdict
+  := do
+  match located with
+  | none =>
+    if known
+    then ok verdict.Verdict.Changed
+    else ok verdict.Verdict.Unverifiable
+  | some l =>
+    match l with
+    | verdict.Located.Same => ok verdict.Verdict.Fresh
+    | verdict.Located.At _ _ => ok verdict.Verdict.Moved
+    | verdict.Located.Absent => ok verdict.Verdict.Changed
+    | verdict.Located.Unsearched =>
+      if known
+      then ok verdict.Verdict.Changed
+      else ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::verdict::observed]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 130:0-160:1
+    Visibility: public -/
+def verdict.observed (fact : verdict.Observed) : Result verdict.Verdict := do
+  match fact with
+  | verdict.Observed.Malformed => ok verdict.Verdict.Unverifiable
+  | verdict.Observed.Unresolved => ok verdict.Verdict.Unverifiable
+  | verdict.Observed.Code t =>
+    match t with
+    | verdict.Target.SameBlob => ok verdict.Verdict.Fresh
+    | verdict.Target.OtherBlob known located =>
+      verdict.other_blob known located
+    | verdict.Target.Missing absence => verdict.missing absence
+  | verdict.Observed.Gate b =>
+    if b
+    then ok verdict.Verdict.Fresh
+    else ok verdict.Verdict.Changed
+  | verdict.Observed.State o =>
+    match o with
+    | none => ok verdict.Verdict.Gone
+    | some o1 =>
+      match o1 with
+      | none => ok verdict.Verdict.Unverifiable
+      | some b =>
+        if b
+        then ok verdict.Verdict.Fresh
+        else ok verdict.Verdict.Changed
+  | verdict.Observed.Timed o =>
+    match o with
+    | none => ok verdict.Verdict.Unverifiable
+    | some b =>
+      if b
+      then ok verdict.Verdict.Expired
+      else ok verdict.Verdict.Fresh
+  | verdict.Observed.Offline b =>
+    if b
+    then ok verdict.Verdict.Due
+    else ok verdict.Verdict.Fresh
+  | verdict.Observed.Immutable => ok verdict.Verdict.Fresh
+  | verdict.Observed.Checked checker =>
+    match checker with
+    | verdict.Checker.Absent => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Failed => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Version => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Said s =>
+      match s with
+      | verdict.Said.Fresh => ok verdict.Verdict.Fresh
+      | verdict.Said.Moved => ok verdict.Verdict.Moved
+      | verdict.Said.Changed => ok verdict.Verdict.Changed
+      | verdict.Said.Gone => ok verdict.Verdict.Gone
+      | verdict.Said.Unverifiable => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Expired => ok verdict.Verdict.Unverifiable
+
 /-- [writfold_core::verdict::locate::window]:
     Source: 'crates/writfold-core/src/verdict/locate.rs', lines 24:0-47:1
     Visibility: public -/
@@ -339,101 +434,6 @@ def verdict.recorded.newest
       if b
       then ok (some verdict.recorded.Pick.Local)
       else ok (some (verdict.recorded.Pick.Recorded i))
-
-/-- [writfold_core::verdict::missing]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 182:0-195:1
-    Visibility: public -/
-def verdict.missing (absence : verdict.Absence) : Result verdict.Verdict := do
-  match absence with
-  | verdict.Absence.Renamed => ok verdict.Verdict.Renamed
-  | verdict.Absence.Followed located =>
-    match located with
-    | none => ok verdict.Verdict.Gone
-    | some l =>
-      match l with
-      | verdict.Located.Same => ok verdict.Verdict.Moved
-      | verdict.Located.At _ _ => ok verdict.Verdict.Moved
-      | verdict.Located.Absent => ok verdict.Verdict.Gone
-      | verdict.Located.Unsearched => ok verdict.Verdict.Gone
-  | verdict.Absence.NoRename => ok verdict.Verdict.Gone
-  | verdict.Absence.RevAbsent => ok verdict.Verdict.Unverifiable
-  | verdict.Absence.NoRev => ok verdict.Verdict.Unverifiable
-  | verdict.Absence.Capped => ok verdict.Verdict.Unverifiable
-
-/-- [writfold_core::verdict::other_blob]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 165:0-178:1
-    Visibility: public -/
-def verdict.other_blob
-  (known : Bool) (located : Option verdict.Located) :
-  Result verdict.Verdict
-  := do
-  match located with
-  | none =>
-    if known
-    then ok verdict.Verdict.Changed
-    else ok verdict.Verdict.Unverifiable
-  | some l =>
-    match l with
-    | verdict.Located.Same => ok verdict.Verdict.Fresh
-    | verdict.Located.At _ _ => ok verdict.Verdict.Moved
-    | verdict.Located.Absent => ok verdict.Verdict.Changed
-    | verdict.Located.Unsearched =>
-      if known
-      then ok verdict.Verdict.Changed
-      else ok verdict.Verdict.Unverifiable
-
-/-- [writfold_core::verdict::observed]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 130:0-160:1
-    Visibility: public -/
-def verdict.observed (fact : verdict.Observed) : Result verdict.Verdict := do
-  match fact with
-  | verdict.Observed.Malformed => ok verdict.Verdict.Unverifiable
-  | verdict.Observed.Unresolved => ok verdict.Verdict.Unverifiable
-  | verdict.Observed.Code t =>
-    match t with
-    | verdict.Target.SameBlob => ok verdict.Verdict.Fresh
-    | verdict.Target.OtherBlob known located =>
-      verdict.other_blob known located
-    | verdict.Target.Missing absence => verdict.missing absence
-  | verdict.Observed.Gate b =>
-    if b
-    then ok verdict.Verdict.Fresh
-    else ok verdict.Verdict.Changed
-  | verdict.Observed.State o =>
-    match o with
-    | none => ok verdict.Verdict.Gone
-    | some o1 =>
-      match o1 with
-      | none => ok verdict.Verdict.Unverifiable
-      | some b =>
-        if b
-        then ok verdict.Verdict.Fresh
-        else ok verdict.Verdict.Changed
-  | verdict.Observed.Timed o =>
-    match o with
-    | none => ok verdict.Verdict.Unverifiable
-    | some b =>
-      if b
-      then ok verdict.Verdict.Expired
-      else ok verdict.Verdict.Fresh
-  | verdict.Observed.Offline b =>
-    if b
-    then ok verdict.Verdict.Due
-    else ok verdict.Verdict.Fresh
-  | verdict.Observed.Immutable => ok verdict.Verdict.Fresh
-  | verdict.Observed.Checked checker =>
-    match checker with
-    | verdict.Checker.Absent => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Failed => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Version => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Said s =>
-      match s with
-      | verdict.Said.Fresh => ok verdict.Verdict.Fresh
-      | verdict.Said.Moved => ok verdict.Verdict.Moved
-      | verdict.Said.Changed => ok verdict.Verdict.Changed
-      | verdict.Said.Gone => ok verdict.Verdict.Gone
-      | verdict.Said.Unverifiable => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Expired => ok verdict.Verdict.Unverifiable
 
 /-- [writfold_core::verdict::Described]
     Source: 'crates/writfold-core/src/verdict.rs', lines 199:0-206:1

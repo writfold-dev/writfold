@@ -1,10 +1,11 @@
 import Lean
+import Calculus
 import Writfold
 
 /-!
 # Axiom audit (docs/writfold/aeneas.md)
 
-Every theorem under `Writfold.Core` is audited: its transitive axioms must
+Every theorem under `Writfold.Core` and `Calculus` is audited: its transitive axioms must
 be a subset of Lean's standard three. Anything else — `sorryAx`, a project
 axiom, an Aeneas `axiom` standing in for an unmodelled external — fails the
 build. The headline claims are also required to exist, so a deleted or
@@ -19,6 +20,47 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 (`mutants.py` refuses to run when one is missing here), and the headline
 statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
+  -- the calculus (proofs/Calculus, #205)
+  ``Calculus.Tri.unknown_never_admits,
+  ``Calculus.Tri.admits_iff,
+  ``Calculus.Tri.le_refl,
+  ``Calculus.Tri.le_trans,
+  ``Calculus.Tri.le_antisymm,
+  ``Calculus.Tri.refines_only_unknown,
+  ``Calculus.Tri.and_comm,
+  ``Calculus.Tri.and_assoc,
+  ``Calculus.Tri.and_idem,
+  ``Calculus.Tri.and_yes,
+  ``Calculus.Tri.and_mono,
+  ``Calculus.Tri.and_eq_yes,
+  ``Calculus.Tri.and_eq_no,
+  ``Calculus.Tri.all_eq_yes,
+  ``Calculus.Tri.all_eq_no,
+  ``Calculus.Tri.all_append,
+  ``Calculus.Tri.all_mono,
+  ``Calculus.Tri.unknown_mem_never_admits,
+  ``Calculus.Tri.more_never_admits,
+  ``Calculus.Decision.join_comm,
+  ``Calculus.Decision.join_assoc,
+  ``Calculus.Decision.join_idem,
+  ``Calculus.Decision.pass_join,
+  ``Calculus.Decision.join_eq_pass,
+  ``Calculus.admit_pass_iff,
+  ``Calculus.unknown_never_passes,
+  ``Calculus.remainder_append,
+  ``Calculus.whole_iff_no_remainder,
+  ``Calculus.whole_append,
+  ``Calculus.judged_never_counts,
+  ``Calculus.declared_out_never_counts,
+  ``Calculus.remainder_counts,
+  ``Calculus.whole_counts,
+  ``Calculus.universal_yes_iff,
+  ``Calculus.remainder_never_whole,
+  ``Calculus.empty_never_yes,
+  ``Calculus.universal_sound,
+  ``Calculus.universal_no_of_witness,
+  ``Calculus.search_yes_iff,
+  ``Calculus.absence_needs_whole,
   -- project asset catalogs (writfold_core::catalog, #84)
   ``Writfold.Core.Catalog.action_spec,
   ``Writfold.Core.Catalog.create_only_absent,
@@ -174,6 +216,38 @@ def claims : List Name := [
   ``Writfold.Core.Units.unit_current_iff,
   ``Writfold.Core.Units.absent_universe_never_covered,
   ``Writfold.Core.Units.empty_universe_needs_allow,
+  ``Writfold.Core.Target.rank_spec,
+  ``Writfold.Core.Target.tip_commit_spec,
+  ``Writfold.Core.Target.tip_is_spec,
+  ``Writfold.Core.Target.best_loop_spec,
+  ``Writfold.Core.Target.best_spec,
+  ``Writfold.Core.Target.headless_at_loop_spec,
+  ``Writfold.Core.Target.headless_at_spec,
+  ``Writfold.Core.Target.first_at_loop_spec,
+  ``Writfold.Core.Target.first_at_spec,
+  ``Writfold.Core.Target.agree_at_loop_spec,
+  ``Writfold.Core.Target.agree_at_spec,
+  ``Writfold.Core.Target.choose_spec,
+  ``Writfold.Core.Target.firstL_found,
+  ``Writfold.Core.Target.chooseOf_remote_facts,
+  ``Writfold.Core.Target.chooseOf_remote,
+  ``Writfold.Core.Target.other_never_chosen,
+  ``Writfold.Core.Target.pin_decides,
+  ``Writfold.Core.Target.agreeL_false,
+  ``Writfold.Core.Target.chooseOf_disagree,
+  ``Writfold.Core.Target.disagreement_is_ambiguous,
+  ``Writfold.Core.Target.one_remote_unchanged,
+  ``Writfold.Core.Referent.settle_spec,
+  ``Writfold.Core.Referent.ambiguous_never_judged,
+  ``Writfold.Core.Referent.behind_never_stale,
+  ``Writfold.Core.Referent.fresh_survives_behind,
+  ``Writfold.Core.Referent.settle_identity,
+  ``Writfold.Core.Referent.settleOf_withholds,
+  ``Writfold.Core.Referent.settle_only_withholds,
+  ``Writfold.Core.Referent.judge_spec,
+  ``Writfold.Core.Referent.judge_fresh_needs,
+  ``Writfold.Core.Referent.settleOf_refines,
+  ``Writfold.Core.Referent.judge_refines,
   ``Writfold.Core.Ground.of_delivery_grounded_iff,
   ``Writfold.Core.Ground.withdrawn_never_grounds,
   -- policy inventories (writfold_core::inventory, #56)
@@ -683,11 +757,11 @@ def claims : List Name := [
   ``Writfold.Core.Pin.current_under_refines,
 ]
 
-/-- Every theorem under `Writfold.Core`, sorted by name. -/
+/-- Every theorem under `Writfold.Core` or `Calculus`, sorted by name. -/
 def kernelTheorems (env : Environment) : Array Name :=
-  let audited : Name := `Writfold.Core
+  let audited : List Name := [`Writfold.Core, `Calculus]
   (env.constants.fold (init := (#[] : Array Name)) fun acc decl info =>
-    if audited.isPrefixOf decl && decl.isInternal = false && info.isThm then acc.push decl
+    if audited.any (·.isPrefixOf decl) && decl.isInternal = false && info.isThm then acc.push decl
     else acc).qsort (fun a b => a.toString < b.toString)
 
 -- `name` is a reserved token once the Aeneas library is imported (its attribute

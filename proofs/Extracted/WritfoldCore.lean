@@ -31,10 +31,12 @@ public import Extracted.WritfoldCore.Pin
 public import Extracted.WritfoldCore.Pointer
 public import Extracted.WritfoldCore.Prose
 public import Extracted.WritfoldCore.Publish
+public import Extracted.WritfoldCore.Referent
 public import Extracted.WritfoldCore.Runs
 public import Extracted.WritfoldCore.Scope
 public import Extracted.WritfoldCore.Store
 public import Extracted.WritfoldCore.Subject
+public import Extracted.WritfoldCore.Target
 public import Extracted.WritfoldCore.Units
 public import Extracted.WritfoldCore.Vale
 public import Extracted.WritfoldCore.Walk

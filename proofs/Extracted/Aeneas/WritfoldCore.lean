@@ -6270,6 +6270,319 @@ def publish.derived (source_moved : Bool) : Result publish.Publish := do
   then ok publish.Publish.Retry
   else ok publish.Publish.Replace
 
+/-- [writfold_core::referent::Relation]
+    Source: 'crates/writfold-core/src/referent.rs', lines 19:0-28:1
+    Visibility: public -/
+@[discriminant isize]
+inductive referent.Relation where
+| Contains : referent.Relation
+| Behind : referent.Relation
+| Diverged : referent.Relation
+| Unknown : referent.Relation
+
+/-- [writfold_core::referent::{impl core::clone::Clone for writfold_core::referent::Relation}::clone]:
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:9-18:14
+    Visibility: public -/
+def referent.Relation.Insts.CoreCloneClone.clone
+  (self : referent.Relation) : Result referent.Relation := do
+  ok self
+
+/-- Trait implementation: [writfold_core::referent::{impl core::clone::Clone for writfold_core::referent::Relation}]
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:9-18:14 -/
+@[reducible]
+def referent.Relation.Insts.CoreCloneClone : core.clone.Clone referent.Relation
+  := {
+  clone := referent.Relation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::referent::{impl core::marker::Copy for writfold_core::referent::Relation}]
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:16-18:20 -/
+@[reducible]
+def referent.Relation.Insts.CoreMarkerCopy : core.marker.Copy referent.Relation
+  := {
+  cloneInst := referent.Relation.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::referent::{impl core::fmt::Debug for writfold_core::referent::Relation}::fmt]:
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:22-18:27
+    Visibility: public -/
+def referent.Relation.Insts.CoreFmtDebug.fmt
+  (self : referent.Relation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | referent.Relation.Contains =>
+    core.fmt.Formatter.write_str f (toStr "Contains")
+  | referent.Relation.Behind => core.fmt.Formatter.write_str f (toStr "Behind")
+  | referent.Relation.Diverged =>
+    core.fmt.Formatter.write_str f (toStr "Diverged")
+  | referent.Relation.Unknown =>
+    core.fmt.Formatter.write_str f (toStr "Unknown")
+
+/-- Trait implementation: [writfold_core::referent::{impl core::fmt::Debug for writfold_core::referent::Relation}]
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:22-18:27 -/
+@[reducible]
+def referent.Relation.Insts.CoreFmtDebug : core.fmt.Debug referent.Relation
+  := {
+  fmt := referent.Relation.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::referent::{impl core::cmp::PartialEq<writfold_core::referent::Relation> for writfold_core::referent::Relation}::eq]:
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:33-18:42
+    Visibility: public -/
+def referent.Relation.Insts.CoreCmpPartialEqRelation.eq
+  (self : referent.Relation) (other : referent.Relation) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [writfold_core::referent::{impl core::cmp::PartialEq<writfold_core::referent::Relation> for writfold_core::referent::Relation}]
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:33-18:42 -/
+@[reducible]
+def referent.Relation.Insts.CoreCmpPartialEqRelation : core.cmp.PartialEq
+  referent.Relation referent.Relation := {
+  eq := referent.Relation.Insts.CoreCmpPartialEqRelation.eq
+}
+
+/-- Trait implementation: [writfold_core::referent::{impl core::cmp::Eq for writfold_core::referent::Relation}]
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:29-18:31 -/
+@[reducible]
+impl_def referent.Relation.Insts.CoreCmpEq : core.cmp.Eq referent.Relation := {
+  partialEqInst := referent.Relation.Insts.CoreCmpPartialEqRelation
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    referent.Relation.Insts.CoreCmpEq
+}
+
+/-- Trait implementation: [writfold_core::referent::{impl core::marker::StructuralPartialEq for writfold_core::referent::Relation}]
+    Source: 'crates/writfold-core/src/referent.rs', lines 18:33-18:42 -/
+@[reducible]
+def referent.Relation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq referent.Relation := {
+}
+
+/-- [writfold_core::verdict::Verdict]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 113:0-127:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Verdict where
+| Fresh : verdict.Verdict
+| Moved : verdict.Verdict
+| Renamed : verdict.Verdict
+| Changed : verdict.Verdict
+| Gone : verdict.Verdict
+| Expired : verdict.Verdict
+| Unverifiable : verdict.Verdict
+| Marked : verdict.Verdict
+| Due : verdict.Verdict
+
+/-- [writfold_core::referent::claims_change]:
+    Source: 'crates/writfold-core/src/referent.rs', lines 31:0-36:1
+    Visibility: public -/
+def referent.claims_change (v : verdict.Verdict) : Result Bool := do
+  match v with
+  | verdict.Verdict.Fresh => ok false
+  | verdict.Verdict.Moved => ok true
+  | verdict.Verdict.Renamed => ok true
+  | verdict.Verdict.Changed => ok true
+  | verdict.Verdict.Gone => ok true
+  | verdict.Verdict.Expired => ok false
+  | verdict.Verdict.Unverifiable => ok false
+  | verdict.Verdict.Marked => ok false
+  | verdict.Verdict.Due => ok false
+
+/-- [writfold_core::referent::settle]:
+    Source: 'crates/writfold-core/src/referent.rs', lines 40:0-48:1
+    Visibility: public -/
+def referent.settle
+  (resolved : Bool) (relation : referent.Relation) (said : verdict.Verdict) :
+  Result verdict.Verdict
+  := do
+  if resolved
+  then
+    match relation with
+    | referent.Relation.Contains => ok said
+    | referent.Relation.Behind =>
+      let b ← referent.claims_change said
+      if b
+      then ok verdict.Verdict.Unverifiable
+      else ok said
+    | referent.Relation.Diverged => ok said
+    | referent.Relation.Unknown => ok said
+  else ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::verdict::Located]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 15:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Located where
+| Same : verdict.Located
+| At : Std.U32 → Std.U32 → verdict.Located
+| Absent : verdict.Located
+| Unsearched : verdict.Located
+
+/-- [writfold_core::verdict::Absence]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 42:0-57:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Absence where
+| Renamed : verdict.Absence
+| Followed : Option verdict.Located → verdict.Absence
+| NoRename : verdict.Absence
+| RevAbsent : verdict.Absence
+| NoRev : verdict.Absence
+| Capped : verdict.Absence
+
+/-- [writfold_core::verdict::missing]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 182:0-195:1
+    Visibility: public -/
+def verdict.missing (absence : verdict.Absence) : Result verdict.Verdict := do
+  match absence with
+  | verdict.Absence.Renamed => ok verdict.Verdict.Renamed
+  | verdict.Absence.Followed located =>
+    match located with
+    | none => ok verdict.Verdict.Gone
+    | some l =>
+      match l with
+      | verdict.Located.Same => ok verdict.Verdict.Moved
+      | verdict.Located.At _ _ => ok verdict.Verdict.Moved
+      | verdict.Located.Absent => ok verdict.Verdict.Gone
+      | verdict.Located.Unsearched => ok verdict.Verdict.Gone
+  | verdict.Absence.NoRename => ok verdict.Verdict.Gone
+  | verdict.Absence.RevAbsent => ok verdict.Verdict.Unverifiable
+  | verdict.Absence.NoRev => ok verdict.Verdict.Unverifiable
+  | verdict.Absence.Capped => ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::verdict::other_blob]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 165:0-178:1
+    Visibility: public -/
+def verdict.other_blob
+  (known : Bool) (located : Option verdict.Located) :
+  Result verdict.Verdict
+  := do
+  match located with
+  | none =>
+    if known
+    then ok verdict.Verdict.Changed
+    else ok verdict.Verdict.Unverifiable
+  | some l =>
+    match l with
+    | verdict.Located.Same => ok verdict.Verdict.Fresh
+    | verdict.Located.At _ _ => ok verdict.Verdict.Moved
+    | verdict.Located.Absent => ok verdict.Verdict.Changed
+    | verdict.Located.Unsearched =>
+      if known
+      then ok verdict.Verdict.Changed
+      else ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::verdict::Said]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 86:0-92:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Said where
+| Fresh : verdict.Said
+| Moved : verdict.Said
+| Changed : verdict.Said
+| Gone : verdict.Said
+| Unverifiable : verdict.Said
+
+/-- [writfold_core::verdict::Checker]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 96:0-109:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Checker where
+| Absent : verdict.Checker
+| Failed : verdict.Checker
+| Version : verdict.Checker
+| Said : verdict.Said → verdict.Checker
+| Expired : verdict.Checker
+
+/-- [writfold_core::verdict::Target]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 28:0-38:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Target where
+| SameBlob : verdict.Target
+| OtherBlob : Bool → Option verdict.Located → verdict.Target
+| Missing : verdict.Absence → verdict.Target
+
+/-- [writfold_core::verdict::Observed]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 61:0-82:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Observed where
+| Malformed : verdict.Observed
+| Unresolved : verdict.Observed
+| Code : verdict.Target → verdict.Observed
+| Gate : Bool → verdict.Observed
+| State : Option (Option Bool) → verdict.Observed
+| Timed : Option Bool → verdict.Observed
+| Offline : Bool → verdict.Observed
+| Immutable : verdict.Observed
+| Checked : verdict.Checker → verdict.Observed
+
+/-- [writfold_core::verdict::observed]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 130:0-160:1
+    Visibility: public -/
+def verdict.observed (fact : verdict.Observed) : Result verdict.Verdict := do
+  match fact with
+  | verdict.Observed.Malformed => ok verdict.Verdict.Unverifiable
+  | verdict.Observed.Unresolved => ok verdict.Verdict.Unverifiable
+  | verdict.Observed.Code t =>
+    match t with
+    | verdict.Target.SameBlob => ok verdict.Verdict.Fresh
+    | verdict.Target.OtherBlob known located =>
+      verdict.other_blob known located
+    | verdict.Target.Missing absence => verdict.missing absence
+  | verdict.Observed.Gate b =>
+    if b
+    then ok verdict.Verdict.Fresh
+    else ok verdict.Verdict.Changed
+  | verdict.Observed.State o =>
+    match o with
+    | none => ok verdict.Verdict.Gone
+    | some o1 =>
+      match o1 with
+      | none => ok verdict.Verdict.Unverifiable
+      | some b =>
+        if b
+        then ok verdict.Verdict.Fresh
+        else ok verdict.Verdict.Changed
+  | verdict.Observed.Timed o =>
+    match o with
+    | none => ok verdict.Verdict.Unverifiable
+    | some b =>
+      if b
+      then ok verdict.Verdict.Expired
+      else ok verdict.Verdict.Fresh
+  | verdict.Observed.Offline b =>
+    if b
+    then ok verdict.Verdict.Due
+    else ok verdict.Verdict.Fresh
+  | verdict.Observed.Immutable => ok verdict.Verdict.Fresh
+  | verdict.Observed.Checked checker =>
+    match checker with
+    | verdict.Checker.Absent => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Failed => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Version => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Said s =>
+      match s with
+      | verdict.Said.Fresh => ok verdict.Verdict.Fresh
+      | verdict.Said.Moved => ok verdict.Verdict.Moved
+      | verdict.Said.Changed => ok verdict.Verdict.Changed
+      | verdict.Said.Gone => ok verdict.Verdict.Gone
+      | verdict.Said.Unverifiable => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Expired => ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::referent::judge]:
+    Source: 'crates/writfold-core/src/referent.rs', lines 51:0-53:1
+    Visibility: public -/
+def referent.judge
+  (resolved : Bool) (relation : referent.Relation) (fact : verdict.Observed) :
+  Result verdict.Verdict
+  := do
+  let v ← verdict.observed fact
+  referent.settle resolved relation v
+
 /-- [writfold_core::runs::State]
     Source: 'crates/writfold-core/src/runs.rs', lines 14:0-19:1
     Visibility: public -/
@@ -6693,21 +7006,6 @@ def store.recorded
                        then ok within_age
                        else ok false
 
-/-- [writfold_core::verdict::Verdict]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 113:0-127:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Verdict where
-| Fresh : verdict.Verdict
-| Moved : verdict.Verdict
-| Renamed : verdict.Verdict
-| Changed : verdict.Verdict
-| Gone : verdict.Verdict
-| Expired : verdict.Verdict
-| Unverifiable : verdict.Verdict
-| Marked : verdict.Verdict
-| Due : verdict.Verdict
-
 /-- [writfold_core::store::use_recorded]:
     Source: 'crates/writfold-core/src/store.rs', lines 49:0-61:1
     Visibility: public -/
@@ -7049,6 +7347,802 @@ def subject.pick
       else if recorded
            then ok subject.Pick.Kb
            else ok subject.Pick.Nothing
+
+/-- [writfold_core::target::Names]
+    Source: 'crates/writfold-core/src/target.rs', lines 22:0-36:1
+    Visibility: public -/
+@[discriminant isize]
+inductive target.Names where
+| Url : target.Names
+| Path : target.Names
+| Base : target.Names
+| Sole : target.Names
+| Other : target.Names
+| Unread : target.Names
+
+/-- [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Names}::clone]:
+    Source: 'crates/writfold-core/src/target.rs', lines 21:9-21:14
+    Visibility: public -/
+def target.Names.Insts.CoreCloneClone.clone
+  (self : target.Names) : Result target.Names := do
+  ok self
+
+/-- Trait implementation: [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Names}]
+    Source: 'crates/writfold-core/src/target.rs', lines 21:9-21:14 -/
+@[reducible]
+def target.Names.Insts.CoreCloneClone : core.clone.Clone target.Names := {
+  clone := target.Names.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::Copy for writfold_core::target::Names}]
+    Source: 'crates/writfold-core/src/target.rs', lines 21:16-21:20 -/
+@[reducible]
+def target.Names.Insts.CoreMarkerCopy : core.marker.Copy target.Names := {
+  cloneInst := target.Names.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Names}::fmt]:
+    Source: 'crates/writfold-core/src/target.rs', lines 21:22-21:27
+    Visibility: public -/
+def target.Names.Insts.CoreFmtDebug.fmt
+  (self : target.Names) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | target.Names.Url => core.fmt.Formatter.write_str f (toStr "Url")
+  | target.Names.Path => core.fmt.Formatter.write_str f (toStr "Path")
+  | target.Names.Base => core.fmt.Formatter.write_str f (toStr "Base")
+  | target.Names.Sole => core.fmt.Formatter.write_str f (toStr "Sole")
+  | target.Names.Other => core.fmt.Formatter.write_str f (toStr "Other")
+  | target.Names.Unread => core.fmt.Formatter.write_str f (toStr "Unread")
+
+/-- Trait implementation: [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Names}]
+    Source: 'crates/writfold-core/src/target.rs', lines 21:22-21:27 -/
+@[reducible]
+def target.Names.Insts.CoreFmtDebug : core.fmt.Debug target.Names := {
+  fmt := target.Names.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Names> for writfold_core::target::Names}::eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 21:33-21:42
+    Visibility: public -/
+def target.Names.Insts.CoreCmpPartialEqNames.eq
+  (self : target.Names) (other : target.Names) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Names> for writfold_core::target::Names}]
+    Source: 'crates/writfold-core/src/target.rs', lines 21:33-21:42 -/
+@[reducible]
+def target.Names.Insts.CoreCmpPartialEqNames : core.cmp.PartialEq target.Names
+  target.Names := {
+  eq := target.Names.Insts.CoreCmpPartialEqNames.eq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Names}]
+    Source: 'crates/writfold-core/src/target.rs', lines 21:29-21:31 -/
+@[reducible]
+impl_def target.Names.Insts.CoreCmpEq : core.cmp.Eq target.Names := {
+  partialEqInst := target.Names.Insts.CoreCmpPartialEqNames
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    target.Names.Insts.CoreCmpEq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::StructuralPartialEq for writfold_core::target::Names}]
+    Source: 'crates/writfold-core/src/target.rs', lines 21:33-21:42 -/
+@[reducible]
+def target.Names.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq target.Names := {
+}
+
+/-- [writfold_core::target::Tip]
+    Source: 'crates/writfold-core/src/target.rs', lines 40:0-44:1
+    Visibility: public -/
+@[discriminant isize]
+inductive target.Tip where
+| At : Std.U32 → target.Tip
+| NoHead : target.Tip
+
+/-- [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Tip}::clone]:
+    Source: 'crates/writfold-core/src/target.rs', lines 39:9-39:14
+    Visibility: public -/
+def target.Tip.Insts.CoreCloneClone.clone
+  (self : target.Tip) : Result target.Tip := do
+  ok self
+
+/-- Trait implementation: [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Tip}]
+    Source: 'crates/writfold-core/src/target.rs', lines 39:9-39:14 -/
+@[reducible]
+def target.Tip.Insts.CoreCloneClone : core.clone.Clone target.Tip := {
+  clone := target.Tip.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::Copy for writfold_core::target::Tip}]
+    Source: 'crates/writfold-core/src/target.rs', lines 39:16-39:20 -/
+@[reducible]
+def target.Tip.Insts.CoreMarkerCopy : core.marker.Copy target.Tip := {
+  cloneInst := target.Tip.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Tip}::fmt]:
+    Source: 'crates/writfold-core/src/target.rs', lines 39:22-39:27
+    Visibility: public -/
+def target.Tip.Insts.CoreFmtDebug.fmt
+  (self : target.Tip) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | target.Tip.At __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "At") __self_01
+  | target.Tip.NoHead => core.fmt.Formatter.write_str f (toStr "NoHead")
+
+/-- Trait implementation: [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Tip}]
+    Source: 'crates/writfold-core/src/target.rs', lines 39:22-39:27 -/
+@[reducible]
+def target.Tip.Insts.CoreFmtDebug : core.fmt.Debug target.Tip := {
+  fmt := target.Tip.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Tip> for writfold_core::target::Tip}::eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 39:33-39:42
+    Visibility: public -/
+def target.Tip.Insts.CoreCmpPartialEqTip.eq
+  (self : target.Tip) (other : target.Tip) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | target.Tip.At __self_0 =>
+      match other with
+      | target.Tip.At __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | target.Tip.NoHead => ok true
+    | target.Tip.NoHead => ok true
+  else ok false
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Tip> for writfold_core::target::Tip}]
+    Source: 'crates/writfold-core/src/target.rs', lines 39:33-39:42 -/
+@[reducible]
+def target.Tip.Insts.CoreCmpPartialEqTip : core.cmp.PartialEq target.Tip
+  target.Tip := {
+  eq := target.Tip.Insts.CoreCmpPartialEqTip.eq
+}
+
+/-- [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Tip}::assert_fields_are_eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 39:29-39:31
+    Visibility: public -/
+def target.Tip.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : target.Tip) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Tip}]
+    Source: 'crates/writfold-core/src/target.rs', lines 39:29-39:31 -/
+@[reducible]
+def target.Tip.Insts.CoreCmpEq : core.cmp.Eq target.Tip := {
+  partialEqInst := target.Tip.Insts.CoreCmpPartialEqTip
+  assert_fields_are_eq := target.Tip.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::StructuralPartialEq for writfold_core::target::Tip}]
+    Source: 'crates/writfold-core/src/target.rs', lines 39:33-39:42 -/
+@[reducible]
+def target.Tip.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq target.Tip := {
+}
+
+/-- [writfold_core::target::Remote]
+    Source: 'crates/writfold-core/src/target.rs', lines 48:0-51:1
+    Visibility: public -/
+structure target.Remote where
+  names : target.Names
+  tip : target.Tip
+
+/-- [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Remote}::clone]:
+    Source: 'crates/writfold-core/src/target.rs', lines 47:9-47:14
+    Visibility: public -/
+def target.Remote.Insts.CoreCloneClone.clone
+  (self : target.Remote) : Result target.Remote := do
+  ok self
+
+/-- Trait implementation: [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Remote}]
+    Source: 'crates/writfold-core/src/target.rs', lines 47:9-47:14 -/
+@[reducible]
+def target.Remote.Insts.CoreCloneClone : core.clone.Clone target.Remote := {
+  clone := target.Remote.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::Copy for writfold_core::target::Remote}]
+    Source: 'crates/writfold-core/src/target.rs', lines 47:16-47:20 -/
+@[reducible]
+def target.Remote.Insts.CoreMarkerCopy : core.marker.Copy target.Remote := {
+  cloneInst := target.Remote.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Remote}::fmt]:
+    Source: 'crates/writfold-core/src/target.rs', lines 47:22-47:27
+    Visibility: public -/
+def target.Remote.Insts.CoreFmtDebug.fmt
+  (self : target.Remote) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ target.Names.Insts.CoreFmtDebug self.names
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared target.Tip.Insts.CoreFmtDebug) self.tip
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Remote") (toStr
+    "names") dyn (toStr "tip") dyn1
+
+/-- Trait implementation: [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Remote}]
+    Source: 'crates/writfold-core/src/target.rs', lines 47:22-47:27 -/
+@[reducible]
+def target.Remote.Insts.CoreFmtDebug : core.fmt.Debug target.Remote := {
+  fmt := target.Remote.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Remote> for writfold_core::target::Remote}::eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 47:33-47:42
+    Visibility: public -/
+def target.Remote.Insts.CoreCmpPartialEqRemote.eq
+  (self : target.Remote) (other : target.Remote) : Result Bool := do
+  let b ← target.Names.Insts.CoreCmpPartialEqNames.eq self.names other.names
+  if b
+  then target.Tip.Insts.CoreCmpPartialEqTip.eq self.tip other.tip
+  else ok false
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Remote> for writfold_core::target::Remote}]
+    Source: 'crates/writfold-core/src/target.rs', lines 47:33-47:42 -/
+@[reducible]
+def target.Remote.Insts.CoreCmpPartialEqRemote : core.cmp.PartialEq
+  target.Remote target.Remote := {
+  eq := target.Remote.Insts.CoreCmpPartialEqRemote.eq
+}
+
+/-- [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Remote}::assert_fields_are_eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 47:29-47:31
+    Visibility: public -/
+def target.Remote.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : target.Remote) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Remote}]
+    Source: 'crates/writfold-core/src/target.rs', lines 47:29-47:31 -/
+@[reducible]
+def target.Remote.Insts.CoreCmpEq : core.cmp.Eq target.Remote := {
+  partialEqInst := target.Remote.Insts.CoreCmpPartialEqRemote
+  assert_fields_are_eq := target.Remote.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::StructuralPartialEq for writfold_core::target::Remote}]
+    Source: 'crates/writfold-core/src/target.rs', lines 47:33-47:42 -/
+@[reducible]
+def target.Remote.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq target.Remote := {
+}
+
+/-- [writfold_core::target::Pinned]
+    Source: 'crates/writfold-core/src/target.rs', lines 55:0-59:1
+    Visibility: public -/
+@[discriminant isize]
+inductive target.Pinned where
+| No : target.Pinned
+| Resolves : target.Pinned
+| Missing : target.Pinned
+
+/-- [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Pinned}::clone]:
+    Source: 'crates/writfold-core/src/target.rs', lines 54:9-54:14
+    Visibility: public -/
+def target.Pinned.Insts.CoreCloneClone.clone
+  (self : target.Pinned) : Result target.Pinned := do
+  ok self
+
+/-- Trait implementation: [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Pinned}]
+    Source: 'crates/writfold-core/src/target.rs', lines 54:9-54:14 -/
+@[reducible]
+def target.Pinned.Insts.CoreCloneClone : core.clone.Clone target.Pinned := {
+  clone := target.Pinned.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::Copy for writfold_core::target::Pinned}]
+    Source: 'crates/writfold-core/src/target.rs', lines 54:16-54:20 -/
+@[reducible]
+def target.Pinned.Insts.CoreMarkerCopy : core.marker.Copy target.Pinned := {
+  cloneInst := target.Pinned.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Pinned}::fmt]:
+    Source: 'crates/writfold-core/src/target.rs', lines 54:22-54:27
+    Visibility: public -/
+def target.Pinned.Insts.CoreFmtDebug.fmt
+  (self : target.Pinned) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | target.Pinned.No => core.fmt.Formatter.write_str f (toStr "No")
+  | target.Pinned.Resolves => core.fmt.Formatter.write_str f (toStr "Resolves")
+  | target.Pinned.Missing => core.fmt.Formatter.write_str f (toStr "Missing")
+
+/-- Trait implementation: [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Pinned}]
+    Source: 'crates/writfold-core/src/target.rs', lines 54:22-54:27 -/
+@[reducible]
+def target.Pinned.Insts.CoreFmtDebug : core.fmt.Debug target.Pinned := {
+  fmt := target.Pinned.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Pinned> for writfold_core::target::Pinned}::eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 54:33-54:42
+    Visibility: public -/
+def target.Pinned.Insts.CoreCmpPartialEqPinned.eq
+  (self : target.Pinned) (other : target.Pinned) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Pinned> for writfold_core::target::Pinned}]
+    Source: 'crates/writfold-core/src/target.rs', lines 54:33-54:42 -/
+@[reducible]
+def target.Pinned.Insts.CoreCmpPartialEqPinned : core.cmp.PartialEq
+  target.Pinned target.Pinned := {
+  eq := target.Pinned.Insts.CoreCmpPartialEqPinned.eq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Pinned}]
+    Source: 'crates/writfold-core/src/target.rs', lines 54:29-54:31 -/
+@[reducible]
+impl_def target.Pinned.Insts.CoreCmpEq : core.cmp.Eq target.Pinned := {
+  partialEqInst := target.Pinned.Insts.CoreCmpPartialEqPinned
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    target.Pinned.Insts.CoreCmpEq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::StructuralPartialEq for writfold_core::target::Pinned}]
+    Source: 'crates/writfold-core/src/target.rs', lines 54:33-54:42 -/
+@[reducible]
+def target.Pinned.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq target.Pinned := {
+}
+
+/-- [writfold_core::target::Why]
+    Source: 'crates/writfold-core/src/target.rs', lines 63:0-68:1
+    Visibility: public -/
+@[discriminant isize]
+inductive target.Why where
+| NoRemoteNames : target.Why
+| Disagree : target.Why
+| NoDefaultBranch : target.Why
+| PinMissing : target.Why
+
+/-- [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Why}::clone]:
+    Source: 'crates/writfold-core/src/target.rs', lines 62:9-62:14
+    Visibility: public -/
+def target.Why.Insts.CoreCloneClone.clone
+  (self : target.Why) : Result target.Why := do
+  ok self
+
+/-- Trait implementation: [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Why}]
+    Source: 'crates/writfold-core/src/target.rs', lines 62:9-62:14 -/
+@[reducible]
+def target.Why.Insts.CoreCloneClone : core.clone.Clone target.Why := {
+  clone := target.Why.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::Copy for writfold_core::target::Why}]
+    Source: 'crates/writfold-core/src/target.rs', lines 62:16-62:20 -/
+@[reducible]
+def target.Why.Insts.CoreMarkerCopy : core.marker.Copy target.Why := {
+  cloneInst := target.Why.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Why}::fmt]:
+    Source: 'crates/writfold-core/src/target.rs', lines 62:22-62:27
+    Visibility: public -/
+def target.Why.Insts.CoreFmtDebug.fmt
+  (self : target.Why) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | target.Why.NoRemoteNames =>
+    core.fmt.Formatter.write_str f (toStr "NoRemoteNames")
+  | target.Why.Disagree => core.fmt.Formatter.write_str f (toStr "Disagree")
+  | target.Why.NoDefaultBranch =>
+    core.fmt.Formatter.write_str f (toStr "NoDefaultBranch")
+  | target.Why.PinMissing =>
+    core.fmt.Formatter.write_str f (toStr "PinMissing")
+
+/-- Trait implementation: [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Why}]
+    Source: 'crates/writfold-core/src/target.rs', lines 62:22-62:27 -/
+@[reducible]
+def target.Why.Insts.CoreFmtDebug : core.fmt.Debug target.Why := {
+  fmt := target.Why.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Why> for writfold_core::target::Why}::eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 62:33-62:42
+    Visibility: public -/
+def target.Why.Insts.CoreCmpPartialEqWhy.eq
+  (self : target.Why) (other : target.Why) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Why> for writfold_core::target::Why}]
+    Source: 'crates/writfold-core/src/target.rs', lines 62:33-62:42 -/
+@[reducible]
+def target.Why.Insts.CoreCmpPartialEqWhy : core.cmp.PartialEq target.Why
+  target.Why := {
+  eq := target.Why.Insts.CoreCmpPartialEqWhy.eq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Why}]
+    Source: 'crates/writfold-core/src/target.rs', lines 62:29-62:31 -/
+@[reducible]
+impl_def target.Why.Insts.CoreCmpEq : core.cmp.Eq target.Why := {
+  partialEqInst := target.Why.Insts.CoreCmpPartialEqWhy
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    target.Why.Insts.CoreCmpEq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::StructuralPartialEq for writfold_core::target::Why}]
+    Source: 'crates/writfold-core/src/target.rs', lines 62:33-62:42 -/
+@[reducible]
+def target.Why.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq target.Why := {
+}
+
+/-- [writfold_core::target::Choice]
+    Source: 'crates/writfold-core/src/target.rs', lines 72:0-80:1
+    Visibility: public -/
+@[discriminant isize]
+inductive target.Choice where
+| Pinned : target.Choice
+| Remote : Std.Usize → target.Choice
+| Head : target.Choice
+| Ambiguous : target.Why → target.Choice
+
+/-- [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Choice}::clone]:
+    Source: 'crates/writfold-core/src/target.rs', lines 71:9-71:14
+    Visibility: public -/
+def target.Choice.Insts.CoreCloneClone.clone
+  (self : target.Choice) : Result target.Choice := do
+  ok self
+
+/-- Trait implementation: [writfold_core::target::{impl core::clone::Clone for writfold_core::target::Choice}]
+    Source: 'crates/writfold-core/src/target.rs', lines 71:9-71:14 -/
+@[reducible]
+def target.Choice.Insts.CoreCloneClone : core.clone.Clone target.Choice := {
+  clone := target.Choice.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::Copy for writfold_core::target::Choice}]
+    Source: 'crates/writfold-core/src/target.rs', lines 71:16-71:20 -/
+@[reducible]
+def target.Choice.Insts.CoreMarkerCopy : core.marker.Copy target.Choice := {
+  cloneInst := target.Choice.Insts.CoreCloneClone
+}
+
+/-- [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Choice}::fmt]:
+    Source: 'crates/writfold-core/src/target.rs', lines 71:22-71:27
+    Visibility: public -/
+def target.Choice.Insts.CoreFmtDebug.fmt
+  (self : target.Choice) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | target.Choice.Pinned => core.fmt.Formatter.write_str f (toStr "Pinned")
+  | target.Choice.Remote __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Remote") __self_01
+  | target.Choice.Head => core.fmt.Formatter.write_str f (toStr "Head")
+  | target.Choice.Ambiguous __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared target.Why.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Ambiguous")
+      __self_01
+
+/-- Trait implementation: [writfold_core::target::{impl core::fmt::Debug for writfold_core::target::Choice}]
+    Source: 'crates/writfold-core/src/target.rs', lines 71:22-71:27 -/
+@[reducible]
+def target.Choice.Insts.CoreFmtDebug : core.fmt.Debug target.Choice := {
+  fmt := target.Choice.Insts.CoreFmtDebug.fmt
+}
+
+/-- [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Choice> for writfold_core::target::Choice}::eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 71:33-71:42
+    Visibility: public -/
+def target.Choice.Insts.CoreCmpPartialEqChoice.eq
+  (self : target.Choice) (other : target.Choice) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | target.Choice.Pinned => ok true
+    | target.Choice.Remote __self_0 =>
+      match other with
+      | target.Choice.Pinned => ok true
+      | target.Choice.Remote __arg1_0 =>
+        lift (core.cmp.impls.PartialEqUsize.eq __self_0 __arg1_0)
+      | target.Choice.Head => ok true
+      | target.Choice.Ambiguous _ => ok true
+    | target.Choice.Head => ok true
+    | target.Choice.Ambiguous __self_0 =>
+      match other with
+      | target.Choice.Pinned => ok true
+      | target.Choice.Remote _ => ok true
+      | target.Choice.Head => ok true
+      | target.Choice.Ambiguous __arg1_0 =>
+        target.Why.Insts.CoreCmpPartialEqWhy.eq __self_0 __arg1_0
+  else ok false
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::PartialEq<writfold_core::target::Choice> for writfold_core::target::Choice}]
+    Source: 'crates/writfold-core/src/target.rs', lines 71:33-71:42 -/
+@[reducible]
+def target.Choice.Insts.CoreCmpPartialEqChoice : core.cmp.PartialEq
+  target.Choice target.Choice := {
+  eq := target.Choice.Insts.CoreCmpPartialEqChoice.eq
+}
+
+/-- [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Choice}::assert_fields_are_eq]:
+    Source: 'crates/writfold-core/src/target.rs', lines 71:29-71:31
+    Visibility: public -/
+def target.Choice.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : target.Choice) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [writfold_core::target::{impl core::cmp::Eq for writfold_core::target::Choice}]
+    Source: 'crates/writfold-core/src/target.rs', lines 71:29-71:31 -/
+@[reducible]
+def target.Choice.Insts.CoreCmpEq : core.cmp.Eq target.Choice := {
+  partialEqInst := target.Choice.Insts.CoreCmpPartialEqChoice
+  assert_fields_are_eq := target.Choice.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [writfold_core::target::{impl core::marker::StructuralPartialEq for writfold_core::target::Choice}]
+    Source: 'crates/writfold-core/src/target.rs', lines 71:33-71:42 -/
+@[reducible]
+def target.Choice.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq target.Choice := {
+}
+
+/-- [writfold_core::target::rank]:
+    Source: 'crates/writfold-core/src/target.rs', lines 84:0-93:1
+    Visibility: public -/
+def target.rank (names : target.Names) : Result Std.U8 := do
+  match names with
+  | target.Names.Url => ok 4#u8
+  | target.Names.Path => ok 3#u8
+  | target.Names.Base => ok 2#u8
+  | target.Names.Sole => ok 1#u8
+  | target.Names.Other => ok 0#u8
+  | target.Names.Unread => ok 0#u8
+
+/-- [writfold_core::target::best]: loop body 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 100:4-106:5
+    Visibility: public -/
+@[rust_loop_body]
+def target.best_loop.body
+  (remotes : Slice target.Remote) (top : Std.U8) (i : Std.Usize) :
+  Result (ControlFlow (Std.U8 × Std.Usize) Std.U8)
+  := do
+  let i1 := Slice.len remotes
+  if i < i1
+  then
+    let r ← Slice.index_usize remotes i
+    let level ← target.rank r.names
+    let top1 ← if level > top
+                 then ok level
+                 else ok top
+    let i2 ← i + 1#usize
+    ok (cont (top1, i2))
+  else ok (done top)
+
+/-- [writfold_core::target::best]: loop 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 100:4-106:5
+    Visibility: public -/
+@[rust_loop]
+def target.best_loop
+  (remotes : Slice target.Remote) (top : Std.U8) (i : Std.Usize) :
+  Result Std.U8
+  := do
+  loop
+    (fun (top1, i1) => target.best_loop.body remotes top1 i1)
+    (top, i)
+
+/-- [writfold_core::target::best]:
+    Source: 'crates/writfold-core/src/target.rs', lines 97:0-108:1
+    Visibility: public -/
+@[reducible]
+def target.best (remotes : Slice target.Remote) : Result Std.U8 := do
+  target.best_loop remotes 0#u8 0#usize
+
+/-- [writfold_core::target::tip_commit]:
+    Source: 'crates/writfold-core/src/target.rs', lines 111:0-116:1
+    Visibility: public -/
+def target.tip_commit (tip : target.Tip) : Result (Option Std.U32) := do
+  match tip with
+  | target.Tip.At k => ok (some k)
+  | target.Tip.NoHead => ok none
+
+/-- [writfold_core::target::tip_is]:
+    Source: 'crates/writfold-core/src/target.rs', lines 119:0-124:1
+    Visibility: public -/
+def target.tip_is (tip : target.Tip) (k : Std.U32) : Result Bool := do
+  match tip with
+  | target.Tip.At j => ok (j = k)
+  | target.Tip.NoHead => ok false
+
+/-- [writfold_core::target::headless_at]: loop body 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 129:4-137:1
+    Visibility: public -/
+@[rust_loop_body]
+def target.headless_at_loop.body
+  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i1 := Slice.len remotes
+  if i < i1
+  then
+    let r ← Slice.index_usize remotes i
+    let i2 ← target.rank r.names
+    if i2 = level
+    then
+      let o ← target.tip_commit r.tip
+      let b := core.option.Option.is_none o
+      if b
+      then ok (done true)
+      else let i3 ← i + 1#usize
+           ok (cont i3)
+    else let i3 ← i + 1#usize
+         ok (cont i3)
+  else ok (done false)
+
+/-- [writfold_core::target::headless_at]: loop 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 129:4-137:1
+    Visibility: public -/
+@[rust_loop]
+def target.headless_at_loop
+  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun i1 => target.headless_at_loop.body remotes level i1)
+    i
+
+/-- [writfold_core::target::headless_at]:
+    Source: 'crates/writfold-core/src/target.rs', lines 127:0-137:1
+    Visibility: public -/
+@[reducible]
+def target.headless_at
+  (remotes : Slice target.Remote) (level : Std.U8) : Result Bool := do
+  target.headless_at_loop remotes level 0#usize
+
+/-- [writfold_core::target::first_at]: loop body 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 143:4-154:1
+    Visibility: public -/
+@[rust_loop_body]
+def target.first_at_loop.body
+  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option (Std.Usize × Std.U32)))
+  := do
+  let i1 := Slice.len remotes
+  if i < i1
+  then
+    let r ← Slice.index_usize remotes i
+    let i2 ← target.rank r.names
+    if i2 = level
+    then
+      let o ← target.tip_commit r.tip
+      match o with
+      | none => ok (done none)
+      | some k => ok (done (some (i, k)))
+    else let i3 ← i + 1#usize
+         ok (cont i3)
+  else ok (done none)
+
+/-- [writfold_core::target::first_at]: loop 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 143:4-154:1
+    Visibility: public -/
+@[rust_loop]
+def target.first_at_loop
+  (remotes : Slice target.Remote) (level : Std.U8) (i : Std.Usize) :
+  Result (Option (Std.Usize × Std.U32))
+  := do
+  loop
+    (fun i1 => target.first_at_loop.body remotes level i1)
+    i
+
+/-- [writfold_core::target::first_at]:
+    Source: 'crates/writfold-core/src/target.rs', lines 141:0-154:1
+    Visibility: public -/
+@[reducible]
+def target.first_at
+  (remotes : Slice target.Remote) (level : Std.U8) :
+  Result (Option (Std.Usize × Std.U32))
+  := do
+  target.first_at_loop remotes level 0#usize
+
+/-- [writfold_core::target::agree_at]: loop body 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 159:4-167:1
+    Visibility: public -/
+@[rust_loop_body]
+def target.agree_at_loop.body
+  (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32)
+  (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i1 := Slice.len remotes
+  if i < i1
+  then
+    let r ← Slice.index_usize remotes i
+    let i2 ← target.rank r.names
+    if i2 = level
+    then
+      let b ← target.tip_is r.tip k
+      if b
+      then let i3 ← i + 1#usize
+           ok (cont i3)
+      else ok (done false)
+    else let i3 ← i + 1#usize
+         ok (cont i3)
+  else ok (done true)
+
+/-- [writfold_core::target::agree_at]: loop 0:
+    Source: 'crates/writfold-core/src/target.rs', lines 159:4-167:1
+    Visibility: public -/
+@[rust_loop]
+def target.agree_at_loop
+  (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32)
+  (i : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun i1 => target.agree_at_loop.body remotes level k i1)
+    i
+
+/-- [writfold_core::target::agree_at]:
+    Source: 'crates/writfold-core/src/target.rs', lines 157:0-167:1
+    Visibility: public -/
+@[reducible]
+def target.agree_at
+  (remotes : Slice target.Remote) (level : Std.U8) (k : Std.U32) :
+  Result Bool
+  := do
+  target.agree_at_loop remotes level k 0#usize
+
+/-- [writfold_core::target::choose]:
+    Source: 'crates/writfold-core/src/target.rs', lines 172:0-195:1
+    Visibility: public -/
+def target.choose
+  (pinned : target.Pinned) (remotes : Slice target.Remote) :
+  Result target.Choice
+  := do
+  match pinned with
+  | target.Pinned.No =>
+    let b ← core.slice.Slice.is_empty remotes
+    if b
+    then ok target.Choice.Head
+    else
+      let level ← target.best remotes
+      if level = 0#u8
+      then ok (target.Choice.Ambiguous target.Why.NoRemoteNames)
+      else
+        let b1 ← target.headless_at remotes level
+        if b1
+        then ok (target.Choice.Ambiguous target.Why.NoDefaultBranch)
+        else
+          let o ← target.first_at remotes level
+          match o with
+          | none => ok (target.Choice.Ambiguous target.Why.NoDefaultBranch)
+          | some p =>
+            let (i, k) := p
+            let b2 ← target.agree_at remotes level k
+            if b2
+            then ok (target.Choice.Remote i)
+            else ok (target.Choice.Ambiguous target.Why.Disagree)
+  | target.Pinned.Resolves => ok target.Choice.Pinned
+  | target.Pinned.Missing => ok (target.Choice.Ambiguous target.Why.PinMissing)
 
 /-- [writfold_core::units::MAX_MEMBERS]
     Source: 'crates/writfold-core/src/units.rs', lines 29:0-29:34
@@ -7422,28 +8516,6 @@ def verdict.locate.place
   then ok verdict.locate.Place.Same
   else verdict.locate.place_loop windows 0#usize
 
-/-- [writfold_core::verdict::Said]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 86:0-92:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Said where
-| Fresh : verdict.Said
-| Moved : verdict.Said
-| Changed : verdict.Said
-| Gone : verdict.Said
-| Unverifiable : verdict.Said
-
-/-- [writfold_core::verdict::Checker]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 96:0-109:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Checker where
-| Absent : verdict.Checker
-| Failed : verdict.Checker
-| Version : verdict.Checker
-| Said : verdict.Said → verdict.Checker
-| Expired : verdict.Checker
-
 /-- [writfold_core::verdict::recorded::recordable]:
     Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 10:0-15:1
     Visibility: public -/
@@ -7673,147 +8745,6 @@ def verdict.recorded.newest
       if b
       then ok (some verdict.recorded.Pick.Local)
       else ok (some (verdict.recorded.Pick.Recorded i))
-
-/-- [writfold_core::verdict::Located]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 15:0-24:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Located where
-| Same : verdict.Located
-| At : Std.U32 → Std.U32 → verdict.Located
-| Absent : verdict.Located
-| Unsearched : verdict.Located
-
-/-- [writfold_core::verdict::Absence]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 42:0-57:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Absence where
-| Renamed : verdict.Absence
-| Followed : Option verdict.Located → verdict.Absence
-| NoRename : verdict.Absence
-| RevAbsent : verdict.Absence
-| NoRev : verdict.Absence
-| Capped : verdict.Absence
-
-/-- [writfold_core::verdict::Target]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 28:0-38:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Target where
-| SameBlob : verdict.Target
-| OtherBlob : Bool → Option verdict.Located → verdict.Target
-| Missing : verdict.Absence → verdict.Target
-
-/-- [writfold_core::verdict::Observed]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 61:0-82:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Observed where
-| Malformed : verdict.Observed
-| Unresolved : verdict.Observed
-| Code : verdict.Target → verdict.Observed
-| Gate : Bool → verdict.Observed
-| State : Option (Option Bool) → verdict.Observed
-| Timed : Option Bool → verdict.Observed
-| Offline : Bool → verdict.Observed
-| Immutable : verdict.Observed
-| Checked : verdict.Checker → verdict.Observed
-
-/-- [writfold_core::verdict::missing]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 182:0-195:1
-    Visibility: public -/
-def verdict.missing (absence : verdict.Absence) : Result verdict.Verdict := do
-  match absence with
-  | verdict.Absence.Renamed => ok verdict.Verdict.Renamed
-  | verdict.Absence.Followed located =>
-    match located with
-    | none => ok verdict.Verdict.Gone
-    | some l =>
-      match l with
-      | verdict.Located.Same => ok verdict.Verdict.Moved
-      | verdict.Located.At _ _ => ok verdict.Verdict.Moved
-      | verdict.Located.Absent => ok verdict.Verdict.Gone
-      | verdict.Located.Unsearched => ok verdict.Verdict.Gone
-  | verdict.Absence.NoRename => ok verdict.Verdict.Gone
-  | verdict.Absence.RevAbsent => ok verdict.Verdict.Unverifiable
-  | verdict.Absence.NoRev => ok verdict.Verdict.Unverifiable
-  | verdict.Absence.Capped => ok verdict.Verdict.Unverifiable
-
-/-- [writfold_core::verdict::other_blob]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 165:0-178:1
-    Visibility: public -/
-def verdict.other_blob
-  (known : Bool) (located : Option verdict.Located) :
-  Result verdict.Verdict
-  := do
-  match located with
-  | none =>
-    if known
-    then ok verdict.Verdict.Changed
-    else ok verdict.Verdict.Unverifiable
-  | some l =>
-    match l with
-    | verdict.Located.Same => ok verdict.Verdict.Fresh
-    | verdict.Located.At _ _ => ok verdict.Verdict.Moved
-    | verdict.Located.Absent => ok verdict.Verdict.Changed
-    | verdict.Located.Unsearched =>
-      if known
-      then ok verdict.Verdict.Changed
-      else ok verdict.Verdict.Unverifiable
-
-/-- [writfold_core::verdict::observed]:
-    Source: 'crates/writfold-core/src/verdict.rs', lines 130:0-160:1
-    Visibility: public -/
-def verdict.observed (fact : verdict.Observed) : Result verdict.Verdict := do
-  match fact with
-  | verdict.Observed.Malformed => ok verdict.Verdict.Unverifiable
-  | verdict.Observed.Unresolved => ok verdict.Verdict.Unverifiable
-  | verdict.Observed.Code t =>
-    match t with
-    | verdict.Target.SameBlob => ok verdict.Verdict.Fresh
-    | verdict.Target.OtherBlob known located =>
-      verdict.other_blob known located
-    | verdict.Target.Missing absence => verdict.missing absence
-  | verdict.Observed.Gate b =>
-    if b
-    then ok verdict.Verdict.Fresh
-    else ok verdict.Verdict.Changed
-  | verdict.Observed.State o =>
-    match o with
-    | none => ok verdict.Verdict.Gone
-    | some o1 =>
-      match o1 with
-      | none => ok verdict.Verdict.Unverifiable
-      | some b =>
-        if b
-        then ok verdict.Verdict.Fresh
-        else ok verdict.Verdict.Changed
-  | verdict.Observed.Timed o =>
-    match o with
-    | none => ok verdict.Verdict.Unverifiable
-    | some b =>
-      if b
-      then ok verdict.Verdict.Expired
-      else ok verdict.Verdict.Fresh
-  | verdict.Observed.Offline b =>
-    if b
-    then ok verdict.Verdict.Due
-    else ok verdict.Verdict.Fresh
-  | verdict.Observed.Immutable => ok verdict.Verdict.Fresh
-  | verdict.Observed.Checked checker =>
-    match checker with
-    | verdict.Checker.Absent => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Failed => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Version => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Said s =>
-      match s with
-      | verdict.Said.Fresh => ok verdict.Verdict.Fresh
-      | verdict.Said.Moved => ok verdict.Verdict.Moved
-      | verdict.Said.Changed => ok verdict.Verdict.Changed
-      | verdict.Said.Gone => ok verdict.Verdict.Gone
-      | verdict.Said.Unverifiable => ok verdict.Verdict.Unverifiable
-    | verdict.Checker.Expired => ok verdict.Verdict.Unverifiable
 
 /-- [writfold_core::verdict::Described]
     Source: 'crates/writfold-core/src/verdict.rs', lines 199:0-206:1

@@ -362,6 +362,40 @@ MUTANTS = (
            "",
            ("Writfold.Core.Units.unit_first_moved",
             "Writfold.Core.Units.unit_current_iff")),
+    # target (#179): the resolver never guesses
+    Mutant("pin-missing-falls-back", "target.rs",
+           "        Pinned::Missing => return Choice::Ambiguous(Why::PinMissing),",
+           "        Pinned::Missing => {}",
+           ("Writfold.Core.Target.choose_spec", "Writfold.Core.Target.pin_decides")),
+    Mutant("nohead-takes-head", "target.rs",
+           "    if headless_at(remotes, level) {\n        return Choice::Ambiguous(Why::NoDefaultBranch);\n    }\n",
+           "",
+           ("Writfold.Core.Target.choose_spec",)),
+    Mutant("disagree-takes-first", "target.rs",
+           "            false => Choice::Ambiguous(Why::Disagree),",
+           "            false => Choice::Remote(i),",
+           ("Writfold.Core.Target.choose_spec",)),
+    Mutant("first-remote-wins", "target.rs",
+           "        let r = remotes[i];\n        if rank(r.names) == level {\n            return match",
+           "        let r = remotes[i];\n        if rank(r.names) == level || i == 0 {\n            return match",
+           ("Writfold.Core.Target.first_at_loop_spec",)),
+    # referent (#196): the boundary only withholds
+    Mutant("ambiguous-judged", "referent.rs",
+           "    if !resolved {\n        return Verdict::Unverifiable;\n    }\n",
+           "",
+           ("Writfold.Core.Referent.settle_spec",)),
+    Mutant("behind-keeps-gone", "referent.rs",
+           "        Verdict::Changed | Verdict::Gone | Verdict::Moved | Verdict::Renamed",
+           "        Verdict::Changed | Verdict::Moved | Verdict::Renamed",
+           ("Writfold.Core.Referent.settle_spec",)),
+    Mutant("behind-drops-fresh", "referent.rs",
+           "        Verdict::Changed | Verdict::Gone | Verdict::Moved | Verdict::Renamed",
+           "        Verdict::Fresh | Verdict::Changed | Verdict::Gone | Verdict::Moved | Verdict::Renamed",
+           ("Writfold.Core.Referent.settle_spec",)),
+    Mutant("judge-skips-settle", "referent.rs",
+           "    settle(resolved, relation, observed(fact))",
+           "    let _ = (resolved, relation);\n    observed(fact)",
+           ("Writfold.Core.Referent.judge_spec",)),
     # vale (#131): only the pinned executable's run is read
     Mutant("vale-absent-usable", "vale.rs",
            "        Tool::Absent | Tool::Other => return false,",
@@ -1822,6 +1856,62 @@ MUTANTS = (
            ("Writfold.Core.Recorded.best_recorded_loop_spec",)),
 )
 
+@dataclass(frozen=True)
+class CoreMutant:
+    """A mutation of a definition under proofs/Calculus (#205): no
+    translation step; the Calculus library is built against it."""
+    name: str
+    file: str
+    before: str
+    after: str
+    fails: tuple[str, ...]
+
+
+CALCULUS = PROOFS / "Calculus"
+
+CORE_MUTANTS = (
+    CoreMutant("admits-unknown", "Word.lean",
+               "def admits : Tri → Bool\n  | yes => true\n  | _ => false",
+               "def admits : Tri → Bool\n  | yes => true\n  | unknown => true\n  | _ => false",
+               ("Calculus.Tri.admits_iff", "Calculus.Tri.unknown_mem_never_admits", "Calculus.Tri.unknown_never_admits")),
+    CoreMutant("and-unknown-beats-no", "Word.lean",
+               "  | no, _ => no\n  | _, no => no\n  | unknown, _ => unknown\n",
+               "  | unknown, _ => unknown\n  | no, _ => no\n  | _, no => no\n",
+               ("Calculus.Tri.and_comm", "Calculus.Tri.and_eq_no")),
+    CoreMutant("all-empty-unknown", "Word.lean",
+               "def all (ts : List Tri) : Tri := ts.foldr and yes",
+               "def all (ts : List Tri) : Tri := ts.foldr and unknown",
+               ("Calculus.Tri.all_append", "Calculus.Tri.all_eq_yes")),
+    CoreMutant("join-ask-beats-deny", "Word.lean",
+               "  | deny, _ => deny\n  | _, deny => deny\n  | ask, _ => ask\n",
+               "  | ask, _ => ask\n  | deny, _ => deny\n  | _, deny => deny\n",
+               ("Calculus.Decision.join_comm",)),
+    CoreMutant("admit-ignores-unknown", "Word.lean",
+               "  if (Tri.all reqs).admits then .pass else action.decision",
+               "  if Tri.all reqs != .no then .pass else action.decision",
+               ("Calculus.admit_pass_iff",)),
+    CoreMutant("remainder-counts-declared-out", "Account.lean",
+               "def remainder (ms : List Member) : Nat := ms.countP (· = .remainder)",
+               "def remainder (ms : List Member) : Nat := ms.countP (· ≠ .judged)",
+               ("Calculus.declared_out_never_counts", "Calculus.remainder_counts", "Calculus.whole_iff_no_remainder")),
+    CoreMutant("whole-ignores-remainder", "Account.lean",
+               "def whole (ms : List Member) : Bool := remainder ms == 0",
+               "def whole (ms : List Member) : Bool := remainder ms == remainder ms",
+               ("Calculus.whole_counts", "Calculus.whole_iff_no_remainder")),
+    CoreMutant("universal-skips-whole", "Account.lean",
+               "  else if !whole (ms.map (·.1)) then .unknown\n",
+               "",
+               ("Calculus.universal_yes_iff",)),
+    CoreMutant("universal-empty-yes", "Account.lean",
+               "  else if (judgedOf ms).isEmpty && !allowEmpty then .unknown\n",
+               "",
+               ("Calculus.universal_yes_iff",)),
+    CoreMutant("search-partial-says-no", "Account.lean",
+               "  if found then .yes else if isWhole then .no else .unknown",
+               "  if found then .yes else .no",
+               ("Calculus.absence_needs_whole",)),
+)
+
 # lake reports `error: <path>.lean:<line>:<col>: <message>`
 ERROR = re.compile(r"^error:\s*(?P<file>[^\s:]+\.lean):(?P<line>\d+):(?P<col>\d+):", re.M)
 DECLARATION = re.compile(r"^(?:@\[[^\]]*\]\s*)?(?:private\s+|protected\s+)?(?:theorem|lemma|def|abbrev|instance)\s+(?P<name>[^\s:(]+)", re.M)
@@ -1830,17 +1920,18 @@ NAMESPACE = re.compile(r"^namespace\s+(?P<name>\S+)", re.M)
 
 def declarations(path: Path) -> list[tuple[int, str]]:
     """(line, fully qualified name) of every declaration in a theorem file."""
-    namespace = ""
+    stack: list[str] = []
     found = []
     for number, line in enumerate(path.read_text().splitlines(), start=1):
         if match := NAMESPACE.match(line):
-            namespace = match.group("name") + "."
+            stack.append(match.group("name"))
             continue
-        if line.startswith("end "):
-            namespace = ""
+        if line.startswith("end ") and stack:
+            stack.pop()
             continue
         if match := DECLARATION.match(line):
-            found.append((number, namespace + match.group("name")))
+            prefix = "".join(f"{n}." for n in stack)
+            found.append((number, prefix + match.group("name")))
     return found
 
 
@@ -1862,7 +1953,7 @@ def failing_theorems(output: str, project: Path) -> tuple[set[str], list[str]]:
         except ValueError:
             unattributed.append(match.group(0))
             continue
-        if relative.parts[0] != "Writfold" or not file.exists():
+        if relative.parts[0] not in ("Writfold", "Calculus") or not file.exists():
             unattributed.append(str(relative))
             continue
         name = attribute(file, int(match.group("line")))
@@ -1900,9 +1991,11 @@ def calibrate(mutant: Mutant, scratch: Path) -> None:
 
     project = scratch / "proofs"
     project.mkdir()
-    for name in ("lakefile.toml", "lean-toolchain", "lake-manifest.json", "Writfold.lean", "Audit.lean"):
+    for name in ("lakefile.toml", "lean-toolchain", "lake-manifest.json", "Writfold.lean",
+                 "Calculus.lean", "Audit.lean"):
         shutil.copy2(PROOFS / name, project / name)
     shutil.copytree(PROOFS / "Writfold", project / "Writfold")
+    shutil.copytree(CALCULUS, project / "Calculus")
     shutil.copytree(scratch / "Extracted", project / "Extracted")
     (project / ".lake").mkdir()
     os.symlink(PROOFS / ".lake" / "packages", project / ".lake" / "packages")
@@ -1931,11 +2024,92 @@ def calibrate(mutant: Mutant, scratch: Path) -> None:
     print(f"calibration: {mutant.name} rejected by {', '.join(sorted(failures))}", flush=True)
 
 
+def calibrate_core(mutant: CoreMutant, scratch: Path) -> None:
+    """A core mutant: the Calculus library alone, built against the mutated
+    definition; the named theorems, and only they, must fail."""
+    project = scratch / "proofs"
+    project.mkdir()
+    for name in ("lakefile.toml", "lean-toolchain", "lake-manifest.json", "Calculus.lean"):
+        shutil.copy2(PROOFS / name, project / name)
+    shutil.copytree(CALCULUS, project / "Calculus")
+    source = project / "Calculus" / mutant.file
+    text = source.read_text()
+    if text.count(mutant.before) != 1:
+        raise SystemExit(f"FAIL {mutant.name}: mutation site does not match exactly once")
+    source.write_text(text.replace(mutant.before, mutant.after))
+    (project / ".lake").mkdir()
+    os.symlink(PROOFS / ".lake" / "packages", project / ".lake" / "packages")
+    build = run(["lake", "build", "Calculus"], project)
+    if build.returncode == 0:
+        raise SystemExit(f"FAIL {mutant.name}: the calculus still builds against the mutation")
+    failures, unattributed = failing_theorems(build.stdout, project)
+    if unattributed:
+        print(build.stdout)
+        raise SystemExit(f"FAIL {mutant.name}: errors outside the theorem files: {unattributed}")
+    expected = set(mutant.fails)
+    if failures != expected:
+        print(build.stdout)
+        raise SystemExit(f"FAIL {mutant.name}: expected {sorted(expected)} to fail, got {sorted(failures)}")
+    print(f"calibration: {mutant.name} rejected by {', '.join(sorted(failures))}", flush=True)
+
+
+# Calculus claims proved from other claims, not by unfolding a definition:
+# a mutated definition breaks the claims they follow from, and these still
+# build. Each names what it follows from, so the list is reviewed with it.
+DERIVED = {
+    "Calculus.Tri.le_refl": "decided over the three words of leb",
+    "Calculus.Tri.le_trans": "decided over the three words of leb",
+    "Calculus.Tri.le_antisymm": "decided over the three words of leb",
+    "Calculus.Tri.refines_only_unknown": "decided over the three words of leb",
+    "Calculus.Tri.and_assoc": "decided over the table of and",
+    "Calculus.Tri.and_idem": "decided over the table of and",
+    "Calculus.Tri.and_yes": "decided over the table of and",
+    "Calculus.Tri.and_mono": "decided over the tables of and and leb",
+    "Calculus.Tri.and_eq_yes": "decided over the table of and",
+    "Calculus.Tri.all_eq_no": "and_eq_no",
+    "Calculus.Tri.all_mono": "and_mono",
+    "Calculus.Tri.more_never_admits": "all_append, admits_iff",
+    "Calculus.Decision.join_assoc": "decided over the table of join",
+    "Calculus.Decision.join_idem": "decided over the table of join",
+    "Calculus.Decision.pass_join": "decided over the table of join",
+    "Calculus.Decision.join_eq_pass": "decided over the table of join",
+    "Calculus.unknown_never_passes": "admit_pass_iff",
+    "Calculus.remainder_append": "List.countP_append",
+    "Calculus.whole_append": "remainder_append",
+    "Calculus.judged_never_counts": "the definition of remainder",
+    "Calculus.remainder_never_whole": "universal_yes_iff, whole_iff_no_remainder",
+    "Calculus.empty_never_yes": "universal_yes_iff",
+    "Calculus.universal_sound": "universal_yes_iff",
+    "Calculus.universal_no_of_witness": "the first branch of universal",
+    "Calculus.search_yes_iff": "the first branch of search",
+}
+
+
+def unnamed_laws() -> list[str]:
+    """Calculus claims neither named by a core mutant nor listed as derived
+    (#205): a law nothing can break in the gate proves nothing."""
+    claims = set(re.findall(r"``(Calculus\.[\w.]+)", (PROOFS / "Audit.lean").read_text()))
+    named = {name for m in CORE_MUTANTS for name in m.fails}
+    stray = sorted(set(DERIVED) & named) + sorted(set(DERIVED) - claims)
+    return stray + sorted(claims - named - set(DERIVED))
+
+
+def foreign_imports() -> list[str]:
+    """An import under proofs/Calculus that is not `Calculus.*` (#205)."""
+    bad = []
+    for path in sorted([PROOFS / "Calculus.lean", *CALCULUS.rglob("*.lean")]):
+        for line in path.read_text().splitlines():
+            if line.startswith("import ") and not line.split()[1].startswith("Calculus."):
+                bad.append(f"{path.relative_to(PROOFS)}: {line}")
+    return bad
+
+
 def unclaimed() -> list[str]:
     """Theorems a mutant names that the axiom audit does not require: a
     rename would then pass the audit and be caught only here."""
     claims = set(re.findall(r"``([\w.]+)", (PROOFS / "Audit.lean").read_text()))
-    return sorted({name for m in MUTANTS for name in m.fails} - claims)
+    named = {name for m in (*MUTANTS, *CORE_MUTANTS) for name in m.fails}
+    return sorted(named - claims)
 
 
 def bad_sites() -> list[str]:
@@ -1950,6 +2124,11 @@ def bad_sites() -> list[str]:
         count = source.read_text().count(mutant.before) if source.is_file() else 0
         if count != 1:
             bad.append(f"FAIL {mutant.name}: mutation site does not match exactly once ({count} matches)")
+    for core in CORE_MUTANTS:
+        source = CALCULUS / core.file
+        count = source.read_text().count(core.before) if source.is_file() else 0
+        if count != 1:
+            bad.append(f"FAIL {core.name}: mutation site does not match exactly once ({count} matches)")
     return bad
 
 
@@ -1970,24 +2149,32 @@ def selection(argv: list[str]) -> tuple[bool, set[str] | None]:
 def main() -> None:
     if missing := unclaimed():
         raise SystemExit(f"FAIL: theorems named by mutants are not audited claims: {missing}")
+    if bad := foreign_imports():
+        raise SystemExit(f"FAIL: proofs/Calculus imports outside the calculus: {bad}")
+    if missing := unnamed_laws():
+        raise SystemExit(f"FAIL: calculus claims no core mutant names: {missing}")
     only_sites, selected = selection(sys.argv[1:])
     if bad := bad_sites():
         for line in bad:
             print(line, flush=True)
         raise SystemExit(f"FAIL: {len(bad)} mutant site(s) do not match exactly once")
     if only_sites:
-        print(f"MUTANT_SITES ok ({len(MUTANTS)})", flush=True)
+        print(f"MUTANT_SITES ok ({len(MUTANTS) + len(CORE_MUTANTS)})", flush=True)
         return
-    mutants = [m for m in MUTANTS if selected is None or m.name in selected]
+    every = (*MUTANTS, *CORE_MUTANTS)
+    mutants = [m for m in every if selected is None or m.name in selected]
     if selected and len(mutants) != len(selected):
         raise SystemExit(f"unknown mutant(s): {sorted(selected - {m.name for m in mutants})}")
     # Every mutant runs even after a failure, so one gate run reports them all.
     # Each calibrates in its own scratch copy, so they run side by side
     # (WRITFOLD_MUTANT_JOBS, default 6); the outcome does not depend on order.
-    def one(mutant: Mutant) -> str | None:
+    def one(mutant: Mutant | CoreMutant) -> str | None:
         with tempfile.TemporaryDirectory(prefix=f"mutant-{mutant.name}-") as directory:
             try:
-                calibrate(mutant, Path(directory))
+                if isinstance(mutant, CoreMutant):
+                    calibrate_core(mutant, Path(directory))
+                else:
+                    calibrate(mutant, Path(directory))
             except SystemExit as error:
                 print(error, flush=True)
                 return mutant.name

@@ -2867,27 +2867,6 @@ mutants = [
   "catalog-change-skips-last",
 ]
 
-[[amend]]
-file = "crates/writfold-core/src/ground.rs"
-function = "of_citations"
-kind = "theorem"
-name = "Writfold.Core.Ground.of_citations_grounded_iff"
-reason = "#105 removed retrieval receipts (the retired Tuft adapter's) and their grounding arm; the function is gone"
-
-[[amend]]
-file = "crates/writfold-core/src/ground.rs"
-function = "of_citations"
-kind = "theorem"
-name = "Writfold.Core.Ground.of_citations_never_attested"
-reason = "#105 removed retrieval receipts (the retired Tuft adapter's) and their grounding arm; the function is gone"
-
-[[amend]]
-file = "crates/writfold-core/src/ground.rs"
-function = "of_citations"
-kind = "mutant"
-name = "citations-zero-grounds"
-reason = "#105 removed retrieval receipts (the retired Tuft adapter's) and their grounding arm; the function is gone"
-
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/runs.rs"
@@ -3186,4 +3165,58 @@ total = "Writfold.Core.Ground.of_delivery_grounded_iff"
 mutants = [
   "delivery-unready-grounds",
   "delivery-withdrawn-grounds",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/target.rs"
+function = "choose"
+lean = "writfold_core.target.choose"
+theorems = [
+  "Writfold.Core.Target.choose_spec",
+  "Writfold.Core.Target.other_never_chosen",
+  "Writfold.Core.Target.pin_decides",
+  "Writfold.Core.Target.disagreement_is_ambiguous",
+]
+total = "Writfold.Core.Target.choose_spec"
+mutants = [
+  "pin-missing-falls-back",
+  "nohead-takes-head",
+  "disagree-takes-first",
+  "first-remote-wins",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/referent.rs"
+function = "settle"
+lean = "writfold_core.referent.settle"
+theorems = [
+  "Writfold.Core.Referent.settle_spec",
+  "Writfold.Core.Referent.ambiguous_never_judged",
+  "Writfold.Core.Referent.behind_never_stale",
+  "Writfold.Core.Referent.fresh_survives_behind",
+  "Writfold.Core.Referent.settle_identity",
+  "Writfold.Core.Referent.settle_only_withholds",
+]
+total = "Writfold.Core.Referent.settle_spec"
+mutants = [
+  "ambiguous-judged",
+  "behind-keeps-gone",
+  "behind-drops-fresh",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/referent.rs"
+function = "judge"
+lean = "writfold_core.referent.judge"
+theorems = [
+  "Writfold.Core.Referent.judge_spec",
+  "Writfold.Core.Referent.judge_fresh_needs",
+  "Writfold.Core.Referent.judge_refines",
+]
+total = "Writfold.Core.Referent.judge_spec"
+mutants = [
+  "judge-skips-settle",
 ]
