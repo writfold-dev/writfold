@@ -16,7 +16,7 @@ the Claude Code plugin. No sudo, no edits to shell startup files. Add `-s -- --d
 The same steps:
 
 ```sh
-base=https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.20
+base=https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.26
 curl -LO "$base/writfold-x86_64-linux-musl" -LO "$base/writfold-x86_64-linux-musl.sha256"
 echo "$(cut -d' ' -f1 writfold-x86_64-linux-musl.sha256)  writfold-x86_64-linux-musl" | sha256sum -c
 install -D -m 755 writfold-x86_64-linux-musl ~/.local/bin/writfold

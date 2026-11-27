@@ -66,12 +66,13 @@ def prepare(new: str) -> None:
         toml.write_text(toml.read_text().replace(f'version = "{old}"', f'version = "{new}"', 1))
         sh("cargo", "metadata", "--offline", "--format-version", "1")
         say(f"Cargo.toml {old} -> {new}; Cargo.lock refreshed")
-    readme = ROOT / "README.md"
-    text = readme.read_text()
-    fixed = text.replace(f"(`v{old}`)", f"(`v{new}`)").replace(f"download/v{old}", f"download/v{new}")
-    if fixed != text:
-        readme.write_text(fixed)
-        say("README pre-release line and download URL bumped")
+    # The README and the install guide name the release (readme_version.rs).
+    for page in (ROOT / "README.md", ROOT / "docs/guide/install.md"):
+        text = page.read_text()
+        fixed = text.replace(f"(`v{old}`)", f"(`v{new}`)").replace(f"download/v{old}", f"download/v{new}")
+        if fixed != text:
+            page.write_text(fixed)
+            say(f"{page.relative_to(ROOT)}: pre-release line and download URL bumped")
     if f"## v{new}" not in (ROOT / "docs/guide/changes.md").read_text():
         say(f"warning: docs/guide/changes.md has no '## v{new}' section yet (the release notes)")
     say("next: commit, then `cargo tauten proofs --level ship` on that commit (side by side with `build`)")
