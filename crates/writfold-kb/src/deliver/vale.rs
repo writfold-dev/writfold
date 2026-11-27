@@ -34,7 +34,11 @@ static PROGRAM: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 /// Use `path` as the Vale executable for the rest of this process (tests
 /// and embedders, which cannot set `WRITFOLD_VALE`); the first call wins.
 pub fn use_program(path: &str) {
-    let _ = PROGRAM.set(path.to_owned());
+    // A second call keeps the first program, as documented: its error is
+    // the value it would have set.
+    if PROGRAM.set(path.to_owned()).is_err() {
+        return;
+    }
 }
 
 /// The executable: [`use_program`]'s, else `WRITFOLD_VALE`, else `vale` on
@@ -127,6 +131,12 @@ pub fn evaluate(root: &Path, payload: &str, v: &Vale) -> Evaluated {
         Err(e) => return unknown(format!("could not stage the document for Vale: {e}")),
     };
     let evaluated = evaluate_in(root, &dir, v);
+    // The private directory is under the temporary directory; failing to
+    // remove it does not change what Vale reported.
+    #[expect(
+        clippy::let_underscore_must_use,
+        reason = "a leftover temporary directory does not change the verdict"
+    )]
     let _ = std::fs::remove_dir_all(&dir);
     evaluated
 }

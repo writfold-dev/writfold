@@ -3,7 +3,10 @@
 //! (`id [digest [path]]` per line; `coverage.txt`, `schema.txt` and
 //! `seed.txt` change what it says), a pair-unit checklist over it, and a
 //! reviewer whose reports cover units.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use crate::agent_support::{self, AGENT, outcome, setup};
 use crate::helpers::{self, RUN, put, set};
 use crate::support::{NOW, TestResult, World};

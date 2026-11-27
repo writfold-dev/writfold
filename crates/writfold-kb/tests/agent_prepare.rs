@@ -222,7 +222,7 @@ fn a_step_that_moved_under_the_lock_is_refused() -> TestResult {
     for (path, _) in &written {
         std::fs::remove_file(path)?;
     }
-    *INJECT.lock().map_err(|_| "poisoned")? = written;
+    *INJECT.lock().map_err(|e| format!("poisoned: {e}"))? = written;
     let mut request = w.request(Verb::Agent(AgentVerb::Prepare(Prepare {
         id: "reviewer".into(),
         input: "task.md".into(),

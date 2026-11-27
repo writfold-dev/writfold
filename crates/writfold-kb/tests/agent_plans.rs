@@ -101,7 +101,7 @@ fn a_crash_before_the_package_leaves_a_prepared_invocation() -> TestResult {
     let w = setup()?;
     set(&w, "change")?;
     use_plan(&w, "claims-review")?;
-    *BLOCK.lock().map_err(|_| "poisoned")? = Some(w.base.join("pkg"));
+    *BLOCK.lock().map_err(|e| format!("poisoned: {e}"))? = Some(w.base.join("pkg"));
     let verb = Verb::Agent(writfold_kb::agents::AgentVerb::Prepare(
         writfold_kb::agents::prepare::Prepare {
             id: "reviewer".into(),
