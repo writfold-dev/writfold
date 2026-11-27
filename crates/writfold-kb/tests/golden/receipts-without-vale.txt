@@ -1,0 +1,70 @@
+== claims.cited-fresh-20261111T000030Z-XXXXXX.json
+{
+  "candidate": {
+    "content": "sha256:f50bdb6bb672c19e668f11101a88785f481278a789fc3246c90637152e262ab5",
+    "id": "20261111T000000Z-XXXXXX"
+  },
+  "check": "claims.cited-fresh",
+  "class": "observed",
+  "definition": "sha256:2e4494ec9954068f0fea80dbd6cccd51981ef20a994a88c6d2120e82906780ba",
+  "digest": "sha256:<receipt>",
+  "evaluator": "writfold <version>",
+  "recorded": "2026-11-11T00:00:30Z",
+  "result": {
+    "findings": [],
+    "findings_total": 0,
+    "note": "0 citation tokens",
+    "outcome": "pass"
+  },
+  "run": "run-20261101T090000Z-a1b2c3",
+  "schema": "writfold-delivery-receipt/1",
+  "seq": 1
+}
+
+== paragraphs.bounded-20261111T000030Z-XXXXXX.json
+{
+  "candidate": {
+    "content": "sha256:f50bdb6bb672c19e668f11101a88785f481278a789fc3246c90637152e262ab5",
+    "id": "20261111T000000Z-XXXXXX"
+  },
+  "check": "paragraphs.bounded",
+  "class": "mechanical",
+  "definition": "sha256:c4dfcab5cfa951aeb70f1cb26a86a474ea80ef8a45b8ede4858d1b123ada309e",
+  "digest": "sha256:<receipt>",
+  "evaluator": "writfold <version>",
+  "recorded": "2026-11-11T00:00:30Z",
+  "result": {
+    "findings": [],
+    "findings_total": 0,
+    "note": "at most 150 words per paragraph",
+    "outcome": "pass"
+  },
+  "run": "run-20261101T090000Z-a1b2c3",
+  "schema": "writfold-delivery-receipt/1",
+  "seq": 1
+}
+
+== references.denied-20261111T000030Z-XXXXXX.json
+{
+  "candidate": {
+    "content": "sha256:f50bdb6bb672c19e668f11101a88785f481278a789fc3246c90637152e262ab5",
+    "id": "20261111T000000Z-XXXXXX"
+  },
+  "check": "references.denied",
+  "class": "mechanical",
+  "definition": "sha256:689ec5fdeb4df22a49624b6156f5cb12a01bfa2452414b02f27de687e8e6c2a7",
+  "digest": "sha256:<receipt>",
+  "evaluator": "writfold <version>",
+  "recorded": "2026-11-11T00:00:30Z",
+  "result": {
+    "findings": [],
+    "findings_total": 0,
+    "note": "2 rules for external",
+    "outcome": "pass"
+  },
+  "run": "run-20261101T090000Z-a1b2c3",
+  "schema": "writfold-delivery-receipt/1",
+  "seq": 1
+}
+
+# exit=0
