@@ -3056,6 +3056,7 @@ theorems = [
   "Writfold.Core.Invoke.first_unmet_spec",
 ]
 total = "Writfold.Core.Invoke.first_unmet_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "needs-unknown-met",
 ]
@@ -3093,6 +3094,7 @@ theorems = [
   "Writfold.Core.Units.pairs_len",
 ]
 total = "Writfold.Core.Units.pairs_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "pairs-drops-last",
   "pairs-keeps-diagonal",
@@ -3177,14 +3179,12 @@ theorems = [
   "Writfold.Core.Target.other_never_chosen",
   "Writfold.Core.Target.pin_decides",
   "Writfold.Core.Target.disagreement_is_ambiguous",
-  "Writfold.Core.Target.first_at_loop_spec",
 ]
 total = "Writfold.Core.Target.choose_spec"
 mutants = [
   "pin-missing-falls-back",
   "nohead-takes-head",
   "disagree-takes-first",
-  "first-remote-wins",
 ]
 
 [[claim]]
@@ -3220,4 +3220,64 @@ theorems = [
 total = "Writfold.Core.Referent.judge_spec"
 mutants = [
   "judge-skips-settle",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/target.rs"
+function = "best"
+lean = "writfold_core.target.best"
+theorems = [
+  "Writfold.Core.Target.best_loop_spec",
+  "Writfold.Core.Target.best_spec",
+]
+total = "Writfold.Core.Target.best_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "best-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/target.rs"
+function = "headless_at"
+lean = "writfold_core.target.headless_at"
+theorems = [
+  "Writfold.Core.Target.headless_at_loop_spec",
+  "Writfold.Core.Target.headless_at_spec",
+]
+total = "Writfold.Core.Target.headless_at_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "headless-ignores-level",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/target.rs"
+function = "first_at"
+lean = "writfold_core.target.first_at"
+theorems = [
+  "Writfold.Core.Target.first_at_loop_spec",
+  "Writfold.Core.Target.first_at_spec",
+]
+total = "Writfold.Core.Target.first_at_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "first-remote-wins",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/target.rs"
+function = "agree_at"
+lean = "writfold_core.target.agree_at"
+theorems = [
+  "Writfold.Core.Target.agree_at_loop_spec",
+  "Writfold.Core.Target.agree_at_spec",
+]
+total = "Writfold.Core.Target.agree_at_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "agree-ignores-level",
 ]
