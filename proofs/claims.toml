@@ -3179,7 +3179,15 @@ theorems = [
   "Writfold.Core.Target.other_never_chosen",
   "Writfold.Core.Target.pin_decides",
   "Writfold.Core.Target.disagreement_is_ambiguous",
-  "Writfold.Core.Target.first_at_loop_spec",
+  "Writfold.Core.Target.first_at_loop_spec",  "Writfold.Core.Target.rank_spec",
+  "Writfold.Core.Target.tip_commit_spec",
+  "Writfold.Core.Target.tip_is_spec",
+  "Writfold.Core.Target.firstL_found",
+  "Writfold.Core.Target.chooseOf_remote_facts",
+  "Writfold.Core.Target.chooseOf_remote",
+  "Writfold.Core.Target.agreeL_false",
+  "Writfold.Core.Target.chooseOf_disagree",
+  "Writfold.Core.Target.one_remote_unchanged",
 ]
 total = "Writfold.Core.Target.choose_spec"
 mutants = [
@@ -3201,6 +3209,7 @@ theorems = [
   "Writfold.Core.Referent.fresh_survives_behind",
   "Writfold.Core.Referent.settle_identity",
   "Writfold.Core.Referent.settle_only_withholds",
+  "Writfold.Core.Referent.settleOf_withholds",
 ]
 total = "Writfold.Core.Referent.settle_spec"
 mutants = [
@@ -3218,6 +3227,7 @@ theorems = [
   "Writfold.Core.Referent.judge_spec",
   "Writfold.Core.Referent.judge_fresh_needs",
   "Writfold.Core.Referent.judge_refines",
+  "Writfold.Core.Referent.settleOf_refines",
 ]
 total = "Writfold.Core.Referent.judge_spec"
 mutants = [

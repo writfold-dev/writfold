@@ -131,6 +131,24 @@ fn found(
 
 const HISTORY: &str = "history";
 
+/// A repository that is not a store: its clone, found as `stale` finds it,
+/// and its target, or `missing`.
+fn local(session: &Session<'_>, name: &str, url: Option<&str>) -> (&'static str, Vec<More>) {
+    match repos::resolve_via(Some(session.ws), name, url) {
+        Some((dir, via)) => {
+            let pin = repos::mapped_ref(Some(session.ws), name);
+            let ask = Ask {
+                repo: name,
+                url,
+                pin: pin.as_deref(),
+                named: matches!(via, repos::Via::Map | repos::Via::Path),
+            };
+            found(session, dir, via.name(), &ask)
+        }
+        None => ("missing", Vec::new()),
+    }
+}
+
 pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     let mut answer = Answer::default();
     let (mut total, mut missing, mut partial, mut shallow) = (0, 0, 0, 0);
@@ -150,19 +168,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
                 let read = reads.iter().find(|r| r.name == name);
                 store_row(session, declared, read, &mut flags)?
             }
-            None => match repos::resolve_via(Some(session.ws), &name, cited.url.as_deref()) {
-                Some((dir, via)) => {
-                    let pin = repos::mapped_ref(Some(session.ws), &name);
-                    let ask = Ask {
-                        repo: &name,
-                        url: cited.url.as_deref(),
-                        pin: pin.as_deref(),
-                        named: matches!(via, repos::Via::Map | repos::Via::Path),
-                    };
-                    found(session, dir, via.name(), &ask)
-                }
-                None => ("missing", Vec::new()),
-            },
+            None => local(session, &name, cited.url.as_deref()),
         };
         missing += usize::from(matches!(status, "missing" | "mismatch"));
         partial += usize::from(status == "partial");

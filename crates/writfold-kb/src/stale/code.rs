@@ -6,21 +6,20 @@
 //! A partial clone's code citations are unverifiable (`partial-clone`): its
 //! blobs may need a fetch. A Git failure in one repository makes that
 //! repository's citations unverifiable (`git-error: …`), not the run fail.
+use super::failed::per_repo_or;
 use super::span::{Located, locate};
 use super::target::{self as resolver, Asked as Ask};
 use super::{Checked, Cite, Verdict, pin_receipt, pinned, rename, repos};
-use crate::error::{KbError, Result};
+use crate::error::Result;
 use crate::session::Session;
 use crate::workspace::{CANCELLED, budgets};
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::sync::atomic::Ordering;
 use writfold_core::verdict::{Verdict as Kernel, other_blob};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
-    GitError, GitExecutable, KbRepository, kb_batch_check, pinned_blobs, pinned_tree,
+    GitExecutable, KbRepository, kb_batch_check, pinned_blobs, pinned_tree,
 };
-use writfold_runtime::process::ProcessError;
 
 pub fn check(
     session: &Session<'_>,
@@ -28,22 +27,7 @@ pub fn check(
     indices: &[usize],
 ) -> Result<Vec<(usize, Checked)>> {
     let mut out = Vec::new();
-    let mut groups: BTreeMap<String, Vec<usize>> = BTreeMap::new();
-    for &index in indices {
-        let cite = &cites[index];
-        let repo = match cite.kind.as_deref() {
-            Some("gate") => cite
-                .rev
-                .as_deref()
-                .and_then(|r| r.split_once('@'))
-                .map(|(repo, _)| repo.to_owned()),
-            _ => cite.repo.clone(),
-        };
-        match repo {
-            Some(repo) => groups.entry(repo).or_default().push(index),
-            None => out.push((index, missing("missing repo="))),
-        }
-    }
+    let groups = by_repo(cites, indices, &mut out);
     let Some(git) = session.git.as_ref() else {
         out.extend(
             groups
@@ -112,54 +96,33 @@ pub fn check(
     Ok(out)
 }
 
-/// A repository's verdicts, or, on a Git failure confined to it, each of
-/// `members` unverifiable with the reason.
-fn per_repo_or(
-    found: Result<Vec<(usize, Checked)>>,
-    members: &[usize],
-) -> Result<Vec<(usize, Checked)>> {
-    match found {
-        Ok(found) => Ok(found),
-        Err(error) if !CANCELLED.load(Ordering::Relaxed) && per_repo(&error) => {
-            let reason = format!("git-error: {}", brief(&error));
-            Ok(members.iter().map(|&i| (i, missing(&reason))).collect())
+/// The citations grouped by the repository they name (a gate citation by
+/// its `rev=<repo>@…`); one without a repository is unverifiable in `out`.
+fn by_repo(
+    cites: &[Cite],
+    indices: &[usize],
+    out: &mut Vec<(usize, Checked)>,
+) -> BTreeMap<String, Vec<usize>> {
+    let mut groups: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    for &index in indices {
+        let cite = &cites[index];
+        let repo = match cite.kind.as_deref() {
+            Some("gate") => cite
+                .rev
+                .as_deref()
+                .and_then(|r| r.split_once('@'))
+                .map(|(repo, _)| repo.to_owned()),
+            _ => cite.repo.clone(),
+        };
+        match repo {
+            Some(repo) => groups.entry(repo).or_default().push(index),
+            None => out.push((index, missing("missing repo="))),
         }
-        Err(error) => Err(error),
     }
+    groups
 }
 
-/// A Git failure confined to one repository: its citations read as
-/// unverifiable with the reason, and the other repositories are still
-/// checked.
-fn per_repo(error: &KbError) -> bool {
-    matches!(
-        error,
-        KbError::Git(_) | KbError::Process(_) | KbError::Fs(_)
-    )
-}
-
-/// The first line of an error (of Git's stderr when it exited non-zero),
-/// at most 160 characters.
-fn brief(error: &KbError) -> String {
-    let failed = match error {
-        KbError::Process(ProcessError::Command { status, stderr })
-        | KbError::Git(GitError::Process(ProcessError::Command { status, stderr })) => {
-            let said = String::from_utf8_lossy(stderr);
-            let line = said.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
-            Some(format!(
-                "exit {} {}",
-                status.map_or_else(|| "?".to_owned(), |s| s.to_string()),
-                line.trim()
-            ))
-        }
-        _ => None,
-    };
-    let text = failed.unwrap_or_else(|| error.to_string());
-    let line = text.lines().next().unwrap_or_default();
-    line.trim().chars().take(160).collect()
-}
-
-fn missing(reason: &str) -> Checked {
+pub(super) fn missing(reason: &str) -> Checked {
     Checked {
         verdict: Verdict::Unverifiable(reason.into()),
         head: "none".into(),
@@ -253,7 +216,7 @@ fn check_repo(
             },
         )
     }));
-    resolver::behind(git, dir, &resolved, cites, out)
+    super::behind::behind(git, dir, &resolved, cites, out)
 }
 
 type Answer = Option<(GitObjectId, String)>;

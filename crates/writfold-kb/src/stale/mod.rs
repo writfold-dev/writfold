@@ -5,9 +5,11 @@
 //! freshness rule and required fields a kind declaration may give
 //! ([`kinds`]). A kind declared `checked` is asked of an external checker,
 //! by `kb stale` only ([`checker`]).
+pub mod behind;
 pub mod checker;
 mod code;
 pub mod effective;
+mod failed;
 pub mod kind_check;
 pub mod kinds;
 mod pin_receipt;

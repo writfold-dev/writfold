@@ -25,7 +25,11 @@ def required() -> list[str]:
     text = (HERE / "Audit.lean").read_text()
     start = text.index("def claims : List Name := [")
     end = text.index("\n]", start)
-    return re.findall(r"``([\w.']+)", text[start:end])
+    # The calculus (proofs/Calculus, #205) is about no Rust function, so no
+    # tauten claim can hold it; mutants.py requires each of its claims to be
+    # named by a core mutant or listed as derived instead.
+    found = re.findall(r"``([\w.']+)", text[start:end])
+    return [name for name in found if not name.startswith("Calculus.")]
 
 
 def claimed() -> set[str]:
