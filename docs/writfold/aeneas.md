@@ -1331,11 +1331,19 @@ not proved. Statements (`gate attest`, `gate waive`, a delivery's
 statements) are ordered by (`seq`, name) since v0.6.0-dev.12, and the one
 that stands is `order::newest`.
 
+## The calculus in Lean
+
+Since v0.6.0-dev.26 ([#205](https://github.com/writfold-dev/writfold/issues/205), [RFC](../rfcs/2026-11-27-calculus-in-lean.md)), `proofs/Calculus/` states the calculus itself in plain Lean: the three-valued word a judgment says (`Tri`: yes, no, unknown) with its knowledge order, `Decision` and its join, `admit`, and the accounted universe (`Member`: judged, declared out, remainder; `whole`, `universal`, `search`). Its laws are theorems: unknown never admits (`Tri.unknown_never_admits`, `unknown_never_passes`), adding an obligation never makes an unmet set met (`Tri.more_never_admits`), and a word that claims all of something holds only over an accounted universe (`remainder_never_whole`, `empty_never_yes`, `absence_needs_whole`).
+
+It is a specification, not a copy of the code: no file under `proofs/Calculus/` imports the translation, Aeneas, Mathlib or `Writfold` (`mutants.py` refuses any other import). Its theorems are audited with the kernels' and are required claims. Core mutants mutate a definition under `proofs/Calculus/` and build only the `Calculus` library; every calculus claim is named by one or listed in `DERIVED` in `mutants.py` with the claim it follows from. From #206 on, each kernel is linked to it.
+
 ## Trust base
 
 The Charon/Aeneas translation of the Rust (pinned: Charon `8cae8fd`, Aeneas
 `nightly-2026.11.07-c5eb4a2`), the Aeneas library's models of the Rust
-operations used, the Lean kernel and the three standard axioms.
+operations used, the Lean kernel and the three standard axioms. The
+calculus's definitions in `proofs/Calculus/` are a specification the owner
+reviews: a law proved there is only as right as the definition it is about.
 `writfold-kb`'s plan fold, receipt, statement and cover-row reading, digests,
 citation checks and the guard's lookups, which gather the facts the kernels
 decide on, are tested, not proved.

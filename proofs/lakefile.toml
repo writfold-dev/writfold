@@ -3,7 +3,7 @@
 # `proofs` compose image, where `aeneas` is the pinned release unpacked at
 # /opt/aeneas (proofs/Dockerfile); lake-manifest.json pins mathlib and the rest.
 name = "writfold-proofs"
-defaultTargets = ["Extracted", "Writfold", "Audit"]
+defaultTargets = ["Calculus", "Extracted", "Writfold", "Audit"]
 
 [[require]]
 name = "aeneas"
@@ -15,6 +15,11 @@ path = "/opt/aeneas/backends/lean"
 [[lean_lib]]
 name = "Extracted"
 roots = ["Extracted.WritfoldCore"]
+
+# The calculus: definitions and laws in plain Lean, no import of the
+# translation (docs/rfcs/2026-11-27-calculus-in-lean.md).
+[[lean_lib]]
+name = "Calculus"
 
 # The theorems, stated over the extracted functions.
 [[lean_lib]]

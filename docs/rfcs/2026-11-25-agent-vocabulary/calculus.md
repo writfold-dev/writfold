@@ -171,6 +171,8 @@ unmet set met. Nothing follows about time: evidence can stop holding.
 
 ### 3.5 Unknown and empty
 
+*Stated in `proofs/Calculus/Word.lean` and `Account.lean` (#205).*
+
 A fact is met, unmet or unknown. Unknown never admits. An empty set of
 obligations never reads as met where something asks "is everything met?".
 
