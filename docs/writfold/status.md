@@ -5,7 +5,7 @@ split of 16 November 2026. The current authority is [mission.md](mission.md);
 its [Component status](mission.md#component-status-15-november-2026) table is
 the standing of each component. What you can run today, with the evidence
 for each verb, is in the README's
-[What works today](../../README.md#what-works-today) table and in the
+[What works today](../guide/tour.md#what-works-today) table and in the
 [guides](../guide/README.md).
 
 ## The binary

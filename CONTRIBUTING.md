@@ -21,6 +21,29 @@ doc correction, a dependency bump, or an obvious one-line fix with no change
 in behaviour. If you cannot tell whether it is trivial, it is not. Open the
 issue.
 
+## Repository map
+
+- `crates/`: `writfold` (the binary: `kb` and `watch`), `writfold-app`
+  (argument handling), `writfold-kb` (records, index, runs, gates, plans,
+  deliveries, hooks), `writfold-core` (the pure decision functions),
+  `writfold-runtime` (Git, file and process effects), `writfold-tui`
+  (`watch`), `writfold-domain` (shared checked values), `writfold-sources`
+  (citation, front matter and Markdown codecs), `writfold-xtask` (source
+  checks).
+- `proofs/`: the Lean proofs over `writfold-core`
+  ([how](docs/writfold/aeneas.md)). `spec/`: the TLA+ models.
+- `docs/guide/`: the guides. `docs/writfold/`: the
+  [mission](docs/writfold/mission.md) and the
+  [design](docs/writfold/kb-v1-design.md). `docs/rfcs/`: the
+  [RFCs](docs/rfcs/README.md), one per design decision, built or planned.
+- `plugins/` and `.claude-plugin/`: the Claude Code plugin and its
+  marketplace entry.
+- `fixtures/`: test knowledge bases and guard conformance cases.
+- `scripts/`, `compose.yaml`, `docker/`, `qualification/`: the
+  [quality and unit gates](docs/writfold/quality-gate.md).
+
+`cargo test --workspace` runs the tests.
+
 ## Building and checking
 
 Read [AGENTS.md](AGENTS.md) first. Two kinds of check apply, and neither

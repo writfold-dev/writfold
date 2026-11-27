@@ -16,8 +16,9 @@ use blocks::blocks;
 
 type TestResult<T = ()> = Result<T, Box<dyn Error>>;
 
-const PAGES: [&str; 16] = [
+const PAGES: [&str; 17] = [
     "adopting",
+    "tour",
     "README",
     "kb-layout",
     "checkers",

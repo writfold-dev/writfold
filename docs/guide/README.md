@@ -6,6 +6,8 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 
 | Page | What it covers | Status |
 |---|---|---|
+| [install](install.md) | The installer, installing by hand with the checksum, the Claude Code plugin, building from source | built |
+| [tour](tour.md) | Each idea in a few lines: sourced answers, runs and plans, gates, policy, delivery, guard rules, `watch`, what is proved, what works today | built |
 | [kb-layout](kb-layout.md) | The knowledge base directory, records, citation tokens and kind declarations, the trailer, `.writfold/`, knowledge bases not written by Writfold, tracked and local state | built |
 | [feeding-back](feeding-back.md) | What each stage writes, with which verb, where it lands and who commits | built, with proposals and the backfill and reflection checks |
 | [checkers](checkers.md) | External checkers for citation kinds Git cannot check: the kind file, the `writfold-checker/1` protocol, a minimal checker, versions | built in v0.5.0-dev.2 |
