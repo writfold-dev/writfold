@@ -27,8 +27,8 @@ Every key but `freshness`, `paths`, `description` and `recorded_max_age` is requ
 On each machine, in this order ([proved](../writfold/aeneas.md)):
 
 1. the KB's local repository map (`<KB git dir>/writfold/repos`), whatever the clone's origin, because the machine's owner wrote it; a clone with another origin is used and flagged `!origin-differs`;
-2. a directory under a `$WRITFOLD_KB_REPOS` root, used only when its `origin` is the declared `url`;
-3. the first path hint whose clone's `origin` is the declared `url`.
+2. a directory under a `$WRITFOLD_KB_REPOS` root, used only when one of its remotes is at the declared `url` (since v0.6.0-dev.28 any remote, not only `origin`: a fork clone with `upstream` at the store's URL is the store, [#198](https://github.com/writfold-dev/writfold/issues/198));
+3. the first path hint whose clone has a remote at the declared `url`.
 
 URLs are compared by host and path, so `git@host:me/scratch.git`, `ssh://git@host/me/scratch` and `https://host/me/scratch` are the same store. A clone found only through a root or a hint whose origin is another repository is a **mismatch**: nothing is read from it, and its citations read `unverifiable: store-origin-mismatch`. A store found nowhere reads `store-not-local`. `kb repos` has a row for every declared store, cited or not, so a fresh machine sees what to clone:
 
@@ -154,7 +154,7 @@ material scratch:work/2026-11-18-review-service-1234 Review of pull request 1234
 # coverage=complete … material=1 …
 ```
 
-- **What is read.** In every declared store whose clone is found here, every `README.md` in the tree of the store's target commit: `origin/HEAD`, else `HEAD`, the commit `cite make` pins, so every directory listed can be cited at exactly the commit the row shows. Material committed in the clone and not pushed is not listed while `origin/HEAD` exists; a note says when the clone's `HEAD` is elsewhere. The work tree is never read and nothing is fetched.
+- **What is read.** In every declared store whose clone is found here, every `README.md` in the tree of the store's target commit (the default branch of the remote at the store's URL when the clone has one, else the clone's own line, as `stale` chooses it), the commit `cite make` pins, so every directory listed can be cited at exactly the commit the row shows. Material committed in the clone and not pushed is not listed while `origin/HEAD` exists; a note says when the clone's `HEAD` is elsewhere. The work tree is never read and nothing is fetched.
 - **What lists a directory.** Each element of `subject:` (one ID or a list) on its own: a record's exact ID, or an alias exactly one record has. An alias two records share, or a name of no record, lists the directory nowhere. The looser matching of lookups (ticket spellings, prefixes) is not used: a store must name the record as the record names itself. The rule is proved (`store::claim`, [proofs](../writfold/aeneas.md)).
 - **What a row is.** The store's claim, never a KB fact: every row is flagged `!store-claim` (and `!origin-differs` when the clone the map names has another origin), its `path` and `line` are empty, and its `at:` line is a code locator you can pass to `uses` or `cite make`. A cover row or an assumption cannot cite a material row. Rows come after every KB row, by store, then directory descending, so date-prefixed directories read newest first.
 - **A store that cannot be read** (missing, a clone of another repository, a partial clone, no commit, a Git failure) gives no rows and one note (`material: store scratch not read (missing); writfold kb repos`). The answer stays `known` and its coverage is unchanged.

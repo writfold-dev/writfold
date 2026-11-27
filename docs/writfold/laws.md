@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=16 declared_out=1 remainder=245 of 262`
+`LAW_COVERAGE judged=18 declared_out=8 remainder=237 of 263`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: the backlog in
@@ -705,7 +705,7 @@ What `resolve` chose was offered, at the deciding level.
 resolve_one_mem {cs : List (Candidate ρ)} {r : ρ} (h : resolve cs = .one r) : ∃ c ∈ cs, Candidate.top cs c = true ∧ c.referent = some r
 ```
 
-- Implemented by: `pointer.level`, `pointer.open`, `subject.pick`
+- Implemented by: `pointer.level`, `pointer.open`, `subject.pick`, `target.choose_in`, `target.choose`
 - Caught by: `resolve-first-wins`, `resolve-falls-back`
 
 ### `Calculus.resolve_one_agree`
@@ -716,7 +716,7 @@ Every candidate at the deciding level agreed: two that disagree, or one that off
 resolve_one_agree {cs : List (Candidate ρ)} {r : ρ} (h : resolve cs = .one r) {c : Candidate ρ} (hc : c ∈ cs) (ht : Candidate.top cs c = true) : c.referent = some r
 ```
 
-- Implemented by: `pointer.level`, `pointer.open`, `store.claim`, `subject.pick`
+- Implemented by: `pointer.level`, `pointer.open`, `store.claim`, `subject.pick`, `target.choose_in`, `target.choose`
 - Caught by: `resolve-first-wins`, `resolve-falls-back`, `resolve-ignores-missing-offer`
 
 ### `Calculus.resolve_order_free`
@@ -727,7 +727,7 @@ The choice does not depend on the order the candidates were found in: two listin
 resolve_order_free {cs ds : List (Candidate ρ)} {r s : ρ} (hmem : ∀ c, c ∈ cs ↔ c ∈ ds) (hc : resolve cs = .one r) (hd : resolve ds = .one s) : r = s
 ```
 
-- Implemented by: `pointer.level`, `subject.pick`
+- Implemented by: `pointer.level`, `subject.pick`, `target.choose_in`, `target.choose`
 - Derived: resolve_one_mem, resolve_one_agree
 
 ### `Calculus.settle_only_withholds`
@@ -833,6 +833,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `runs.complete` | `Calculus.whole` | `Writfold.Core.Conform.runs_complete_implements` |
 | `store.claim` | `Calculus.resolve` | `Writfold.Core.Conform.claim_implements` |
 | `subject.pick` | `Calculus.resolve` | `Writfold.Core.Conform.pick_implements` |
+| `target.choose` | `Calculus.resolve` | `Writfold.Core.Conform.choose_implements` |
+| `target.choose_in` | `Calculus.resolve` | `Writfold.Core.Conform.choose_in_implements` |
 | `walk.complete` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_implements` |
 | `walk.complete_within` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_within_implements` |
 
@@ -852,3 +854,10 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | Function | Why |
 |---|---|
 | `account.left` | the per-member test inside account::remainder, linked through it (left_spec) |
+| `target.agree_at` | inside choose_in; linked through it (agree_at_spec) |
+| `target.best` | the strongest level, inside choose_in; linked through it (best_spec) |
+| `target.first_at` | inside choose_in; linked through it (first_at_spec) |
+| `target.headless_at` | inside choose_in; linked through it (headless_at_spec) |
+| `target.rank` | a remote's naming level, inside choose_in; linked through it (rank_spec) |
+| `target.tip_commit` | a tip's commit, inside choose_in (tip_commit_spec) |
+| `target.tip_is` | a tip compared with a commit, inside choose_in (tip_is_spec) |

@@ -201,6 +201,18 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
         .extend(modes.iter().map(|m| crate::deliver::modes::row(root, m)));
     answer.rows.extend(route_rows(root));
     let stores = store_lines(root, &mut lines)?;
+    // Declared repositories decide what a citation is judged at (#197); a
+    // KB without them keeps the identity it had.
+    for d in crate::declared::read(root)? {
+        let urls: Vec<String> = d.urls().map(crate::store::normalise).collect();
+        let reference = d.reference.as_deref().unwrap_or("default");
+        lines.push(format!(
+            "repo:{}\t{}\t{reference}\t{}",
+            d.name,
+            urls.join(","),
+            d.aliases.join(",")
+        ));
+    }
     lines.sort();
     let mut material = lines.join("\n");
     material.push('\n');

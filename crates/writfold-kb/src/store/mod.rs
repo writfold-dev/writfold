@@ -196,8 +196,16 @@ fn candidate(dir: Option<PathBuf>, want: &str) -> (Candidate, Option<(PathBuf, S
     let Some(git_dir) = dir.as_deref().and_then(repos::git_dir) else {
         return (Candidate::None, None);
     };
-    let had = origin(&git_dir).unwrap_or_default();
-    let same = normalise(&had) == want;
+    // The store is the clone when any remote is at the declared URL (#198).
+    let urls = crate::declared::remote_urls(&git_dir);
+    let at = urls.iter().find(|u| normalise(u) == want);
+    let same = at.is_some();
+    let had = match at {
+        Some(u) => u.clone(),
+        None => origin(&git_dir)
+            .or_else(|| urls.first().cloned())
+            .unwrap_or_default(),
+    };
     (Candidate::Clone(same), Some((git_dir, had)))
 }
 

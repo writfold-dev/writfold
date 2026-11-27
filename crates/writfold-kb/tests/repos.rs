@@ -1,7 +1,7 @@
 //! `kb repos` and partial clones (design section 6): one row per cited
 //! repository (`local`, `partial` or `missing`) with how its clone was
 //! found; a partial clone's code citations read as unverifiable
-//! (`partial-clone`) instead of failing `stale`, and any other Git failure
+//! (by blob id, #182) instead of failing `stale`, and any other Git failure
 //! in one repository degrades only that repository's citations.
 mod support;
 
@@ -143,17 +143,34 @@ fn stale(w: &World) -> TestResult<(String, u8)> {
     }))
 }
 
+/// #182: a partial clone decides by blob id: the cited blob at the cited
+/// path is fresh without its bytes; another blob it lacks is
+/// unverifiable (blob-not-local), never changed.
 #[test]
-fn a_partial_clone_is_unverifiable_not_an_error() -> TestResult {
+fn a_partial_clone_decides_by_blob_id() -> TestResult {
     let w = cited()?;
+    let other = git(&w.code, &["rev-parse", "HEAD:src/batch.rs"])?;
+    let rev = git(&w.code, &["rev-parse", "HEAD"])?;
+    let note = std::fs::read_to_string(w.kb.join("lantern/repos.md"))?;
+    let extra = format!(
+        "\u{27e6}cite kind=code repo=lazy rev={rev} path=src/ledger.rs L=1-2 blob={other}\u{27e7}\n"
+    );
+    std::fs::write(w.kb.join("lantern/repos.md"), format!("{note}{extra}"))?;
+    git(&w.kb, &["commit", "-qam", "other blob"])?;
     let (text, code) = stale(&w)?;
     assert_eq!(code, 2, "{text}");
-    let lazy = text
+    assert!(
+        !text.lines().any(|l| l.contains("@lantern/repos.md:3")),
+        "the same blob reads fresh: {text}"
+    );
+    let differs = text
         .lines()
-        .find(|l| l.contains("@lantern/repos.md:3"))
-        .ok_or("lazy row")?;
-    assert!(lazy.contains("[unverifiable]"), "{lazy}");
-    assert!(lazy.contains("partial-clone"), "{lazy}");
+        .find(|l| l.contains("@lantern/repos.md:6"))
+        .ok_or("differing row")?;
+    assert!(
+        differs.contains("[unverifiable]") && differs.contains("blob-not-local"),
+        "{differs}"
+    );
     let ghost = text
         .lines()
         .find(|l| l.contains("@lantern/repos.md:4"))

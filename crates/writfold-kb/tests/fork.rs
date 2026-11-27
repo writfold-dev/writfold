@@ -258,3 +258,130 @@ fn cite_make_cites_the_chosen_target() -> TestResult {
     assert!(text.contains("target-ambiguous"), "{text}");
     Ok(())
 }
+
+/// Write `.writfold/repos/service.toml` naming `url` (and `extra` lines).
+fn declare(l: &Layout, url: &Path, extra: &str) -> TestResult {
+    let dir = l.w.kb.join(".writfold/repos");
+    std::fs::create_dir_all(&dir)?;
+    std::fs::write(
+        dir.join("service.toml"),
+        format!(
+            "schema = \"writfold-repo/1\"\nname = \"org/service\"\nurl = \"file://{}\"\n{extra}",
+            url.display()
+        ),
+    )?;
+    Ok(())
+}
+
+/// #197: a declaration decides which remote is the repository, whatever a
+/// token's url= says; a clone with no remote at the declared URL is
+/// ambiguous; a declared ref is that branch; the map's ref= still wins.
+#[test]
+fn a_declared_repository_is_its_declared_url() -> TestResult {
+    let l = layout()?;
+    // Tokens minted in a fork clone name the fork's URL: without a
+    // declaration that fork (url= equal) would be the target.
+    let fork_url = format!("file://{}", l.fork.display());
+    let note = std::fs::read_to_string(l.w.kb.join("lantern/fork.md"))?
+        .replace("⟧", &format!(" url={fork_url}⟧"));
+    std::fs::write(l.w.kb.join("lantern/fork.md"), note)?;
+    git(&l.w.kb, &["commit", "-qam", "fork url"])?;
+    work(&l, "both", &[("upstream", &l.canon)], "")?;
+    let (text, _) = stale(&l.w)?;
+    assert!(
+        row(&text, "new.txt").contains("target-behind"),
+        "the fork wins undeclared: {text}"
+    );
+    declare(&l, &l.canon, "")?;
+    let (text, _) = stale(&l.w)?;
+    assert_eq!(row(&text, "new.txt"), "[fresh]", "{text}");
+    let (text, _) = repos(&l.w)?;
+    assert!(
+        text.contains("declared: .writfold/repos/service.toml; upstream is its url"),
+        "{text}"
+    );
+
+    work(&l, "fork-only", &[], "")?;
+    let (text, _) = stale(&l.w)?;
+    assert!(
+        row(&text, "new.txt").contains("no remote of this clone is at the declared url"),
+        "{text}"
+    );
+
+    declare(&l, &l.canon, "ref = \"release\"\n")?;
+    work(&l, "no-release", &[("upstream", &l.canon)], "")?;
+    let (text, _) = stale(&l.w)?;
+    assert!(
+        row(&text, "new.txt").contains("the declared ref release"),
+        "{text}"
+    );
+    work(
+        &l,
+        "pinned",
+        &[("upstream", &l.canon)],
+        " ref=refs/remotes/upstream/main",
+    )?;
+    let (text, _) = stale(&l.w)?;
+    assert_eq!(
+        row(&text, "new.txt"),
+        "[fresh]",
+        "the map's ref= wins: {text}"
+    );
+    Ok(())
+}
+
+/// #198: no product module asks a clone for `origin` by name; the
+/// resolver (`stale/target.rs`) and the store module's mismatch note are
+/// the only places a remote's name is read.
+#[test]
+fn no_module_reads_origin_by_convention() -> TestResult {
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let mut found = Vec::new();
+    let mut stack = vec![src.clone()];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir)?.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.extension().is_some_and(|e| e == "rs")
+                && !path.ends_with("stale/target.rs")
+            {
+                let text = std::fs::read_to_string(&path)?;
+                for needle in ["remote.origin.url", "refs/remotes/origin"] {
+                    if text.contains(needle) {
+                        found.push(format!("{}: {needle}", path.display()));
+                    }
+                }
+            }
+        }
+    }
+    assert!(found.is_empty(), "{found:?}");
+    Ok(())
+}
+
+/// #198: a store cloned as a fork, with `upstream` at the declared URL, is
+/// the store: no `!origin-differs`.
+#[test]
+fn a_store_cloned_as_a_fork_is_found_by_its_declared_url() -> TestResult {
+    let l = layout()?;
+    let dir = work(&l, "store-fork", &[("upstream", &l.canon)], "")?;
+    std::fs::write(l.w.kb.join(".git/writfold/repos"), "# map\n")?;
+    let stores = l.w.kb.join(".writfold/stores");
+    std::fs::create_dir_all(&stores)?;
+    std::fs::write(
+        stores.join("scratch.toml"),
+        format!(
+            "schema = \"writfold-store/1\"\nname = \"scratch\"\nurl = \"file://{}\"\nrole = \"attached\"\npaths = [\"{}\"]\n",
+            l.canon.display(),
+            dir.display()
+        ),
+    )?;
+    let (text, _) = repos(&l.w)?;
+    let row = text
+        .lines()
+        .find(|r| r.starts_with("repo scratch"))
+        .ok_or("no store row")?;
+    assert!(!row.contains("origin-differs"), "{text}");
+    assert!(row.contains("[local]"), "{text}");
+    Ok(())
+}

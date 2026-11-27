@@ -5,12 +5,9 @@
 //! directories holding `<name>` or `<org>/<name>`), a `repo=` that is itself
 //! a path, and a `file://` URL. A partial clone (a promisor remote) is
 //! told apart by reading its config file, without spawning Git.
-use crate::error::Result;
 use crate::session::Session;
-use crate::workspace::{CANCELLED, Workspace, budgets};
+use crate::workspace::Workspace;
 use std::path::{Path, PathBuf};
-use writfold_domain::GitObjectId;
-use writfold_runtime::git::{GitExecutable, KbRepository, kb_commit};
 
 /// Which rule found a repository's clone.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -208,27 +205,6 @@ pub fn fetched(git_dir: &Path) -> Option<i64> {
         .and_then(|meta| meta.modified().ok())
         .and_then(|at| at.duration_since(std::time::UNIX_EPOCH).ok())
         .and_then(|since| i64::try_from(since.as_secs()).ok())
-}
-
-/// The commit citations are checked against: `origin/HEAD`, else `HEAD`,
-/// with the name of the ref that gave it.
-pub fn target(
-    git: &GitExecutable<'_>,
-    git_dir: &Path,
-) -> Result<Option<(GitObjectId, &'static str)>> {
-    let reads = KbRepository {
-        git_dir,
-        work_tree: None,
-    };
-    for (spec, named) in [
-        ("refs/remotes/origin/HEAD", "origin/HEAD"),
-        ("HEAD", "HEAD"),
-    ] {
-        if let Some(commit) = kb_commit(git, reads, spec, budgets()?, &CANCELLED)? {
-            return Ok(Some((commit, named)));
-        }
-    }
-    Ok(None)
 }
 
 /// The shared Git directory of the repository in `dir`: the same for a

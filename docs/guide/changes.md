@@ -6,6 +6,13 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.28
+
+- **Declared repositories** ([#197](https://github.com/writfold-dev/writfold/issues/197)): a new KB directory, `.writfold/repos/<slug>.toml` (`writfold-repo/1`: `name`, `url`, optional `mirrors`, `aliases`, `ref`, `description`). A declared repository is judged only at a remote at its URL, whatever a token's `url=` says (a token minted in a fork clone no longer makes the fork the target); a clone with no remote there is `unverifiable (target-ambiguous: no remote of this clone is at the declared url …)`. Declarations join `kb policy`'s identity and `kb lint`; a KB without the directory reads as before.
+- **fix: no `origin` by convention** ([#198](https://github.com/writfold-dev/writfold/issues/198)): `cite make`, attached stores, the gate's subject name, the brief's project and observed places no longer read `origin` by name. A store clone is the store when any remote is at the store's URL, and its material is read at that remote's line.
+- **fix: partial clones** ([#182](https://github.com/writfold-dev/writfold/issues/182)): code citations in a blobless clone are decided by blob id; the reason `partial-clone` is gone. What needs bytes the clone lacks reads `unverifiable (blob-not-local)`.
+- The Git resolver is proved to implement the calculus's `resolve` (law R), and a new guide page, [assets](assets.md), says what a citation points at and who judges it ([#212](https://github.com/writfold-dev/writfold/issues/212), [#199](https://github.com/writfold-dev/writfold/issues/199)).
+
 ## v0.6.0-dev.27
 
 - **fix: a run's unread files** ([#181](https://github.com/writfold-dev/writfold/issues/181)): `resume` and `resume --packet` on a run that holds files in no format Writfold reads (another tool's `observations/`, a stray file, an unknown file in a Writfold directory) print an `unread` row, count `unread=N`, and read `coverage=partial` and `packet=partial` (exit 2) where they read complete (exit 0). A run with only Writfold's own files is unchanged. `--json` gains the count and the row. A hook or script that treats exit 2 from `resume` as a failure will see it for runs another tool wrote.

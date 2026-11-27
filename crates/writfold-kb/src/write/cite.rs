@@ -13,11 +13,11 @@ use crate::session::Session;
 use crate::stale::repos;
 use crate::stale::target::{self as resolver, Asked as Ask};
 use crate::time;
-use crate::workspace::{CANCELLED, GitTool, Workspace, budgets};
+use crate::workspace::{GitTool, Workspace};
 use crate::{Request, write::atomic::digest};
 use std::path::Path;
 use writfold_domain::GitObjectId;
-use writfold_runtime::git::{GitExecutable, KbRepository, kb_config};
+use writfold_runtime::git::GitExecutable;
 use writfold_sources::citations::iter_cite_tokens;
 
 pub use super::span::{Lines, Span, Spanned, blobs, spans};
@@ -144,17 +144,13 @@ pub fn seen(now: i64) -> String {
     format!("{}Z", &time::stamp(now)[..16])
 }
 
-/// `url=` when no remote was chosen: the repository's origin URL, else
-/// its directory.
-pub fn url(git: &GitExecutable<'_>, git_dir: &Path, dir: &Path) -> Result<String> {
-    let reads = KbRepository {
-        git_dir,
-        work_tree: None,
-    };
-    Ok(
-        kb_config(git, reads, "remote.origin.url", budgets()?, &CANCELLED)?
-            .unwrap_or_else(|| dir.to_string_lossy().into_owned()),
-    )
+/// `url=` when no remote was chosen: the URL of the clone's first remote,
+/// else its directory.
+pub fn url(git_dir: &Path, dir: &Path) -> String {
+    crate::declared::remote_urls(git_dir)
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| dir.to_string_lossy().into_owned())
 }
 
 /// The token from its fields, checked to parse back.
@@ -219,17 +215,19 @@ pub fn make(
     };
     let git_dir = repos::git_dir(&dir).unwrap_or_else(|| dir.clone());
     let pin_ref = repos::mapped_ref(Some(session.ws), &name);
+    let declared = crate::declared::read(&session.ws.root)?;
     let ask = Ask {
         repo: &name,
         url: None,
         pin: pin_ref.as_deref(),
         named: as_path || repos::mapped(Some(session.ws), &name).is_some(),
+        declared: crate::declared::find(&declared, &name),
     };
     let (rev, chosen_url) = cited_commit(&git, &git_dir, &ask)?;
     let pin = pinned(&git, (&dir, rev), path, make)?;
     let url = match chosen_url {
         Some(url) => url,
-        None => url(&git, &git_dir, &dir)?,
+        None => url(&git_dir, &dir),
     };
     let text = code_token(&Fields {
         repo: &name,

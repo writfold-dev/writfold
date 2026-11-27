@@ -63,6 +63,10 @@ last tree, buildable, as branch `public-main-pre-split` (tag
 
 - Git text is the source of truth. One record per file, so concurrent writers
   merge in Git.
+- (27 November 2026, [asset boundary](../rfcs/2026-11-27-asset-boundary.md))
+  Git is required for the KB and for a run's subject. A cited asset is
+  validated through a provider, of which Git is the first: the provider
+  supplies facts and the verdict is `referent::judge`'s.
 - A local SQLite file is a derived index that can always be rebuilt from Git
   at a commit. It holds records, typed edges with provenance and freshness,
   and full-text search (FTS5 with BM25 and a trigram tokenizer for

@@ -10,7 +10,7 @@ use super::repos::common_dir;
 use crate::error::Result;
 use crate::workspace::{CANCELLED, budgets};
 use std::path::Path;
-use writfold_core::target::{Choice, Names, Pinned, Remote, Tip, Why, choose};
+use writfold_core::target::{Choice, Names, Pinned, Remote, Tip, Why, choose_in};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{GitExecutable, KbRepository, kb_commit};
 
@@ -36,6 +36,8 @@ pub struct Asked<'a> {
     pub url: Option<&'a str>,
     pub pin: Option<&'a str>,
     pub named: bool,
+    /// The repository's declaration in the KB, if any (#197).
+    pub declared: Option<&'a crate::declared::Declared>,
 }
 
 /// One remote of the clone: its name, URL and default-branch tip.
@@ -76,6 +78,11 @@ pub fn names(url: Option<&str>, asked: &Asked<'_>, only: bool) -> Names {
     let Some(remote) = url.and_then(normalize) else {
         return Names::Unread;
     };
+    // A declared repository is its declared URL or a mirror, and nothing else.
+    if let Some(d) = asked.declared {
+        let at = d.urls().filter_map(normalize).any(|u| u == remote);
+        return if at { Names::Url } else { Names::Other };
+    }
     if asked.url.and_then(normalize).as_deref() == Some(remote.as_str()) {
         return Names::Url;
     }
@@ -156,8 +163,13 @@ fn tip(
     git: &GitExecutable<'_>,
     git_dir: &Path,
     remote: &str,
-    agreed: Option<&str>,
+    (agreed, declared_ref): (Option<&str>, Option<&str>),
 ) -> Result<Option<(String, GitObjectId)>> {
+    // A declared ref is that branch and nothing else (#197).
+    if let Some(branch) = declared_ref {
+        let found = commit(git, git_dir, &format!("refs/remotes/{remote}/{branch}"))?;
+        return Ok(found.map(|id| (format!("{remote}/{branch}"), id)));
+    }
     if let Some(id) = commit(git, git_dir, &format!("refs/remotes/{remote}/HEAD"))? {
         let branch = head_branch(git_dir, remote).unwrap_or_else(|| "HEAD".into());
         return Ok(Some((format!("{remote}/{branch}"), id)));
@@ -201,7 +213,15 @@ fn seen(git: &GitExecutable<'_>, git_dir: &Path, asked: &Asked<'_>) -> Result<Ve
             name: name.clone(),
             url: url.clone(),
             names: names(url.as_deref(), asked, only),
-            tip: tip(git, git_dir, name, agreed.as_deref())?,
+            tip: tip(
+                git,
+                git_dir,
+                name,
+                (
+                    agreed.as_deref(),
+                    asked.declared.and_then(|d| d.reference.as_deref()),
+                ),
+            )?,
         });
     }
     Ok(out)
@@ -282,7 +302,7 @@ pub fn resolve(git: &GitExecutable<'_>, git_dir: &Path, asked: &Asked<'_>) -> Re
         why: Some(format!("target-ambiguous: {why}")),
         url: None,
     };
-    Ok(match choose(pinned.0, &kernel(&remotes)) {
+    Ok(match choose_in(pinned.0, asked.declared.is_some(), &kernel(&remotes)) {
         Choice::Pinned => Resolved {
             commit: pinned.1,
             rule: format!("ref={}", asked.pin.unwrap_or_default()),
@@ -298,10 +318,18 @@ pub fn resolve(git: &GitExecutable<'_>, git_dir: &Path, asked: &Asked<'_>) -> Re
         Choice::Remote(i) => {
             let r = remotes.get(i);
             let (rule, id) = r.and_then(|r| r.tip.clone()).unzip();
+            let why = match asked.declared {
+                Some(d) => Some(format!(
+                    "declared: {}; {} is its url",
+                    d.path,
+                    r.map_or("", |r| r.name.as_str())
+                )),
+                None => (remotes.len() > 1).then(|| described(&remotes)),
+            };
             Resolved {
                 commit: id,
                 rule: rule.unwrap_or_else(|| "none".into()),
-                why: (remotes.len() > 1).then(|| described(&remotes)),
+                why,
                 url: r.and_then(|r| r.url.clone()),
             }
         }
@@ -310,12 +338,21 @@ pub fn resolve(git: &GitExecutable<'_>, git_dir: &Path, asked: &Asked<'_>) -> Re
                 "the map's ref {} does not resolve",
                 asked.pin.unwrap_or_default()
             ),
-            Why::NoRemoteNames => format!(
-                "no remote of this clone names {} ({})",
-                asked.repo,
-                described(&remotes)
-            ),
-            Why::NoDefaultBranch => "a remote that names the repository has no default branch here (git remote set-head REMOTE -a, or ref= in the map)".into(),
+            Why::NoRemoteNames => match asked.declared {
+                Some(d) => format!(
+                    "no remote of this clone is at the declared url {} (git remote add upstream {} && git fetch upstream)",
+                    d.url, d.url
+                ),
+                None => format!(
+                    "no remote of this clone names {} ({})",
+                    asked.repo,
+                    described(&remotes)
+                ),
+            },
+            Why::NoDefaultBranch => match asked.declared.and_then(|d| d.reference.as_deref()) {
+                Some(branch) => format!("the declared ref {branch} is not at the declared remote here; fetch it"),
+                None => "a remote that names the repository has no default branch here (git remote set-head REMOTE -a, or ref= in the map)".into(),
+            },
             Why::Disagree => format!(
                 "remotes that name {} disagree ({})",
                 asked.repo,
@@ -363,6 +400,7 @@ mod tests {
             url: None,
             pin: None,
             named: true,
+            declared: None,
         };
         let fork = Some("git@github.com:me/service.git");
         let canon = Some("https://github.com/org/service");

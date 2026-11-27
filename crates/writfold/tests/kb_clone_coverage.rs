@@ -138,10 +138,9 @@ fn plan_without_writes(d: &Demo) -> Result {
         verdicts.contains("unverifiable repo-not-local"),
         "{verdicts}"
     );
-    assert!(
-        verdicts.contains("unverifiable partial-clone"),
-        "{verdicts}"
-    );
+    // gamma's partial clone decides its blob= citations by id (#182).
+    assert!(!verdicts.contains("partial-clone"), "{verdicts}");
+    assert!(verdicts.contains("     2  fresh"), "{verdicts}");
     // Nothing so far wrote to Git or cloned anything.
     assert_eq!(
         sh(&kb, d, "git rev-parse HEAD; git status --porcelain")?.0,
@@ -193,7 +192,7 @@ fn provision_and_compare(d: &Demo) -> Result {
     assert!(
         compare
             .lines()
-            .any(|l| l.ends_with("  fresh") && l.contains("     4")),
+            .any(|l| l.ends_with("  fresh") && l.contains("     6")),
         "{compare}"
     );
     let local = lines_with(&compare, "repo-not-local");
@@ -203,6 +202,6 @@ fn provision_and_compare(d: &Demo) -> Result {
             .any(|l| l.split_whitespace().nth(1) == Some("3")),
         "{compare}"
     );
-    assert!(compare.contains("unverifiable partial-clone"), "{compare}");
+    assert!(!compare.contains("partial-clone"), "{compare}");
     Ok(())
 }

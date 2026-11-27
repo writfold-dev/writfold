@@ -9,7 +9,7 @@ use crate::session::Session;
 use crate::stale::repos;
 use crate::workspace::{CANCELLED, budgets};
 use std::path::Path;
-use writfold_runtime::git::{KbRepository, kb_config, kb_log};
+use writfold_runtime::git::kb_log;
 
 /// Sections and their budget shares, in percent.
 const SHARES: [(&str, usize); 6] = [
@@ -51,16 +51,17 @@ pub fn infer(session: &Session<'_>, cwd: &Path) -> Result<Option<String>> {
     {
         return Ok(Some(top.to_owned()));
     }
-    let (Some(git), Some(dir)) = (&session.git, cwd.ancestors().find_map(repos::git_dir)) else {
+    let (Some(_), Some(dir)) = (&session.git, cwd.ancestors().find_map(repos::git_dir)) else {
         return Ok(None);
     };
-    let reads = KbRepository {
-        git_dir: &dir,
-        work_tree: None,
+    // The repository's declared URL when a remote is at one, else its first
+    // remote's (#198).
+    let declared = crate::declared::read(&session.ws.root).unwrap_or_default();
+    let url = match crate::declared::of_clone(&declared, &dir) {
+        Some(d) => Some(d.url.clone()),
+        None => crate::declared::remote_urls(&dir).into_iter().next(),
     };
-    let Some(origin) = kb_config(git, reads, "remote.origin.url", budgets()?, &CANCELLED)?
-        .and_then(|u| last_two(&u))
-    else {
+    let Some(origin) = url.and_then(|u| last_two(&u)) else {
         return Ok(None);
     };
     let assets = query::records(&session.conn, "kind = 'asset' ORDER BY id", &[])?;

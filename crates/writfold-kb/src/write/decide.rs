@@ -245,11 +245,13 @@ fn landed(session: &Session<'_>, commit: &str) -> Result<String> {
         })?;
     // The same target `stale` judges this repository at (#180).
     let pin = repos::mapped_ref(Some(session.ws), repo);
+    let declared = crate::declared::read(&session.ws.root)?;
     let ask = crate::stale::target::Asked {
         repo,
         url: None,
         pin: pin.as_deref(),
         named: repos::mapped(Some(session.ws), repo).is_some(),
+        declared: crate::declared::find(&declared, repo),
     };
     let resolved = crate::stale::target::resolve(git, &dir, &ask)?;
     let named = resolved.rule.as_str();

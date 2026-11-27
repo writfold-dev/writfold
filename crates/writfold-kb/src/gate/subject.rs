@@ -14,7 +14,7 @@ use writfold_core::scope::in_scope;
 use writfold_core::subject::{Pick, pick};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
-    GitExecutable, KbRepository, gate_hash_paths, gate_ls_tree, kb_config, kb_diff_tree, kb_status,
+    GitExecutable, KbRepository, gate_hash_paths, gate_ls_tree, kb_diff_tree, kb_status,
 };
 
 /// A located subject repository.
@@ -46,7 +46,7 @@ impl Subject {
 /// [`writfold_core::subject::pick`].
 pub fn locate(
     ws: &Workspace,
-    git: &GitExecutable<'_>,
+    _git: &GitExecutable<'_>,
     explicit: Option<&Path>,
     cwd: &Path,
     recorded: Option<&str>,
@@ -89,19 +89,9 @@ pub fn locate(
     let Some(repo) = repo else {
         return Ok(None);
     };
-    let reads = KbRepository {
-        git_dir: &repo.git_dir,
-        work_tree: None,
-    };
-    let origin = kb_config(git, reads, "remote.origin.url", budgets()?, &CANCELLED)?;
+    // Named by the map, else by its declaration or first remote (#198).
     let name = repos::mapped_name(Some(ws), &repo.work_tree)
-        .or_else(|| {
-            origin
-                .as_deref()
-                .and_then(|url| url.trim_end_matches('/').rsplit(['/', ':']).next())
-                .map(|n| n.trim_end_matches(".git").to_owned())
-                .filter(|n| !n.is_empty())
-        })
+        .or_else(|| crate::declared::clone_name(&ws.root, &repo.git_dir))
         .or_else(|| repos::main_name(&repo.git_dir))
         .or_else(|| {
             repo.work_tree

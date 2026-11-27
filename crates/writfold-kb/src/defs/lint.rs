@@ -24,6 +24,7 @@ pub enum Kind {
     Delivery,
     Source,
     Store,
+    Repo,
     Queries,
     Record,
     Catalog,
@@ -45,13 +46,14 @@ pub struct File {
     pub report: Report,
 }
 
-const DIRS: [(&str, Kind); 10] = [
+const DIRS: [(&str, Kind); 11] = [
     (crate::gate::def::DIR, Kind::Gate),
     (crate::guard::rules::DIR, Kind::Guard),
     (crate::plan::template::DIR, Kind::Template),
     (crate::deliver::config::DIR, Kind::Mode),
     (crate::stale::kinds::DIR, Kind::Source),
     (crate::store::DIR, Kind::Store),
+    (crate::declared::DIR, Kind::Repo),
     (crate::catalog::DIR, Kind::Catalog),
     (crate::agents::TOOLS, Kind::Tool),
     (crate::agents::SKILLS, Kind::Skill),
@@ -69,6 +71,7 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
         },
         Kind::Source => crate::stale::kind_check::check(text, stem, shown).err(),
         Kind::Store => crate::store::check::check(text, stem, shown).err(),
+        Kind::Repo => crate::declared::check::check(text, stem, shown).err(),
         Kind::Queries => crate::verbs::eval::lint(text, shown),
         Kind::Record => None,
         Kind::Catalog => crate::catalog::decl::check(text, stem, shown).err(),

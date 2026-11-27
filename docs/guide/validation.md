@@ -24,7 +24,7 @@ investigation inv:2026/2026-06-01-flush-stalls-again [open] opened after sig:fsy
 | `!changed` | the cited lines were edited, or a cited record changed state | read the source again before relying on the row |
 | `!gone` | the file or lines no longer exist | find what replaced them |
 | `!expired` | a time-limited citation (`ttl`, or its kind's `default_ttl`) ran out | look again and re-cite |
-| `!unverifiable` | no local clone of the cited repository (`repo-not-local`), a partial clone (`partial-clone`), a Git failure in that clone (`git-error: …`); or a token without `seen=`, or without a field its kind declaration requires (the reason names it) | add or replace the clone ([`kb repos`](#local-clones-kb-repos)), or complete the token |
+| `!unverifiable` | no local clone of the cited repository (`repo-not-local`), bytes a partial clone lacks (`blob-not-local`), a Git failure in that clone (`git-error: …`); or a token without `seen=`, or without a field its kind declaration requires (the reason names it) | add or replace the clone ([`kb repos`](#local-clones-kb-repos)), or complete the token |
 | `!superseded→<id>` | a decision was replaced | follow the arrow |
 | `!past-ttl` | an asset's `verified_at` plus `ttl` has passed | verify the asset |
 | `!regression` | an investigation opened after its signature was marked fixed | the fix may not have held |
@@ -75,16 +75,17 @@ repo ghost [missing] tokens=2 @lantern/notes.md:4
 
 **Which commit is judged** (built in v0.6.0-dev.26, [#179](https://github.com/writfold-dev/writfold/issues/179), [RFC](../rfcs/2026-11-27-citation-target.md)). A citation is judged at one commit of the clone, chosen by a proved rule (`writfold_core::target::choose`), not by the name `origin`:
 
-1. A `ref=` on the clone's line in the local map decides: `org/service /src/service ref=refs/remotes/upstream/main`. A `ref=` that does not resolve is ambiguous; it is never replaced by a guess.
+0. A repository declared in the KB (`.writfold/repos/<slug>.toml`, built in v0.6.0-dev.28, [#197](https://github.com/writfold-dev/writfold/issues/197)) is its declared `url` (or a `mirrors` entry) and nothing else: only a remote at one of those URLs is a candidate, whatever a token's `repo=` and `url=` say, and a clone with no remote there is ambiguous, never judged at its own `HEAD`. A declared `ref = "release"` is that branch of the remote; a branch that is not there is ambiguous. The choice is `writfold_core::target::choose_in` (proved; with no declaration it is `choose`, below). `kb repos` prints `(declared: .writfold/repos/<slug>.toml; <remote> is its url)` and has a row for a declared repository even when nothing cites it yet.
+1. A `ref=` on the clone's line in the local map decides, declared or not: `org/service /src/service ref=refs/remotes/upstream/main`. A `ref=` that does not resolve is ambiguous; it is never replaced by a guess.
 2. A clone with no fetched remote (a fresh `git init`, a bare or mirror clone) is judged at its `HEAD`.
 3. Otherwise only the remotes that name the cited repository are candidates, the strongest naming first: the URL equals the token's `url=`; the URL's path ends in a qualified `repo=` (`org/service`); its last segment equals an unqualified `repo=`; or the clone was named for it (by the map or a path) and this is its only remote. A remote whose URL names another repository, such as your fork, is never a candidate.
 4. A candidate's default branch is its `refs/remotes/<remote>/HEAD`, else the branch that the other remotes' `HEAD`s name (`git remote add` sets no `HEAD`). A candidate without one, or two candidates at different commits, is ambiguous.
 
 An ambiguous clone's citations read `unverifiable (target-ambiguous: …)`, never `gone`, and `kb repos` shows it `[ambiguous]` with what each remote names. A citation whose cited commit is ahead of the chosen target (the target is an ancestor of `rev=`) reads `unverifiable (target-behind: … fetch)` where it would have read `changed`, `moved` or `gone`; `fresh` is kept (`writfold_core::referent::settle`). A clone with one fetched remote that names the repository, or none, is judged at the same commit as before.
 
-**Partial clones.** A clone made with `--filter` (its config sets `extensions.partialClone` or a remote's `promisor`) lacks blobs, and KB reads never fetch. `kb repos` shows it as `partial`, and `stale` reports its code citations `!unverifiable` with `partial-clone` (its gate citations, which need only commits, are still checked). Detection reads the config file only; a promisor setting that comes through an `[include]` is not seen, and then Git's refusal to fetch shows as `git-error: …` instead. Any Git failure in one clone makes only that repository's citations `!unverifiable` with `git-error: <exit and first stderr line>`; the other repositories are still checked.
+**Partial clones.** A clone made with `--filter` (its config sets `extensions.partialClone` or a remote's `promisor`) lacks blobs, and KB reads never fetch. `kb repos` shows it as `partial`. Since v0.6.0-dev.28 ([#182](https://github.com/writfold-dev/writfold/issues/182)) `stale` decides its code citations by blob id, which a blobless clone holds in its trees: the cited blob at the cited path is `fresh`, and a cited blob found at another path is an exact rename. Another blob is decided from its bytes when they are in the clone; otherwise the citation reads `unverifiable (blob-not-local: …)`, never `changed` or `gone` (`writfold_core::verdict`, proved: a fetch only ever refines the answer). A clone without the target's trees reads `tree-not-local`. Gate citations, which need only commits, are checked as before. Detection reads the config file only; a promisor setting that comes through an `[include]` is not seen, and then Git's refusal to fetch shows as `git-error: …` instead. Any Git failure in one clone makes only that repository's citations `!unverifiable` with `git-error: <exit and first stderr line>`; the other repositories are still checked.
 
-**Which clone to make.** Use a full clone, bare or not. A shallow clone (`--depth`) holds every file at its newest commit but not the history behind it. What the bytes at the target decide reads the same as in a full clone: a token with `blob=` at an unchanged path, and a token with `span=` whose file holds another blob (the span is searched there). What needs the cited commit (a token with neither `blob=` nor `span=`, a path renamed with edits or deleted since) reads `unverifiable` `history-not-local`, never `changed` or `gone`, until `git fetch --unshallow`. `kb repos` marks such a clone `history: shallow`. Since v0.6.0-dev.17; earlier binaries reported those citations changed or gone. A partial clone (`--filter=blob:none`) is `partial-clone` throughout. For a clone that only feeds `stale`, `git clone --mirror` is the simplest: `git fetch` keeps its branches and `HEAD` current (a plain `--bare` clone has no fetch refspec, so fetching does not move its branches).
+**Which clone to make.** Use a full clone, bare or not. A shallow clone (`--depth`) holds every file at its newest commit but not the history behind it. What the bytes at the target decide reads the same as in a full clone: a token with `blob=` at an unchanged path, and a token with `span=` whose file holds another blob (the span is searched there). What needs the cited commit (a token with neither `blob=` nor `span=`, a path renamed with edits or deleted since) reads `unverifiable` `history-not-local`, never `changed` or `gone`, until `git fetch --unshallow`. `kb repos` marks such a clone `history: shallow`. Since v0.6.0-dev.17; earlier binaries reported those citations changed or gone. A partial clone (`--filter=blob:none`) decides by blob id what needs no bytes (above), and reads `blob-not-local` for what does. For a clone that only feeds `stale`, `git clone --mirror` is the simplest: `git fetch` keeps its branches and `HEAD` current (a plain `--bare` clone has no fetch refspec, so fetching does not move its branches).
 
 **The trusted-KB shortcut.** When every `url=` in the KB is one you would clone anyway, this script clones every missing repository into the first search root and fetches every resolved clone (it needs `jq`, and a `url=` on at least one token of each repository). It fetches whatever the KB's text names, so on a KB you did not write, or a machine with limited storage, plan the clones first (next section).
 
@@ -128,7 +129,7 @@ $ python3 clone-coverage.py shortlist
  3 gamma            partial        2  token count
 # review this list; write the approved `<repo> <origin>` lines yourself
 $ python3 clone-coverage.py verdicts --save ../before.json
-     2  unverifiable partial-clone
+     2  fresh
      7  unverifiable repo-not-local
 $ python3 clone-coverage.py provision ../approved.txt --into ../clones --depth 1
 alpha: $DEMO/clones/alpha.git 220 KiB (depth 1)
@@ -138,12 +139,11 @@ $ du -sk ../clones/alpha.git ../full/alpha.git
 948	../full/alpha.git
 $ python3 clone-coverage.py compare ../before.json ../after.json
 before  after  verdict and reason
-     0      4  fresh
-     2      2  unverifiable partial-clone
+     2      6  fresh
      7      3  unverifiable repo-not-local
 ```
 
-Here `approved.txt` names only `alpha`. `beta` stays missing on purpose, so its three citations, the gate citation among them, still read `repo-not-local`. `alpha`'s four `blob=` citations read fresh from a shallow mirror taking a quarter of a full one's storage. `gamma`'s partial clone stays `partial-clone` until it is replaced by a full or shallow clone.
+Here `approved.txt` names only `alpha`. `beta` stays missing on purpose, so its three citations, the gate citation among them, still read `repo-not-local`. `alpha`'s four `blob=` citations read fresh from a shallow mirror taking a quarter of a full one's storage. `gamma`'s two `blob=` citations read fresh from its partial clone by blob id (since v0.6.0-dev.28).
 
 ## The index: `kb index status | verify | rebuild`
 

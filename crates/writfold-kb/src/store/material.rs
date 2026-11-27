@@ -112,8 +112,8 @@ fn read_one(
         read.state = "git-error";
         return Ok(read);
     };
-    let commit = match repos::target(git, &git_dir) {
-        Ok(Some((commit, _))) => commit,
+    let commit = match crate::declared::store_commit(git, &git_dir, store) {
+        Ok(Some(commit)) => commit,
         Ok(None) => {
             read.state = "no-commit";
             return Ok(read);

@@ -3,7 +3,7 @@
 //! `--batch` for the files whose blob differs, and one tree listing when a
 //! path is missing (to find an exact rename by blob). A missing path whose
 //! blob is not in the tree is followed as a rename with edits ([`rename`]).
-//! A partial clone's code citations are unverifiable (`partial-clone`): its
+//! A partial clone's code citations are decided by blob id (`partial`): its
 //! blobs may need a fetch. A Git failure in one repository makes that
 //! repository's citations unverifiable (`git-error: …`), not the run fail.
 use super::failed::per_repo_or;
@@ -38,6 +38,7 @@ pub fn check(
         return Ok(out);
     };
     let stores = crate::store::read(&session.ws.root)?;
+    let declared = crate::declared::read(&session.ws.root)?;
     let mut remaining = rename::REV_CAP;
     for (repo, members) in groups {
         let (dir, members, url, named) = match stores.get(&repo) {
@@ -80,18 +81,22 @@ pub fn check(
             url: url.as_deref(),
             pin: pin.as_deref(),
             named,
+            declared: crate::declared::find(&declared, &repo),
         };
         let (gates, members): (Vec<usize>, Vec<usize>) = members
             .into_iter()
             .partition(|&i| cites[i].kind.as_deref() == Some("gate"));
-        let members = if repos::partial(&dir) {
-            out.extend(members.iter().map(|&i| (i, missing("partial-clone"))));
-            gates
-        } else {
-            [gates, members].concat()
+        // A partial clone's code citations are decided by blob id (#182).
+        let (code, members) = match repos::partial(&dir) {
+            true => (members, gates),
+            false => (Vec::new(), [gates, members].concat()),
         };
         let found = check_repo(git, (&dir, &ask), cites, &members, &mut remaining);
         out.extend(per_repo_or(found, &members)?);
+        if !code.is_empty() {
+            let found = super::partial::resolved(git, (&dir, &ask), cites, &code);
+            out.extend(per_repo_or(found, &code)?);
+        }
     }
     Ok(out)
 }

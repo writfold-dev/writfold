@@ -75,7 +75,8 @@ fn tree(git: &GitExecutable<'_>, ws: &Workspace, name: &str) -> Option<Vec<(Stri
     if repos::partial(&git_dir) {
         return None;
     }
-    let (commit, _) = repos::target(git, &git_dir).ok()??;
+    let declared = stores.get(name)?;
+    let commit = crate::declared::store_commit(git, &git_dir, declared).ok()??;
     let entries = gate_ls_tree(git, &git_dir, &commit, budgets().ok()?, &CANCELLED).ok()?;
     Some(entries.into_iter().map(|e| (e.path, e.id)).collect())
 }

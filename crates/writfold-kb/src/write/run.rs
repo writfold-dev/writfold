@@ -17,7 +17,7 @@ use crate::time;
 use crate::workspace::{CANCELLED, budgets, find_repo};
 use sha2::{Digest, Sha256};
 use std::path::Path;
-use writfold_runtime::git::{GitExecutable, KbRepository, kb_config, kb_status};
+use writfold_runtime::git::{GitExecutable, KbRepository, kb_status};
 
 pub const MODES: [&str; 3] = ["advice", "authoring", "review"];
 
@@ -262,11 +262,7 @@ pub fn observe_place(git: &GitExecutable<'_>, cwd: &Path) -> Result<Option<Place
         work_tree: Some(&repo.work_tree),
     };
     let status = kb_status(git, reads, ".", budgets()?, &CANCELLED)?;
-    let origin = kb_config(git, reads, "remote.origin.url", budgets()?, &CANCELLED)?;
-    let name = origin
-        .as_deref()
-        .and_then(|url| url.trim_end_matches('/').rsplit(['/', ':']).next())
-        .map(|n| n.trim_end_matches(".git").to_owned())
+    let name = crate::declared::remote_name(&repo.git_dir)
         .or_else(|| {
             repo.work_tree
                 .file_name()

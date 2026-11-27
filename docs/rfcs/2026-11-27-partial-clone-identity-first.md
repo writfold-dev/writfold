@@ -2,13 +2,13 @@
 rfc: "2026-11-27-partial-clone-identity-first"
 title: "Partial clones: decide by blob identity first, name the blobs a verdict still needs, fetch them only when asked"
 status: accepted
-implementation: not-started
+implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
 updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/182
-milestone: null
+milestone: "v0.6.0-dev.28"
 supersedes: []
 superseded_by: []
 blocked_on:
@@ -205,3 +205,4 @@ costly to take back, because it is the first network call on a KB read.
 - 2026-11-27: drafted after reproducing the report on `9afa5942`. Accepted
   under the owner's standing acceptance for slices 1 and 2; slice 3 is
   recorded and not started. Not yet reviewed by the owner.
+- 2026-11-27 (as built, v0.6.0-dev.28): see changes.md. Slice 1 landed; locality is asked per differing blob (with lazy fetch disabled Git refuses a promised object outright, so a refusal reads not local). Slice 2 (--need-blobs) moved to #215; slice 3 waits on owner question 1.

@@ -205,6 +205,7 @@ When one of these files is wrong, `writfold kb lint` reports every fault with it
 | File | Defines | Guide |
 |---|---|---|
 | `.writfold/gates/<id>.toml` | one gate; in the KB root or in the repository it checks | [gates](gates.md) |
+| `.writfold/repos/<slug>.toml` | a cited repository's name, URL, mirrors, aliases and line (`writfold-repo/1`, built in v0.6.0-dev.28) | [validation](validation.md#which-commit-is-judged), [assets](assets.md) |
 | `.writfold/deliveries/<mode>.toml` | changes to a built-in delivery mode | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/deny-<audience>.toml` | references a draft for that audience must not hold | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/guard.toml` | publishing commands the guard hook watches | [delivery-modes](delivery-modes.md) |

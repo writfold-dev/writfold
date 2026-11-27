@@ -2,13 +2,13 @@
 rfc: "2026-11-27-declared-repositories"
 title: "A cited repository can be declared: its URL and its line are Git text, and the resolver reads them before it infers"
 status: accepted
-implementation: not-started
+implementation: complete
 authors:
   - fable
 created: 2026-11-27
 updated: 2026-11-27
 issue: https://github.com/writfold-dev/writfold/issues/197
-milestone: null
+milestone: "v0.6.0-dev.28"
 supersedes: []
 superseded_by: []
 blocked_on: []
@@ -261,3 +261,4 @@ Collected in #203 with the other owner questions.
 - 2026-11-27: drafted with the asset boundary RFC. Accepted under the
   owner's standing acceptance (21 November 2026); not yet reviewed by
   the owner.
+- 2026-11-27 (as built, v0.6.0-dev.28): see changes.md. choose_in threads a declared flag through the existing helpers, so choose is choose_in undeclared (undeclared_is_choose). observe_place has no KB root and names a clone by its first remote, not its declaration.

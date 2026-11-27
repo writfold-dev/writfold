@@ -133,8 +133,14 @@ const HISTORY: &str = "history";
 
 /// A repository that is not a store: its clone, found as `stale` finds it,
 /// and its target, or `missing`.
-fn local(session: &Session<'_>, name: &str, url: Option<&str>) -> (&'static str, Vec<More>) {
-    match repos::resolve_via(Some(session.ws), name, url) {
+fn local(
+    session: &Session<'_>,
+    (name, url): (&str, Option<&str>),
+    all: &[crate::declared::Declared],
+) -> (&'static str, Vec<More>) {
+    let declared = crate::declared::find(all, name);
+    let shown = declared.map(|d| more("declared", d.url.clone(), Some(d.path.clone())));
+    let (status, mut lines) = match repos::resolve_via(Some(session.ws), name, url) {
         Some((dir, via)) => {
             let pin = repos::mapped_ref(Some(session.ws), name);
             let ask = Ask {
@@ -142,11 +148,14 @@ fn local(session: &Session<'_>, name: &str, url: Option<&str>) -> (&'static str,
                 url,
                 pin: pin.as_deref(),
                 named: matches!(via, repos::Via::Map | repos::Via::Path),
+                declared,
             };
             found(session, dir, via.name(), &ask)
         }
         None => ("missing", Vec::new()),
-    }
+    };
+    lines.splice(0..0, shown);
+    (status, lines)
 }
 
 pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
@@ -160,6 +169,11 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     for declared in stores.iter() {
         all.entry(declared.name.clone()).or_default();
     }
+    // A declared repository has a row even when nothing cites it yet (#197).
+    let declared = crate::declared::read(&session.ws.root)?;
+    for d in &declared {
+        all.entry(d.name.clone()).or_default();
+    }
     for (name, cited) in all {
         total += 1;
         let mut flags = Vec::new();
@@ -168,7 +182,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
                 let read = reads.iter().find(|r| r.name == name);
                 store_row(session, declared, read, &mut flags)?
             }
-            None => local(session, &name, cited.url.as_deref()),
+            None => local(session, (&name, cited.url.as_deref()), &declared),
         };
         missing += usize::from(matches!(status, "missing" | "mismatch"));
         partial += usize::from(status == "partial");
@@ -254,6 +268,7 @@ fn store_row(
                 url: Some(&declared.url),
                 pin: pin.as_deref(),
                 named: true,
+                declared: None,
             };
             let (status, found) = found(session, dir, resolved.how, &ask);
             lines.extend(found);

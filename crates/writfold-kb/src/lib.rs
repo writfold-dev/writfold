@@ -15,6 +15,7 @@ pub mod agents;
 pub mod catalog;
 pub mod check;
 pub mod cursor;
+pub mod declared;
 pub mod defs;
 pub mod deliver;
 pub mod delta;
