@@ -50,13 +50,13 @@ A kind declared `checked` is asked of an external checker, `writfold-check-<name
 
 A `repo=` that is empty or contains `..` is never resolved.
 
-`writfold kb repos [--missing] [--json]` (built in v0.5.0-dev.3) prints one row per repository named by a code or gate citation: `local`, `partial` or `missing`, the number of tokens naming it and the first of them, then the clone's details. It reads the clone's `config` and `FETCH_HEAD` files and spawns Git at most twice per found repository (to resolve `origin/HEAD`, else `HEAD`); a missing repository spawns nothing.
+`writfold kb repos [--missing] [--json]` (built in v0.5.0-dev.3) prints one row per repository named by a code or gate citation: `local`, `partial`, `ambiguous` or `missing`, the number of tokens naming it and the first of them, then the clone's details. It reads the clone's `config` and `FETCH_HEAD` files and spawns Git a few times per found repository (to resolve each remote's default branch, see *Which commit is judged* below); a missing repository spawns nothing.
 
 ```text
 $ writfold kb repos
 repo demo-service [local] tokens=6 @harbor/evidence/flush-latency.md:3
   resolved: map @/home/me/src/demo-service/.git
-  target: origin/HEAD 1f0c9a3b7d2e
+  target: origin/main 1f0c9a3b7d2e
   fetched: 2026-11-12T08:30:04Z
 repo ghost [missing] tokens=2 @lantern/notes.md:4
   url: https://example.invalid/org/ghost.git
@@ -68,10 +68,19 @@ repo ghost [missing] tokens=2 @lantern/notes.md:4
 |---|---|
 | `url:` | the `url=` of one of the repository's tokens, when any has one |
 | `resolved:` | the rule that found the clone (`map`, `search-root`, `path`, `url`) and its Git directory |
-| `target:` | the commit `stale` checks against: `origin/HEAD`, else `HEAD`, or `none` |
+| `target:` | the commit `stale` checks against, the ref that gave it and, when the clone has several remotes, what each names (`upstream/main 9e7dc58202b5 (origin names another repository; upstream names it)`); or `none` with the reason (`target-ambiguous: …`) |
 | `fetched:` | the modification time of the clone's `FETCH_HEAD`, or `none` when it has never fetched |
 
-`--missing` keeps only the `missing` rows; the trailer still counts every repository. The exit code is 2 when any repository is missing and 0 otherwise. In `--json` each row is `{"kind":"repo","id":<name>,"status":…,"text":"tokens=N","path":…,"line":…,"more":[{"label":"url"|"resolved"|"target"|"fetched","text":…,"path":…}]}`; the clone's Git directory is the `path` of the `resolved` entry.
+`--missing` keeps only the `missing` rows; the trailer still counts every repository (`ambiguous=N` among them). The exit code is 2 when any repository is missing or ambiguous and 0 otherwise. In `--json` each row is `{"kind":"repo","id":<name>,"status":…,"text":"tokens=N","path":…,"line":…,"more":[{"label":"url"|"resolved"|"target"|"fetched","text":…,"path":…}]}`; the clone's Git directory is the `path` of the `resolved` entry.
+
+**Which commit is judged** (built in v0.6.0-dev.26, [#179](https://github.com/writfold-dev/writfold/issues/179), [RFC](../rfcs/2026-11-27-citation-target.md)). A citation is judged at one commit of the clone, chosen by a proved rule (`writfold_core::target::choose`), not by the name `origin`:
+
+1. A `ref=` on the clone's line in the local map decides: `org/service /src/service ref=refs/remotes/upstream/main`. A `ref=` that does not resolve is ambiguous; it is never replaced by a guess.
+2. A clone with no fetched remote (a fresh `git init`, a bare or mirror clone) is judged at its `HEAD`.
+3. Otherwise only the remotes that name the cited repository are candidates, the strongest naming first: the URL equals the token's `url=`; the URL's path ends in a qualified `repo=` (`org/service`); its last segment equals an unqualified `repo=`; or the clone was named for it (by the map or a path) and this is its only remote. A remote whose URL names another repository, such as your fork, is never a candidate.
+4. A candidate's default branch is its `refs/remotes/<remote>/HEAD`, else the branch that the other remotes' `HEAD`s name (`git remote add` sets no `HEAD`). A candidate without one, or two candidates at different commits, is ambiguous.
+
+An ambiguous clone's citations read `unverifiable (target-ambiguous: …)`, never `gone`, and `kb repos` shows it `[ambiguous]` with what each remote names. A citation whose cited commit is ahead of the chosen target (the target is an ancestor of `rev=`) reads `unverifiable (target-behind: … fetch)` where it would have read `changed`, `moved` or `gone`; `fresh` is kept (`writfold_core::referent::settle`). A clone with one fetched remote that names the repository, or none, is judged at the same commit as before.
 
 **Partial clones.** A clone made with `--filter` (its config sets `extensions.partialClone` or a remote's `promisor`) lacks blobs, and KB reads never fetch. `kb repos` shows it as `partial`, and `stale` reports its code citations `!unverifiable` with `partial-clone` (its gate citations, which need only commits, are still checked). Detection reads the config file only; a promisor setting that comes through an `[include]` is not seen, and then Git's refusal to fetch shows as `git-error: …` instead. Any Git failure in one clone makes only that repository's citations `!unverifiable` with `git-error: <exit and first stderr line>`; the other repositories are still checked.
 

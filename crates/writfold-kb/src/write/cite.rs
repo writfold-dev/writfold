@@ -11,12 +11,13 @@ use crate::emit::{Answer, Frame, Output, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use crate::stale::repos;
+use crate::stale::target::{self as resolver, Asked as Ask};
 use crate::time;
 use crate::workspace::{CANCELLED, GitTool, Workspace, budgets};
 use crate::{Request, write::atomic::digest};
 use std::path::Path;
 use writfold_domain::GitObjectId;
-use writfold_runtime::git::{GitExecutable, KbRepository, kb_commit, kb_config};
+use writfold_runtime::git::{GitExecutable, KbRepository, kb_config};
 use writfold_sources::citations::iter_cite_tokens;
 
 pub use super::span::{Lines, Span, Spanned, blobs, spans};
@@ -48,22 +49,23 @@ fn value(key: &str, text: &str) -> Result<String> {
     })
 }
 
-/// The commit a citation pins: `origin/HEAD`, else `HEAD`.
-fn cited_commit(git: &GitExecutable<'_>, git_dir: &Path) -> Result<GitObjectId> {
-    let reads = KbRepository {
-        git_dir,
-        work_tree: None,
-    };
-    match kb_commit(
-        git,
-        reads,
-        "refs/remotes/origin/HEAD",
-        budgets()?,
-        &CANCELLED,
-    )? {
-        Some(rev) => Ok(rev),
-        None => kb_commit(git, reads, "HEAD", budgets()?, &CANCELLED)?
-            .ok_or_else(|| KbError::Refused("the repository has no commit".into())),
+/// The commit a citation pins and the URL to write: the target `stale`
+/// will judge it at (#180), refused when that is ambiguous.
+fn cited_commit(
+    git: &GitExecutable<'_>,
+    git_dir: &Path,
+    ask: &Ask<'_>,
+) -> Result<(GitObjectId, Option<String>)> {
+    let resolved = resolver::resolve(git, git_dir, ask)?;
+    match resolved.commit {
+        Some(rev) => Ok((rev, resolved.url)),
+        None => Err(KbError::Refused(match resolved.why {
+            Some(why) => format!(
+                "{why}; next: add or fetch the remote that names {}, or add ref=REF to its line in <git dir>/writfold/repos",
+                ask.repo
+            ),
+            None => "the repository has no commit".into(),
+        })),
     }
 }
 
@@ -75,10 +77,14 @@ struct Pinned {
     dirty: Option<String>,
 }
 
-fn pinned(git: &GitExecutable<'_>, dir: &Path, path: &str, make: &CiteMake) -> Result<Pinned> {
+fn pinned(
+    git: &GitExecutable<'_>,
+    (dir, rev): (&Path, GitObjectId),
+    path: &str,
+    make: &CiteMake,
+) -> Result<Pinned> {
     let git_dir = repos::git_dir(dir)
         .ok_or_else(|| KbError::Refused(format!("{} is not a repository", dir.display())))?;
-    let rev = cited_commit(git, &git_dir)?;
     let want = Span {
         path: path.to_owned(),
         lines: Lines::Range(make.first, make.last),
@@ -138,7 +144,8 @@ pub fn seen(now: i64) -> String {
     format!("{}Z", &time::stamp(now)[..16])
 }
 
-/// `url=`: the repository's origin URL, else its directory.
+/// `url=` when no remote was chosen: the repository's origin URL, else
+/// its directory.
 pub fn url(git: &GitExecutable<'_>, git_dir: &Path, dir: &Path) -> Result<String> {
     let reads = KbRepository {
         git_dir,
@@ -202,15 +209,28 @@ pub fn make(
             make.repo
         ))
     })?;
-    let pin = pinned(&git, &dir, path, make)?;
-    let name = if make.repo.contains('/') || make.repo.starts_with('.') {
+    let as_path = make.repo.contains('/') || make.repo.starts_with('.');
+    let named_dir = repos::mapped(Some(session.ws), &make.repo).is_none() && as_path;
+    let name = if named_dir {
         dir.file_name()
             .map_or_else(|| make.repo.clone(), |n| n.to_string_lossy().into_owned())
     } else {
         make.repo.clone()
     };
     let git_dir = repos::git_dir(&dir).unwrap_or_else(|| dir.clone());
-    let url = url(&git, &git_dir, &dir)?;
+    let pin_ref = repos::mapped_ref(Some(session.ws), &name);
+    let ask = Ask {
+        repo: &name,
+        url: None,
+        pin: pin_ref.as_deref(),
+        named: as_path || repos::mapped(Some(session.ws), &name).is_some(),
+    };
+    let (rev, chosen_url) = cited_commit(&git, &git_dir, &ask)?;
+    let pin = pinned(&git, (&dir, rev), path, make)?;
+    let url = match chosen_url {
+        Some(url) => url,
+        None => url(&git, &git_dir, &dir)?,
+    };
     let text = code_token(&Fields {
         repo: &name,
         rev: pin.rev.as_str(),

@@ -6,6 +6,13 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.26
+
+- **fix: a fork clone's citations** ([#179](https://github.com/writfold-dev/writfold/issues/179)): in a clone with several remotes, citations are judged at the remote whose URL names the cited repository, not at `origin`. Rows that read `gone`, `changed` or `moved` only because `origin` was a stale fork now read what the cited repository says. `kb stale` rows and `kb repos` name the judged ref by its branch (`(origin/main)`, `(upstream/main)`) where they said `(origin/HEAD)`.
+- **fix:** a qualified `repo=org/name` whose clone has no remote naming `org/name` (a fork-only clone), or whose naming remotes disagree or have no default branch, reads `unverifiable (target-ambiguous: …)`. `kb repos` shows such a row `[ambiguous]`, counts it (`ambiguous=N`) and exits 2.
+- **fix:** a citation whose cited commit is ahead of the judged commit reads `unverifiable (target-behind: …)` where it read `gone`, `changed` or `moved`.
+- New: `ref=<ref>` after the path on a line of the local repository map names the commit to judge that clone at.
+
 ## v0.6.0-dev.25
 
 - A run's policy pin records, for each delivery mode with `agent = "<id>"` that its steps owe, that agent's closure digest (`agent:<id>`, [#161](https://github.com/writfold-dev/writfold/issues/161)). While the step owing the mode is open, an edited profile, skill, `model` hint or instructions file makes the run read `policy moved` (exit 2 from `plan status`), as an edited gate or mode already did; `plan repin` adopts it. A run pinned before has no `agent:` entries and is judged as before.

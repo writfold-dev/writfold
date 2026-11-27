@@ -243,18 +243,21 @@ fn landed(session: &Session<'_>, commit: &str) -> Result<String> {
                 "{repo} has no commit {sha} (or the prefix names more than one)"
             ))
         })?;
-    let target = match kb_commit(
-        git,
-        reads,
-        "refs/remotes/origin/HEAD",
-        budgets()?,
-        &CANCELLED,
-    )? {
-        Some(id) => Some((id, "origin/HEAD")),
-        None => kb_commit(git, reads, "HEAD", budgets()?, &CANCELLED)?.map(|id| (id, "HEAD")),
+    // The same target `stale` judges this repository at (#180).
+    let pin = repos::mapped_ref(Some(session.ws), repo);
+    let ask = crate::stale::target::Asked {
+        repo,
+        url: None,
+        pin: pin.as_deref(),
+        named: repos::mapped(Some(session.ws), repo).is_some(),
     };
-    let Some((target, named)) = target else {
-        return Err(refused(format!("{repo} has no commit on HEAD")));
+    let resolved = crate::stale::target::resolve(git, &dir, &ask)?;
+    let named = resolved.rule.as_str();
+    let Some(target) = resolved.commit.clone() else {
+        return Err(refused(match &resolved.why {
+            Some(why) => format!("{repo}: {why}"),
+            None => format!("{repo} has no commit on HEAD"),
+        }));
     };
     if !kb_is_ancestor(git, reads, &full, &target, budgets()?, &CANCELLED)? {
         return Err(refused(format!(

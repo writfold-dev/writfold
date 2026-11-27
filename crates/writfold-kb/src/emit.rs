@@ -268,6 +268,7 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
                     | "disagree"
                     | "disorder"
                     | "missing"
+                    | "ambiguous"
                     | "miss"
                     | "not-accepted"
             )

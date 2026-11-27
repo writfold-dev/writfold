@@ -96,13 +96,16 @@ fn stale(w: &World) -> TestResult<String> {
 }
 
 /// The row for `line`; `kb stale` prints no row for a fresh citation. Both
-/// clones' heads are the same commit (named `origin/HEAD` in the clone), so
-/// rows compare whole.
+/// clones' heads are the same commit (named by the remote's default branch,
+/// `origin/main`, in the clone), so rows compare whole.
 fn row(text: &str, line: u32) -> TestResult<String> {
     let at = format!("@lantern/shallow.md:{line} ");
     Ok(text.lines().find(|l| l.contains(&at)).map_or_else(
         || "[fresh]".to_owned(),
-        |l| l.replace("(origin/HEAD)", "(HEAD)"),
+        |l| {
+            let named = regex::Regex::new(r"\(origin/[^)]+\)").ok();
+            named.map_or_else(|| l.to_owned(), |re| re.replace(l, "(HEAD)").into_owned())
+        },
     ))
 }
 

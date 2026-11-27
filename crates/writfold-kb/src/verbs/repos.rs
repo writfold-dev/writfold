@@ -10,6 +10,7 @@ use crate::emit::{Answer, More, Row};
 use crate::error::Result;
 use crate::session::Session;
 use crate::stale::repos;
+use crate::stale::target::{self as resolver, Asked as Ask};
 use crate::store::{self, Freshness, Store};
 use crate::time;
 use std::collections::BTreeMap;
@@ -75,24 +76,45 @@ fn more(label: &'static str, text: String, path: Option<String>) -> More {
     }
 }
 
-/// The status and continuation lines of a repository found at `dir`.
-fn found(session: &Session<'_>, dir: PathBuf, via: &'static str) -> (&'static str, Vec<More>) {
-    let status = if repos::partial(&dir) {
+/// The status and continuation lines of a repository found at `dir`,
+/// with its target chosen as `stale` chooses it (#179).
+fn found(
+    session: &Session<'_>,
+    dir: PathBuf,
+    via: &'static str,
+    ask: &Ask<'_>,
+) -> (&'static str, Vec<More>) {
+    let resolved = session
+        .git
+        .as_ref()
+        .and_then(|git| resolver::resolve(git, &dir, ask).ok());
+    let ambiguous = resolved
+        .as_ref()
+        .is_some_and(|r| r.commit.is_none() && r.why.is_some());
+    let status = if ambiguous {
+        "ambiguous"
+    } else if repos::partial(&dir) {
         "partial"
     } else {
         "local"
     };
-    let target = session
-        .git
-        .as_ref()
-        .and_then(|git| repos::target(git, &dir).ok().flatten())
-        .map_or_else(
-            || "none".to_owned(),
-            |(commit, named)| {
-                let short: String = commit.as_str().chars().take(12).collect();
-                format!("{named} {short}")
-            },
-        );
+    let target = resolved.map_or_else(
+        || "none".to_owned(),
+        |r| {
+            let short: String = r
+                .commit
+                .map(|c| c.as_str().chars().take(12).collect())
+                .unwrap_or_default();
+            let head = match short.is_empty() {
+                true => r.rule,
+                false => format!("{} {short}", r.rule),
+            };
+            match r.why {
+                Some(why) => format!("{head} ({why})"),
+                None => head,
+            }
+        },
+    );
     let fetched = repos::fetched(&dir).map_or_else(|| "none".to_owned(), time::stamp);
     let mut lines = vec![
         more("resolved", via.to_owned(), Some(dir.display().to_string())),
@@ -112,6 +134,7 @@ const HISTORY: &str = "history";
 pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     let mut answer = Answer::default();
     let (mut total, mut missing, mut partial, mut shallow) = (0, 0, 0, 0);
+    let mut ambiguous = 0;
     let stores = store::read(&session.ws.root)?;
     let reads =
         store::material::read_all(session.git.as_ref(), session.ws, &session.conn, &stores)?;
@@ -128,12 +151,22 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
                 store_row(session, declared, read, &mut flags)?
             }
             None => match repos::resolve_via(Some(session.ws), &name, cited.url.as_deref()) {
-                Some((dir, via)) => found(session, dir, via.name()),
+                Some((dir, via)) => {
+                    let pin = repos::mapped_ref(Some(session.ws), &name);
+                    let ask = Ask {
+                        repo: &name,
+                        url: cited.url.as_deref(),
+                        pin: pin.as_deref(),
+                        named: matches!(via, repos::Via::Map | repos::Via::Path),
+                    };
+                    found(session, dir, via.name(), &ask)
+                }
                 None => ("missing", Vec::new()),
             },
         };
         missing += usize::from(matches!(status, "missing" | "mismatch"));
         partial += usize::from(status == "partial");
+        ambiguous += usize::from(status == "ambiguous");
         shallow += usize::from(lines.iter().any(|m| m.label == HISTORY));
         if missing_only && !matches!(status, "missing" | "mismatch") {
             continue;
@@ -167,6 +200,11 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
             "a partial clone's code citations are unverifiable (its blobs would need a fetch): use a full clone".into(),
         );
     }
+    if ambiguous > 0 {
+        answer.notes.push(
+            "an ambiguous clone's citations are unverifiable (target-ambiguous): add or fetch the remote that names the repository, or name the ref with `ref=REF` on its line in <git dir>/writfold/repos".into(),
+        );
+    }
     if shallow > 0 {
         answer.notes.push(
             "a shallow clone decides code citations from the bytes at its target (blob=, span=); a citation that needs the cited commit is unverifiable (history-not-local) until `git fetch --unshallow`".into(),
@@ -177,6 +215,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
         ("missing", missing),
         ("partial", partial),
         ("shallow", shallow),
+        ("ambiguous", ambiguous),
     ];
     Ok(answer)
 }
@@ -203,7 +242,14 @@ fn store_row(
     }
     let status = match resolved.git_dir {
         Some(dir) => {
-            let (status, found) = found(session, dir, resolved.how);
+            let pin = repos::mapped_ref(Some(session.ws), &declared.name);
+            let ask = Ask {
+                repo: &declared.name,
+                url: Some(&declared.url),
+                pin: pin.as_deref(),
+                named: true,
+            };
+            let (status, found) = found(session, dir, resolved.how, &ask);
             lines.extend(found);
             status
         }

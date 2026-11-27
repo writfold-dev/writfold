@@ -7,6 +7,7 @@
 //! blobs may need a fetch. A Git failure in one repository makes that
 //! repository's citations unverifiable (`git-error: …`), not the run fail.
 use super::span::{Located, locate};
+use super::target::{self as resolver, Asked as Ask};
 use super::{Checked, Cite, Verdict, pin_receipt, pinned, rename, repos};
 use crate::error::{KbError, Result};
 use crate::session::Session;
@@ -55,7 +56,7 @@ pub fn check(
     let stores = crate::store::read(&session.ws.root)?;
     let mut remaining = rename::REV_CAP;
     for (repo, members) in groups {
-        let (dir, members) = match stores.get(&repo) {
+        let (dir, members, url, named) = match stores.get(&repo) {
             Some(store) => {
                 // A pinned citation this machine cannot judge may read a
                 // recorded verdict instead (#4).
@@ -74,18 +75,27 @@ pub fn check(
                     pinned::Split::Read { dir, head, pinned } => {
                         let found = pinned::check(git, &dir, cites, &pinned);
                         out.extend(per_repo_or(found, &pinned)?.into_iter().map(stand_in));
-                        (dir, head)
+                        (dir, head, Some(store.url.clone()), true)
                     }
                 }
             }
             None => {
                 let url = members.iter().find_map(|&i| cites[i].field("url"));
-                let Some(dir) = repos::resolve(session, &repo, url.as_deref()) else {
+                let Some((dir, via)) = repos::resolve_via(Some(session.ws), &repo, url.as_deref())
+                else {
                     out.extend(members.iter().map(|&i| (i, missing("repo-not-local"))));
                     continue;
                 };
-                (dir, members)
+                let named = matches!(via, repos::Via::Map | repos::Via::Path);
+                (dir, members, url, named)
             }
+        };
+        let pin = repos::mapped_ref(Some(session.ws), &repo);
+        let ask = Ask {
+            repo: &repo,
+            url: url.as_deref(),
+            pin: pin.as_deref(),
+            named,
         };
         let (gates, members): (Vec<usize>, Vec<usize>) = members
             .into_iter()
@@ -96,7 +106,7 @@ pub fn check(
         } else {
             [gates, members].concat()
         };
-        let found = check_repo(git, &dir, cites, &members, &mut remaining);
+        let found = check_repo(git, (&dir, &ask), cites, &members, &mut remaining);
         out.extend(per_repo_or(found, &members)?);
     }
     Ok(out)
@@ -166,7 +176,7 @@ pub(crate) fn valid_path(path: &str) -> bool {
 
 fn check_repo(
     git: &GitExecutable<'_>,
-    dir: &Path,
+    (dir, ask): (&Path, &Ask<'_>),
     cites: &[Cite],
     members: &[usize],
     remaining: &mut usize,
@@ -175,12 +185,15 @@ fn check_repo(
         git_dir: dir,
         work_tree: None,
     };
-    let Some((target, named)) = repos::target(git, dir)? else {
-        return Ok(members
-            .iter()
-            .map(|&i| (i, missing("repository has no commit")))
-            .collect());
+    let resolved = resolver::resolve(git, dir, ask)?;
+    let Some(target) = resolved.commit.clone() else {
+        let why = resolved
+            .why
+            .as_deref()
+            .unwrap_or("repository has no commit");
+        return Ok(members.iter().map(|&i| (i, missing(why))).collect());
     };
+    let named = &resolved.rule;
     let head = format!("{}:{named}", target.as_str());
     let mut out = Vec::new();
     let mut names = Vec::new();
@@ -240,7 +253,7 @@ fn check_repo(
             },
         )
     }));
-    Ok(out)
+    resolver::behind(git, dir, &resolved, cites, out)
 }
 
 type Answer = Option<(GitObjectId, String)>;

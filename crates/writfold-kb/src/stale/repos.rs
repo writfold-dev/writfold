@@ -62,10 +62,27 @@ fn map(ws: Option<&Workspace>) -> Vec<(String, PathBuf)> {
     text.lines()
         .filter(|line| !line.trim_start().starts_with('#'))
         .filter_map(|line| {
-            let (name, path) = line.trim().split_once(char::is_whitespace)?;
-            Some((name.to_owned(), PathBuf::from(path.trim())))
+            let mut words = line.split_whitespace();
+            let (name, path) = (words.next()?, words.next()?);
+            Some((name.to_owned(), PathBuf::from(path)))
         })
         .collect()
+}
+
+/// The `ref=` the KB's local map gives a repository name, if any (#179):
+/// `<name> <path> [ref=<ref>]`.
+pub(crate) fn mapped_ref(ws: Option<&Workspace>, repo: &str) -> Option<String> {
+    let git_dir = &ws?.repo.as_ref()?.git_dir;
+    let text = std::fs::read_to_string(git_dir.join("writfold").join("repos")).ok()?;
+    text.lines()
+        .filter(|line| !line.trim_start().starts_with('#'))
+        .find_map(|line| {
+            let mut words = line.split_whitespace();
+            (words.next()? == repo).then_some(())?;
+            words
+                .skip(1)
+                .find_map(|w| w.strip_prefix("ref=").map(str::to_owned))
+        })
 }
 
 pub(crate) fn mapped(ws: Option<&Workspace>, repo: &str) -> Option<PathBuf> {
