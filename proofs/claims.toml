@@ -3817,3 +3817,69 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "outbound-skips-last",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/claims.rs"
+function = "fails"
+lean = "writfold_core.claims.fails"
+theorems = [
+  "Writfold.Core.Claims.fails_spec",
+]
+total = "Writfold.Core.Claims.fails_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "bare-passes",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/claims.rs"
+function = "unsure"
+lean = "writfold_core.claims.unsure"
+theorems = [
+  "Writfold.Core.Claims.unsure_spec",
+]
+total = "Writfold.Core.Claims.unsure_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "unverifiable-passes",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/claims.rs"
+function = "accounted"
+lean = "writfold_core.claims.accounted"
+theorems = [
+  "Writfold.Core.Claims.accounted_loop_spec",
+  "Writfold.Core.Claims.accounted_spec",
+  "Writfold.Core.Claims.accounted_pass_iff",
+  "Writfold.Core.Claims.bare_never_passes",
+  "Writfold.Core.Claims.empty_never_passes",
+  "Writfold.Core.Claims.remainder_is_bare",
+  "Writfold.Core.Claims.tag_is_not_a_citation",
+  "Writfold.Core.Conform.claims_accounted_implements",
+]
+total = "Writfold.Core.Claims.accounted_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "empty-passes",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/claims.rs"
+function = "cited"
+lean = "writfold_core.claims.cited"
+theorems = [
+  "Writfold.Core.Claims.cited_spec",
+  "Writfold.Core.Claims.below_min_never_passes",
+  "Writfold.Core.Claims.no_min_unchanged",
+  "Writfold.Core.Conform.claims_cited_implements",
+]
+total = "Writfold.Core.Claims.cited_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "min-ignored",
+]

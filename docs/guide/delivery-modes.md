@@ -98,12 +98,27 @@ delivery 20261112T211045Z-ee94cc [ready] pr-comment audience=external destinatio
 |---|---|---|
 | `paragraphs.bounded` | mechanical | no prose paragraph has more words than the bound. Code blocks, tables and headings are skipped; each list item is its own paragraph |
 | `references.denied` | mechanical | no line matches a rule of the audience's deny list. With no deny list for the audience the outcome is `unknown`, never a pass |
-| `claims.cited-fresh` | observed | every citation token in the draft is fresh under `kb stale`. A draft with no tokens passes, and the note says `0 citation tokens` |
+| `claims.cited-fresh` | observed | every citation token in the draft is fresh under `kb stale`. A draft with no tokens passes, and the note says `0 citation tokens`, unless the mode sets `min_citations = N` (built in v0.6.0-dev.31): then fewer than N tokens fails, `failed[claims.cited-fresh]: too-few` |
+| `claims.accounted` | mechanical | (built in v0.6.0-dev.31; only in a mode that lists it, never a default) every prose block (a paragraph, a list item, a table row; not a heading, a code block or front matter) is cited with fresh tokens, or ends with exactly one of the mode's `status_tags` in square brackets (`[inferred]`). A bare block fails at its line with the ways to account for it; a stale citation fails; an unverifiable one is `unknown`; a draft with no block is `unknown`. A near-miss tag (`[infered]`), two tags, or a tag on a cited block is a finding. The note counts cited and tagged blocks apart; the check never says the text is true ([below](#claims-inside-text)) |
 | `length.bounded` | mechanical | (built in v0.6.0-dev.11; only in a mode that lists it, never a default) the whole payload has at most `max_chars` characters and `max_lines` lines. A finding names the line where the bound is crossed: `failed[length.bounded]: 3 lines; this mode takes at most 2 (max_lines)`. Listing it without either bound is refused |
 | `prose.rules` | mechanical | (built in v0.6.0-dev.20; only in a mode that lists it with `prose = "<set>"`, never a default) no prose line matches a **blocking** rule of the rule set. Matches of **advice** rules are shown and recorded and never hold the draft back. A rule set with no rules is `unknown`, never a pass ([below](#prose-rules)) |
 | `invocation.bound` | mechanical | (built in v0.6.0-dev.22; only in a mode that lists it with `agent = "<id>"`, never a default) the candidate names an agent invocation of this run (`deliver prepare --invocation`), prepared at the step that owes this mode, for the mode's `agent`, under the profile's closure as it is now, with no second report for it. It judges records, not the report. An unreadable record is `unknown` ([agents](agents.md#deliver-the-report-bound-to-its-invocation)) |
 
-The checks count words, match patterns and run `stale`. They do not judge tone or truth, and they miss a claim made in prose without a citation token.
+The checks count words, match patterns and run `stale`. They do not judge tone or truth. `claims.cited-fresh` alone misses a claim made in prose without a citation token; `claims.accounted` makes every block say how it stands.
+
+### Claims inside text
+
+Built in v0.6.0-dev.31 ([#189](https://github.com/writfold-dev/writfold/issues/189)). A research note or a brief usually mixes claims backed by a source with inference and open questions. `claims.accounted` asks each prose block to say which:
+
+```toml
+schema = "writfold-delivery-mode/1"
+mode = "brief"
+checks = ["claims.cited-fresh", "claims.accounted"]
+min_citations = 1
+status_tags = ["inferred", "open"]
+```
+
+A block is accounted for when its citation tokens are fresh, or when it ends with one tag (`… the retry budget is the likely cause. [inferred]`). A tag accounts for a block; it says nothing about its truth, and the note counts tags apart from citations. The decision is `writfold_core::claims::accounted`, proved in `proofs/Writfold/Claims.lean` and linked to law U (`Calculus.Universal`): a pass leaves no block over (`remainder_is_bare`), and an empty draft is never a pass (`empty_never_passes`). A reviewer excusing a block that makes no claim is planned ([#221](https://github.com/writfold-dev/writfold/issues/221)).
 
 ## A mode file
 

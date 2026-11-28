@@ -119,6 +119,34 @@ inductive gate.Standing where
 | Attested : gate.Standing
 | Waived : gate.Standing
 
+/-- [writfold_core::claims::Standing]
+    Source: 'crates/writfold-core/src/claims.rs', lines 10:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive claims.Standing where
+| Fresh : claims.Standing
+| Stale : claims.Standing
+| Unverifiable : claims.Standing
+
+/-- [writfold_core::claims::Block]
+    Source: 'crates/writfold-core/src/claims.rs', lines 18:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive claims.Block where
+| Cited : claims.Standing → claims.Block
+| Tagged : claims.Block
+| Excused : claims.Block
+| Bare : claims.Block
+
+/-- [writfold_core::gate::Outcome]
+    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Outcome where
+| Pass : gate.Outcome
+| Fail : gate.Outcome
+| Unknown : gate.Outcome
+
 /-- [writfold_core::compose::RefFact]
     Source: 'crates/writfold-core/src/compose.rs', lines 18:0-27:1
     Visibility: public -/
@@ -231,15 +259,6 @@ inductive gate.Ending where
 | Signaled : gate.Ending
 | TimedOut : gate.Ending
 | Error : gate.Ending
-
-/-- [writfold_core::gate::Outcome]
-    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
-    Visibility: public -/
-@[discriminant isize]
-inductive gate.Outcome where
-| Pass : gate.Outcome
-| Fail : gate.Outcome
-| Unknown : gate.Outcome
 
 /-- [writfold_core::gate::Kept]
     Source: 'crates/writfold-core/src/gate.rs', lines 78:0-86:1

@@ -4,7 +4,7 @@
 //! a script gate adds no write path).
 use super::candidate::{self, Candidate};
 use super::checks::{self, Evaluated};
-use super::config::{self, BOUND, CLAIMS, LENGTH, PARAGRAPHS, PROSE, REFERENCES, VALE};
+use super::config::{self, ACCOUNTED, BOUND, CLAIMS, LENGTH, PARAGRAPHS, PROSE, REFERENCES, VALE};
 use super::receipt::{self, Facts};
 use crate::error::{KbError, Result};
 use crate::index::query::Rec;
@@ -144,7 +144,10 @@ fn evaluate(
     Ok(match ob.name.as_str() {
         PARAGRAPHS => checks::paragraphs(payload, mode),
         REFERENCES => checks::references(payload, deny),
-        CLAIMS => checks::claims(session, source, &c.payload_path())?,
+        CLAIMS => checks::claims(session, source, &c.payload_path(), mode.min_citations)?,
+        ACCOUNTED => {
+            super::accounted::evaluate(session, source, &c.payload_path(), &mode.status_tags)?
+        }
         LENGTH => checks::length(payload, mode),
         BOUND => super::bound::evaluate(session, rec, c, mode.agent.as_deref()),
         PROSE => match &mode.prose {

@@ -147,6 +147,75 @@ pub fn paragraphs(text: &str) -> Vec<Paragraph> {
     out
 }
 
+/// One prose block for `claims.accounted` (#189): a paragraph, a list item
+/// or a table row, with its first and last line and its text.
+pub struct Block {
+    pub line: u32,
+    pub end: u32,
+    pub text: String,
+}
+
+fn separator(row: &str) -> bool {
+    row.chars().all(|c| matches!(c, '|' | '-' | ':' | ' '))
+}
+
+/// Every prose block of `text`: headings, code blocks, front matter and
+/// table separators are not blocks; a table row is one.
+pub fn blocks(text: &str) -> Vec<Block> {
+    let mut out: Vec<Block> = Vec::new();
+    let mut open: Option<Block> = None;
+    let mut fenced: Option<(char, usize)> = None;
+    let mut front = text.starts_with("---\n");
+    for (index, raw) in text.lines().enumerate() {
+        let number = u32::try_from(index + 1).unwrap_or(u32::MAX);
+        if front {
+            front = !(index > 0 && raw.trim_end() == "---");
+            continue;
+        }
+        if let Some(f) = fenced {
+            fenced = (!closes(raw, f)).then_some(f);
+            continue;
+        }
+        let (line, _) = unquote(raw);
+        let body = unindent(line);
+        let breaks =
+            fence(line).is_some() || line.trim().is_empty() || heading(body) || thematic(body);
+        if breaks || body.starts_with('|') || item(body).is_some() {
+            out.extend(open.take().filter(|b| words(&b.text) > 0));
+        }
+        if let Some(f) = fence(line) {
+            fenced = Some(f);
+            continue;
+        }
+        if breaks {
+            continue;
+        }
+        if body.starts_with('|') {
+            if !separator(body) {
+                out.push(Block {
+                    line: number,
+                    end: number,
+                    text: body.to_owned(),
+                });
+            }
+            continue;
+        }
+        let rest = item(body).unwrap_or(body);
+        let b = open.get_or_insert(Block {
+            line: number,
+            end: number,
+            text: String::new(),
+        });
+        b.end = number;
+        if !b.text.is_empty() {
+            b.text.push(' ');
+        }
+        b.text.push_str(rest);
+    }
+    out.extend(open.take().filter(|b| words(&b.text) > 0));
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Paragraph, paragraphs, words};

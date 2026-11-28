@@ -164,9 +164,27 @@ pub fn cites(text: &str, path: &str) -> Vec<Cite> {
 
 /// `claims.cited-fresh`: every citation token in the candidate, checked by
 /// `stale` (local repositories only; nothing is fetched).
-pub fn claims(session: &Session<'_>, text: &str, path: &str) -> Result<Evaluated> {
+pub fn claims(session: &Session<'_>, text: &str, path: &str, min: usize) -> Result<Evaluated> {
     let cites = self::cites(text, path);
-    let checked = stale::check(session, &cites, false)?;
+    let mut shipped = claims_shipped(session, &cites)?;
+    // The floor (#189): never a pass below `min_citations` tokens.
+    let floored = writfold_core::claims::cited(cites.len(), min, shipped.outcome);
+    if floored != shipped.outcome {
+        shipped.findings.push(Finding {
+            line: 1,
+            rule: "too-few".into(),
+            detail: format!(
+                "{} citation tokens; the mode needs min_citations = {min}",
+                cites.len()
+            ),
+        });
+        shipped.outcome = floored;
+    }
+    Ok(shipped)
+}
+
+fn claims_shipped(session: &Session<'_>, cites: &[Cite]) -> Result<Evaluated> {
+    let checked = stale::check(session, cites, false)?;
     let mut findings = Vec::new();
     let mut unverifiable = Vec::new();
     for (cite, checked) in cites.iter().zip(&checked) {

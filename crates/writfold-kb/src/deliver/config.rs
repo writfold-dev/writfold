@@ -23,8 +23,13 @@ pub const PROSE: &str = "prose.rules";
 pub const VALE: &str = "prose.vale";
 /// `invocation.bound` (`agent = "<id>"`): never on by default (#149).
 pub const BOUND: &str = "invocation.bound";
+/// `claims.accounted` (#189): every prose block cited, tagged or excused;
+/// never on by default.
+pub const ACCOUNTED: &str = "claims.accounted";
 /// The built-in checks, in the order they run and are shown.
-pub const BUILTIN: [&str; 7] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH, PROSE, VALE, BOUND];
+pub const BUILTIN: [&str; 8] = [
+    PARAGRAPHS, REFERENCES, CLAIMS, ACCOUNTED, LENGTH, PROSE, VALE, BOUND,
+];
 /// The checks a built-in mode runs when no file names it.
 pub const DEFAULTS: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
@@ -160,6 +165,15 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
                 ("mechanical", format!("audience={}\n{list}", deny.audience))
             }
             PROSE | VALE => ("mechanical", mode.material(check)),
+            // A minimum joins the digest only when written, so a mode
+            // without it keeps its receipts (#189).
+            CLAIMS if mode.min_citations > 0 => {
+                ("observed", format!("min_citations={}", mode.min_citations))
+            }
+            ACCOUNTED => (
+                "mechanical",
+                format!("status_tags={}", mode.status_tags.join(",")),
+            ),
             BOUND => (
                 "mechanical",
                 format!("agent={}", mode.agent.as_deref().unwrap_or("")),

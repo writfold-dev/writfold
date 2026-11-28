@@ -1720,3 +1720,31 @@ function = "delivery.outbound.left_over"
 implements = "Calculus.Site.decide"
 theorem = "Writfold.Core.Conform.outbound_left_over_implements"
 laws = ["Calculus.closed_pass_iff", "Calculus.open_is_declared"]
+
+[[local]]
+type = "claims.Block"
+why = "a prose block as the caller classed it; mapped to a member and its word by blockOf"
+
+[[local]]
+type = "claims.Standing"
+why = "how a block's citations stand; part of claims.Block (blockOf)"
+
+[[link]]
+function = "claims.accounted"
+implements = "Calculus.Universal"
+theorem = "Writfold.Core.Conform.claims_accounted_implements"
+laws = ["Calculus.universal_sound"]
+
+[[link]]
+function = "claims.cited"
+implements = "Calculus.Tri.and"
+theorem = "Writfold.Core.Conform.claims_cited_implements"
+laws = ["Calculus.Tri.and_eq_yes", "Calculus.Tri.and_yes"]
+
+[[out]]
+function = "claims.fails"
+why = "a block that fails by itself, inside accounted; linked through it (fails_spec)"
+
+[[out]]
+function = "claims.unsure"
+why = "a block that cannot be told, inside accounted; linked through it (unsure_spec)"

@@ -804,6 +804,121 @@ def checklist.standing
       waived_current
     }
 
+/-- [writfold_core::claims::Standing]
+    Source: 'crates/writfold-core/src/claims.rs', lines 10:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive claims.Standing where
+| Fresh : claims.Standing
+| Stale : claims.Standing
+| Unverifiable : claims.Standing
+
+/-- [writfold_core::claims::Block]
+    Source: 'crates/writfold-core/src/claims.rs', lines 18:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive claims.Block where
+| Cited : claims.Standing → claims.Block
+| Tagged : claims.Block
+| Excused : claims.Block
+| Bare : claims.Block
+
+/-- [writfold_core::claims::fails]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 30:0-37:1
+    Visibility: public -/
+def claims.fails (block : claims.Block) : Result Bool := do
+  match block with
+  | claims.Block.Cited standing =>
+    match standing with
+    | claims.Standing.Fresh => ok false
+    | claims.Standing.Stale => ok true
+    | claims.Standing.Unverifiable => ok false
+  | claims.Block.Tagged => ok false
+  | claims.Block.Excused => ok false
+  | claims.Block.Bare => ok true
+
+/-- [writfold_core::claims::unsure]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 40:0-47:1
+    Visibility: public -/
+def claims.unsure (block : claims.Block) : Result Bool := do
+  match block with
+  | claims.Block.Cited standing =>
+    match standing with
+    | claims.Standing.Fresh => ok false
+    | claims.Standing.Stale => ok false
+    | claims.Standing.Unverifiable => ok true
+  | claims.Block.Tagged => ok false
+  | claims.Block.Excused => ok false
+  | claims.Block.Bare => ok false
+
+/-- [writfold_core::gate::Outcome]
+    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Outcome where
+| Pass : gate.Outcome
+| Fail : gate.Outcome
+| Unknown : gate.Outcome
+
+/-- [writfold_core::claims::accounted]: loop body 0:
+    Source: 'crates/writfold-core/src/claims.rs', lines 59:4-71:1
+    Visibility: public -/
+@[rust_loop_body]
+def claims.accounted_loop.body
+  (blocks : Slice claims.Block) (unknown : Bool) (index : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) gate.Outcome)
+  := do
+  let i := Slice.len blocks
+  if index < i
+  then
+    let b ← Slice.index_usize blocks index
+    let b1 ← claims.fails b
+    if b1
+    then ok (done gate.Outcome.Fail)
+    else
+      let unknown1 ← if unknown
+                       then ok true
+                       else claims.unsure b
+      let index1 ← index + 1#usize
+      ok (cont (unknown1, index1))
+  else
+    if unknown
+    then ok (done gate.Outcome.Unknown)
+    else ok (done gate.Outcome.Pass)
+
+/-- [writfold_core::claims::accounted]: loop 0:
+    Source: 'crates/writfold-core/src/claims.rs', lines 59:4-71:1
+    Visibility: public -/
+@[rust_loop]
+def claims.accounted_loop
+  (blocks : Slice claims.Block) (unknown : Bool) (index : Std.Usize) :
+  Result gate.Outcome
+  := do
+  loop
+    (fun (unknown1, index1) => claims.accounted_loop.body blocks unknown1
+      index1)
+    (unknown, index)
+
+/-- [writfold_core::claims::accounted]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 53:0-71:1
+    Visibility: public -/
+def claims.accounted (blocks : Slice claims.Block) : Result gate.Outcome := do
+  let b ← core.slice.Slice.is_empty blocks
+  if b
+  then ok gate.Outcome.Unknown
+  else claims.accounted_loop blocks false 0#usize
+
+/-- [writfold_core::claims::cited]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 75:0-80:1
+    Visibility: public -/
+def claims.cited
+  (tokens : Std.Usize) (min : Std.Usize) (shipped : gate.Outcome) :
+  Result gate.Outcome
+  := do
+  if tokens < min
+  then ok gate.Outcome.Fail
+  else ok shipped
+
 /-- [writfold_core::command::is_help]:
     Source: 'crates/writfold-core/src/command/mod.rs', lines 118:0-126:1
     Visibility: public -/
@@ -3026,15 +3141,6 @@ inductive gate.Ending where
 | Signaled : gate.Ending
 | TimedOut : gate.Ending
 | Error : gate.Ending
-
-/-- [writfold_core::gate::Outcome]
-    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
-    Visibility: public -/
-@[discriminant isize]
-inductive gate.Outcome where
-| Pass : gate.Outcome
-| Fail : gate.Outcome
-| Unknown : gate.Outcome
 
 /-- [writfold_core::gate::outcome]:
     Source: 'crates/writfold-core/src/gate.rs', lines 64:0-73:1

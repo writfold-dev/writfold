@@ -182,3 +182,50 @@ pub(super) fn agent(c: &mut Check<'_>, listed: bool) -> Option<Option<String>> {
         (Field::Got(v), true) => Some(Some(v.value.text)),
     }
 }
+
+/// `min_citations` (with `claims.cited-fresh`) and `status_tags` (with
+/// `claims.accounted`), #189: each refused without its check.
+pub(super) fn citations(
+    c: &mut Check<'_>,
+    cited: bool,
+    accounted: bool,
+) -> Option<(usize, Vec<String>)> {
+    let min = match (c.int("min_citations", (1, 1000), 1), cited) {
+        (Field::Absent, _) => Some(0),
+        (Field::Bad, _) => None,
+        (Field::Got(v), false) => {
+            let why = "`min_citations` needs claims.cited-fresh in checks".to_owned();
+            c.error("value.conflict", Some(v.span), why)
+                .label("not checked");
+            None
+        }
+        (Field::Got(v), true) => usize::try_from(v.value).ok(),
+    };
+    let tags = match (c.list("status_tags"), accounted) {
+        (Field::Absent, _) => Some(Vec::new()),
+        (Field::Bad, _) => None,
+        (Field::Got(v), false) => {
+            let why = "`status_tags` needs claims.accounted in checks".to_owned();
+            c.error("value.conflict", Some(v.span), why)
+                .label("not checked");
+            None
+        }
+        (Field::Got(v), true) => {
+            let bad = v.value.iter().find(|t| {
+                !t.str()
+                    .chars()
+                    .all(|ch| ch.is_ascii_lowercase() || ch == '-')
+                    || t.str().is_empty()
+            });
+            match bad {
+                Some(t) => {
+                    let why = format!("{:?} is not a tag word ([a-z-])", t.str());
+                    c.error("value.form", Some(t.span), why).label("not a tag");
+                    None
+                }
+                None => Some(v.value.iter().map(|t| t.value.text.clone()).collect()),
+            }
+        }
+    };
+    Some((min?, tags?))
+}

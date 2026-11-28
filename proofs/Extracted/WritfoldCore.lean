@@ -8,6 +8,7 @@ public import Extracted.WritfoldCore.Gate
 public import Extracted.WritfoldCore.Checklist
 public import Extracted.WritfoldCore.Bind
 public import Extracted.WritfoldCore.Catalog
+public import Extracted.WritfoldCore.Claims
 public import Extracted.WritfoldCore.Command
 public import Extracted.WritfoldCore.Policy
 public import Extracted.WritfoldCore.Plan

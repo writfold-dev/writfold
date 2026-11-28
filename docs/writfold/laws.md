@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=112 declared_out=157 remainder=0 of 269`
+`LAW_COVERAGE judged=114 declared_out=159 remainder=0 of 273`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: functions in neither, which
@@ -126,6 +126,7 @@ and_idem (a : Tri) : and a a = a
 and_yes (a : Tri) : and yes a = a
 ```
 
+- Implemented by: `claims.cited`
 - Derived: decided over the table of and
 
 ### `Calculus.Tri.and_mono`
@@ -147,7 +148,7 @@ Both hold exactly when each holds.
 and_eq_yes {a b : Tri} : and a b = yes ↔ a = yes ∧ b = yes
 ```
 
-- Implemented by: `gate.outcome_kept`
+- Implemented by: `claims.cited`, `gate.outcome_kept`
 - Derived: decided over the table of and
 
 ### `Calculus.Tri.and_eq_no`
@@ -423,6 +424,7 @@ empty_never_yes (ms : List (Member × Tri)) (h : judgedOf ms = []) : universal f
 universal_sound (e : Bool) (ms : List (Member × Tri)) : Universal e ms (universal e ms)
 ```
 
+- Implemented by: `claims.accounted`
 - Derived: universal_yes_iff
 
 ### `Calculus.universal_no_of_witness`
@@ -958,6 +960,8 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 | `checklist.rollup_under` | `Calculus.universal` | `Writfold.Core.Conform.rollup_under_implements` |
 | `checklist.standing` | `Calculus.stand` | `Writfold.Core.Conform.checklist_standing_implements` |
 | `checklist.state` | `Calculus.stand` | `Writfold.Core.Conform.checklist_state_implements` |
+| `claims.accounted` | `Calculus.Universal` | `Writfold.Core.Conform.claims_accounted_implements` |
+| `claims.cited` | `Calculus.Tri.and` | `Writfold.Core.Conform.claims_cited_implements` |
 | `compose.closure` | `Calculus.admit` | `Writfold.Core.Conform.compose_closure_implements` |
 | `compose.covers` | `Calculus.Tri.all` | `Writfold.Core.Conform.compose_covers_implements` |
 | `delivery.deciding` | `Calculus.deciding` | `Writfold.Core.Conform.delivery_deciding_implements` |
@@ -1107,6 +1111,8 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 | `checklist.item` | a row's six-word state from a parsed row (item_spec); its coverage is decided per policy by covered_under |
 | `checklist.owes` | a required entry not covered (owes_spec): the remainder test inside rollup_under |
 | `checklist.stale` | whether an entry's row is stale (stale_spec); inside rollup_under |
+| `claims.fails` | a block that fails by itself, inside accounted; linked through it (fails_spec) |
+| `claims.unsure` | a block that cannot be told, inside accounted; linked through it (unsure_spec) |
 | `command.is_help` | reads one command word; a parser, not a judgment (is_help_spec) |
 | `command.named` | matches a command name against a prefix; a parser, not a judgment (named_spec) |
 | `decision.facts` | collects the facts a decision write is checked on; the decision-state table (#213) |

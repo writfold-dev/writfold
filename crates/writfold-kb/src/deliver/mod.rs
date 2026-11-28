@@ -8,6 +8,7 @@
 //! and `deliver waive` record statements; `deliver status` derives each
 //! obligation's standing. Nothing is sent, ever: there is no network and
 //! no adapter. The checks are mechanical; attestations are attestations.
+mod accounted;
 mod answer;
 pub mod bound;
 pub mod candidate;

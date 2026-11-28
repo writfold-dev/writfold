@@ -128,6 +128,10 @@ accept = ["attested"]
 scope = ["proposals/**", "decisions/**", "ktlo/**", "investigations/**"]
 ```
 
+## Notes whose every paragraph says how it stands
+
+A research note delivered under a mode with `claims.accounted` (since v0.6.0-dev.31) cannot carry an unmarked claim: each paragraph is cited with fresh tokens or ends with one of the mode's status tags, such as `[inferred]` or `[open]` ([delivery modes](delivery-modes.md#claims-inside-text)). With `min_citations`, a note with no citation at all fails `claims.cited-fresh` instead of passing it.
+
 ## What this does not do
 
 - **Correctness:** a report that is wrong and well formed passes `invocation.bound` and covers its unit. Coverage is not correctness.
