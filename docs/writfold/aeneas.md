@@ -84,6 +84,15 @@ claims in `proofs/Audit.lean` must exist, and every theorem a mutant names
 must be one of them) and calibrates the semantic mutants in
 `proofs/mutants.py`, each of which must break exactly its named theorem.
 
+**Which entrance records** (#173). For a change that lands on `main`, the
+proofs gate is `scripts/release claims`: it refuses a weakened claim or a
+spent `[[amend]]`, checks the cargo-tauten version against
+`toolchains.lock.json`, then runs `cargo tauten proofs`, which runs these
+same stages and writes `proofs/claims.json`; commit that record, since the
+quality gate's `tauten-check` step refuses one older than the last change
+under `crates/writfold-core/` or `proofs/`. The compose run above and
+`cargo tauten proofs try` are the developer loop and record nothing.
+
 ### Running the gate without a Compose network
 
 `docker compose run` creates a project network; on a host short of networks,
@@ -1026,6 +1035,7 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `item-accepts-not-current` | `checklist.rs` | checklist: a row about other content or another definition is stale | `Checklist.item_spec`, `Checklist.item_none_found_iff` |
 | `covered-counts-unsupported` | `checklist.rs` | checklist: an unsupported item is not covered | `Checklist.covered_under_spec` |
 | `covered-ignores-na` | `checklist.rs` | checklist: not-applicable covers only where the policy accepts it | `Checklist.covered_under_spec` |
+| `state-hides-stale` | `checklist.rs` | checklist: a stale checklist reports stale, never open | `Checklist.state_spec` |
 | `covered-none-found-without-policy` | `checklist.rs` | checklist: none-found covers only where the policy accepts it | `Checklist.covered_under_spec` |
 | `covered-ignores-snapshot` | `checklist.rs` | checklist: an item the `snapshot` list names needs a look that kept one | `Checklist.covered_under_spec` |
 | `item-none-found-no-evidence` | `checklist.rs` | checklist: none-found needs at least one cited look | `Checklist.item_spec`, `Checklist.item_none_found_iff` |
@@ -1048,6 +1058,10 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `verdict-deny-asks` | `guard.rs` | guard: a deny rule denies | `Guard.verdict_spec` |
 | `combine-ask-over-deny` | `guard.rs` | guard: a denial wins over a question | `Guard.combine_spec` |
 | `effect-enforces-audit` | `guard.rs` | guard: an audit rule never decides the call | `Guard.effect_spec` |
+| `undecided-passes-closed` | `site.rs` | site (#184): an undecided event under deny is denied | `Site.decide_spec` |
+| `posture-overrides-judged` | `site.rs` | site: a posture never overrides a judged decision | `Site.decide_spec` |
+| `stricter-takes-first` | `site.rs` | site: the stricter posture reads both sides | `Site.stricter_spec` |
+| `block-ignores-limit` | `site.rs` | site: a blocking stop rule stops at its limit | `Site.block_again_spec` |
 | `gates-fact-met-on-nothing` | `guard.rs` | guard: gates.met is not met by an empty set | `Guard.gates_fact_met_iff` |
 | `gates-fact-ignores-invalid` | `guard.rs` | guard: an invalid receipt or definition keeps gates.met unmet | `Guard.gates_fact_met_iff` |
 | `nudge-while-active` | `guard.rs` | guard: the Stop nudge never fires while a stop hook is continuing | `Guard.nudge_spec` |
@@ -1218,6 +1232,7 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `answered-ignores-grounded` | `bind.rs` | bind: an ungrounded reference never answers | `Bind.answered_from_loop_spec` |
 | `item-under-ignores-answer` | `bind.rs` | bind: an unanswered supported row is stale | `Bind.item_under_spec` |
 | `holds-skips-unreadable` | `pin.rs` | pin: an unreadable pin never holds | `Pin.holds_from_loop_spec` |
+| `holds-skips-first` | `pin.rs` | pin: every pin is looked at, the first included | `Pin.holds_spec` |
 | `timed-default-never-ages` | `pin.rs` | pin: a catalog default lifetime ages like a token's own | `Pin.timed_spec` |
 | `nothing-found-ignores-pins` | `pin.rs` | pin: a negative look's pins decide whether it still found nothing | `Pin.nothing_found_spec` |
 | `current-under-ignores-about` | `pin.rs` | pin: pins never make a receipt about other bytes current | `Pin.current_under_spec` |

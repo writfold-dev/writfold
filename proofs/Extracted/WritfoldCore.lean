@@ -35,6 +35,7 @@ public import Extracted.WritfoldCore.Publish
 public import Extracted.WritfoldCore.Referent
 public import Extracted.WritfoldCore.Runs
 public import Extracted.WritfoldCore.Scope
+public import Extracted.WritfoldCore.Site
 public import Extracted.WritfoldCore.Store
 public import Extracted.WritfoldCore.Subject
 public import Extracted.WritfoldCore.Target
