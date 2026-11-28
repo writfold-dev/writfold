@@ -3510,6 +3510,8 @@ file = "crates/writfold-core/src/guard/require.rs"
 function = "settled_fact"
 lean = "writfold_core.guard.require.settled_fact"
 theorems = [
+  "Writfold.Core.Guard.settled_met_iff",
+  "Writfold.Core.Guard.settled_unknown_iff_unread",
   "Writfold.Core.Conform.settled_fact_implements",
 ]
 mutants = [
@@ -3524,6 +3526,7 @@ file = "crates/writfold-core/src/plan/round.rs"
 function = "exit"
 lean = "writfold_core.plan.round.exit"
 theorems = [
+  "Writfold.Core.Round.exit_spec",
   "Writfold.Core.Conform.round_exit_implements",
   "Writfold.Core.Conform.round_all_met_implements",
 ]
@@ -3538,6 +3541,7 @@ file = "crates/writfold-core/src/handoff.rs"
 function = "strict"
 lean = "writfold_core.handoff.strict"
 theorems = [
+  "Writfold.Core.Handoff.strict_spec",
   "Writfold.Core.Conform.handoff_strict_implements",
 ]
 mutants = [
@@ -3550,6 +3554,8 @@ file = "crates/writfold-core/src/handoff.rs"
 function = "checked"
 lean = "writfold_core.handoff.checked"
 theorems = [
+  "Writfold.Core.Handoff.accepted_implies_evidence_complete",
+  "Writfold.Core.Handoff.incomplete_evidence_never_accepted",
   "Writfold.Core.Conform.handoff_checked_implements",
 ]
 mutants = [
@@ -3562,6 +3568,7 @@ file = "crates/writfold-core/src/inventory.rs"
 function = "unplanned_clean"
 lean = "writfold_core.inventory.unplanned_clean"
 theorems = [
+  "Writfold.Core.Inventory.unplanned_clean_iff",
   "Writfold.Core.Conform.unplanned_clean_implements",
 ]
 mutants = [
@@ -3574,6 +3581,8 @@ file = "crates/writfold-core/src/inventory.rs"
 function = "lines_clean_over"
 lean = "writfold_core.inventory.lines_clean_over"
 theorems = [
+  "Writfold.Core.Inventory.lines_clean_over_iff",
+  "Writfold.Core.Inventory.lines_clean_over_incomplete",
   "Writfold.Core.Conform.lines_clean_over_implements",
 ]
 mutants = [
@@ -3586,6 +3595,7 @@ file = "crates/writfold-core/src/checklist.rs"
 function = "state"
 lean = "writfold_core.checklist.state"
 theorems = [
+  "Writfold.Core.Checklist.state_spec",
   "Writfold.Core.Conform.checklist_state_implements",
 ]
 mutants = [
@@ -3598,6 +3608,7 @@ file = "crates/writfold-core/src/pin.rs"
 function = "holds"
 lean = "writfold_core.pin.holds"
 theorems = [
+  "Writfold.Core.Pin.holds_spec",
   "Writfold.Core.Conform.pin_holds_implements",
 ]
 mutants = [
@@ -3718,8 +3729,8 @@ theorems = [
 total = "Writfold.Core.Site.decide_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
-  "undecided-passes-closed",
-  "posture-overrides-judged",
+  "site-undecided-passes-closed",
+  "site-posture-overrides-judged",
 ]
 
 [[claim]]
@@ -3737,7 +3748,7 @@ theorems = [
 total = "Writfold.Core.Site.stricter_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
-  "stricter-takes-first",
+  "site-stricter-takes-first",
 ]
 
 [[claim]]

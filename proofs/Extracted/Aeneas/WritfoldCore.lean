@@ -2722,7 +2722,7 @@ def delivery.guard
     | delivery.Unread.Deny => ok false
 
 /-- [writfold_core::diag::blocks]:
-    Source: 'crates/writfold-core/src/diag/mod.rs', lines 252:0-254:1
+    Source: 'crates/writfold-core/src/diag/mod.rs', lines 253:0-255:1
     Visibility: public -/
 def diag.blocks
   (errors : Std.Usize) (warnings : Std.Usize) (deny : Bool) : Result Bool := do
