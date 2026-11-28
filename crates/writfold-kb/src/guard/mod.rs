@@ -33,6 +33,7 @@ mod rule_lists;
 pub mod rules;
 pub mod site;
 pub mod status;
+pub mod stop;
 pub mod waived;
 
 /// One read-only guard verb.
@@ -151,6 +152,13 @@ pub fn stop(
         .get("session_id")
         .and_then(Value::as_str)
         .unwrap_or("");
+    if let Some(reason) = stop::blocks(ws, input, (cwd, &local, session), now, &found)? {
+        let value = json!({"decision": "block", "reason": reason});
+        return Ok(HookOutput {
+            stdout: format!("{value}\n"),
+            stderr,
+        });
+    }
     let mut texts = nudges(ws, input, (cwd, &local, session), now, &found)?;
     if let Some(block) = broken_once(&local, session, &problems, now)? {
         texts.insert(0, block);
@@ -210,7 +218,10 @@ fn nudges(
     now: i64,
     found: &[Rule],
 ) -> Result<Vec<String>, String> {
-    let stops: Vec<&Rule> = found.iter().filter(|r| r.event == Event::Stop).collect();
+    let stops: Vec<&Rule> = found
+        .iter()
+        .filter(|r| r.event == Event::Stop && r.block.is_none())
+        .collect();
     if stops.is_empty() {
         return Ok(Vec::new());
     }

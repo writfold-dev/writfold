@@ -16,11 +16,14 @@ pub const HELP: &str = "usage: writfold kb guard check --kind shell --command LI
        writfold kb guard check --kind skill|spawn --name NAME [--tool NAME]
        writfold kb guard check --kind tool --tool NAME
        writfold kb guard check --from-event FILE|- [--harness ID]
+       writfold kb guard check --event stop --session ID [--stop-active] [--message TEXT]
   common: [--kb DIR] [--cwd DIR] [--posture open|ask|deny] [--session ID] [--actor ID] [--actor-type T] [--json]
 The guard site's decision for one event, exactly as kb hook pre-tool-use
 decides it: the delivery guard, then the rules. Writes the guard log entry
 (via: check); runs nothing. Exit 0 allow, 2 ask, 3 deny, 1 usage (3 under
 a posture other than open).
+--event stop runs the stop rules as kb hook stop does: exit 3 when a
+blocking rule ends the turn (--stop-active: this stop follows a block).
 A harness's own event is read through its binding: claude-code (built in)
 or .writfold/harness/<id>.toml.
 ";
@@ -39,6 +42,7 @@ fn slot<'a>(args: &'a mut Args, flag: &str) -> Option<&'a mut Option<String>> {
         "--from-event" => &mut args.from_event,
         "--harness" => &mut args.harness,
         "--posture" => &mut args.posture,
+        "--message" => &mut args.message,
         _ => return None,
     })
 }
@@ -47,8 +51,17 @@ fn parse(words: &[String]) -> Result<Args, String> {
     let mut args = Args::default();
     let mut rest = words.iter();
     while let Some(flag) = rest.next() {
-        if flag == "--json" {
-            args.json = true;
+        if flag == "--json" || flag == "--stop-active" {
+            args.json |= flag == "--json";
+            args.stop_active |= flag == "--stop-active";
+            continue;
+        }
+        if flag == "--event" {
+            match rest.next().map(String::as_str) {
+                Some("stop") => args.stop = true,
+                Some("pre-tool") => {}
+                other => return Err(format!("--event takes stop or pre-tool, not {other:?}")),
+            }
             continue;
         }
         let Some(slot) = slot(&mut args, flag) else {

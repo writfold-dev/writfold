@@ -32,6 +32,13 @@ pub struct Args {
     pub harness: Option<String>,
     /// The registration's posture (`--posture`).
     pub posture: Option<String>,
+    /// `--event stop`: the end of a turn, not a tool call.
+    pub stop: bool,
+    /// `--stop-active`: this Stop follows a block in the same turn.
+    pub stop_active: bool,
+    /// `--message`: the agent's last message, kept in the session's draft
+    /// as the hook keeps it.
+    pub message: Option<String>,
     pub json: bool,
 }
 
@@ -247,6 +254,9 @@ pub fn run(args: &Args, env: &HookEnv) -> Checked {
         Ok(posture) => posture,
         Err(refused) => return refused,
     };
+    if args.stop {
+        return stop(args, env, posture);
+    }
     let here = args
         .cwd
         .as_deref()
@@ -282,4 +292,45 @@ pub fn run(args: &Args, env: &HookEnv) -> Checked {
     let input: Map<String, Value> = event.canonical();
     let sited = site::decide(&ws, &input, (&cwd, env.home.as_deref()), now, posture);
     report(&sited, &event, args.json)
+}
+
+/// `--event stop`: the stop rules exactly as `kb hook stop` runs them (the
+/// session's draft recorded, a blocking rule counted, a nudge once); exit
+/// 3 when a rule blocks the end of the turn, else 0 with any nudge.
+fn stop(args: &Args, env: &HookEnv, posture: Posture) -> Checked {
+    let Some(session) = &args.session else {
+        return usage_under(posture, "--event stop needs --session");
+    };
+    let cwd = args
+        .cwd
+        .as_deref()
+        .map_or_else(|| env.cwd.clone(), PathBuf::from);
+    let event = json!({"hook_event_name": "Stop", "session_id": session,
+        "cwd": cwd.display().to_string(), "stop_hook_active": args.stop_active,
+        "last_assistant_message": args.message.as_deref().unwrap_or("(reported through writfold kb guard check --event stop)")});
+    let out = crate::hook::run_with("stop", &event.to_string(), env, posture);
+    let value: Value = serde_json::from_str(&out.stdout).unwrap_or(Value::Null);
+    let stderr = out
+        .stderr
+        .replace("writfold kb hook: ", &format!("{NAME}: "));
+    let note = "# note: a guard, not enforcement: it decides only the calls it is asked about\n";
+    if let Some(reason) = value["reason"]
+        .as_str()
+        .filter(|_| value["decision"] == "block")
+    {
+        return Checked {
+            stdout: format!("stop [block] {reason}\n{note}# decision=block event=stop\n"),
+            stderr,
+            exit: 3,
+        };
+    }
+    let nudge = value["hookSpecificOutput"]["additionalContext"].as_str();
+    let said = nudge
+        .map(|n| format!("stop [nudge] {n}\n"))
+        .unwrap_or_default();
+    Checked {
+        stdout: format!("{said}{note}# decision=allow event=stop\n"),
+        stderr,
+        exit: 0,
+    }
 }

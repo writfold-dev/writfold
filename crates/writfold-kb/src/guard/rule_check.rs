@@ -7,7 +7,8 @@ use crate::gate::def_check::{description, globs, schema};
 use writfold_core::diag::Report;
 use writfold_core::guard::{Action, Mode, Repeat};
 
-const KEYS: [&str; 12] = [
+const KEYS: [&str; 13] = [
+    "limit",
     "mode",
     "schema",
     "id",
@@ -34,7 +35,9 @@ const PRE: [&str; 11] = [
     "mode",
     "description",
 ];
-const STOP: [&str; 7] = [
+const STOP: [&str; 9] = [
+    "action",
+    "limit",
     "schema",
     "id",
     "event",
@@ -69,10 +72,7 @@ fn word<T>(
 ) -> Option<Option<T>> {
     if !wanted {
         let (who, label) = match key {
-            "action" => (
-                "a stop rule",
-                "a stop rule takes no action: it only adds context",
-            ),
+            "action" => ("a stop rule", "a stop rule's only action is \"block\""),
             "mode" => ("a stop rule", "mode applies to a pre-tool-use rule only"),
             _ => ("a pre-tool-use rule", "repeat applies to a stop rule only"),
         };
@@ -152,6 +152,45 @@ fn paths(c: &mut Check<'_>, commands: &[Vec<String>], tools: &[String]) -> Optio
     Some(paths.into_iter().map(|p| p.value.text).collect())
 }
 
+/// A stop rule's `action = "block"` and `limit` (#184): `Some(limit)` for
+/// a blocking rule (default 1, at most 8), `None` for one that nudges;
+/// the outer `None` when a key is wrong.
+fn blocking(c: &mut Check<'_>, stop: bool) -> Option<Option<usize>> {
+    if !stop {
+        if c.doc.get("limit").is_none() {
+            return Some(None);
+        }
+        let why = "`limit` is not used by a pre-tool-use rule".to_owned();
+        return (!c.not_here("limit", why, "limit applies to a blocking stop rule only"))
+            .then_some(None);
+    }
+    let action = match c.text("action") {
+        Field::Absent => false,
+        Field::Bad => return None,
+        Field::Got(t) if t.str() == "block" => true,
+        Field::Got(t) => {
+            let why = format!("a stop rule's action is \"block\", not {:?}", t.str());
+            c.unknown_value(t.span, why, "not a stop action", t.str(), &["block"], '"');
+            return None;
+        }
+    };
+    match (action, c.int("limit", (1, 8), 1)) {
+        (true, Field::Got(n)) => usize::try_from(n.value).ok().map(Some),
+        (true, Field::Absent) => Some(Some(1)),
+        (false, Field::Absent) => Some(None),
+        (false, Field::Got(n)) => {
+            let d = c.error(
+                "key.needs",
+                Some(n.span),
+                "`limit` needs action = \"block\"".into(),
+            );
+            d.help("add a line: action = \"block\"".to_owned());
+            None
+        }
+        (_, Field::Bad) => None,
+    }
+}
+
 /// Parse and check one rule file whose name is `<stem>.toml`.
 pub fn check(text: &str, stem: &str, path: &str) -> Result<Rule, Report> {
     let mut c = Check::read(path, text, "a guard rule");
@@ -170,13 +209,12 @@ pub fn check(text: &str, stem: &str, path: &str) -> Result<Rule, Report> {
     let tools =
         strings(&mut c, "tools").map(|t| t.into_iter().map(|t| t.value.text).collect::<Vec<_>>());
     let pre = event == Some(Event::PreToolUse);
-    let action = word(
-        &mut c,
-        "action",
-        pre || event.is_none(),
-        &["deny", "ask"],
-        Action::parse,
-    );
+    let stop = event == Some(Event::Stop);
+    let action = match stop {
+        true => Some(None),
+        false => word(&mut c, "action", true, &["deny", "ask"], Action::parse),
+    };
+    let block = blocking(&mut c, stop);
     let repeat = word(&mut c, "repeat", !pre, &["session", "turn"], Repeat::parse);
     let mode = word(
         &mut c,
@@ -219,6 +257,7 @@ pub fn check(text: &str, stem: &str, path: &str) -> Result<Rule, Report> {
             require: require?,
             action: action?,
             repeat: repeat?.unwrap_or(Repeat::Session),
+            block: block?,
             mode: mode?.unwrap_or(Mode::Enforce),
             description: description?.unwrap_or_default(),
         })
