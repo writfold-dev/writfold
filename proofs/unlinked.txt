@@ -1,4 +1,0 @@
-# entries: 0
-# Translated functions and enums not yet linked to the calculus (#206).
-# This list only shrinks: law_coverage.py refuses a registered or vanished entry,
-# and the ceiling above must equal the number of entries.

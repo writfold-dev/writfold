@@ -34,8 +34,8 @@ FILES = {
         '[[word]]\ntype = "k.Word"\ncore = "Calculus.Tri"\nabstraction = "wordOf"\nonto = "wordOf_onto"\n\n'
         '[[local]]\ntype = "k.Other"\nwhy = "a fixture type"\n\n'
         '[[link]]\nfunction = "k.decide"\nimplements = "Calculus.admit"\n'
-        'theorem = "Writfold.Core.Conform.decide_implements"\nlaws = ["Calculus.admit_law"]\n',
-    "unlinked.txt": "# entries: 1\nk.helper\n",
+        'theorem = "Writfold.Core.Conform.decide_implements"\nlaws = ["Calculus.admit_law"]\n\n'
+        '[[out]]\nfunction = "k.helper"\nwhy = "a fixture helper"\n',
 }
 
 
@@ -57,15 +57,22 @@ class LawCoverage(unittest.TestCase):
     def test_the_fixture_passes(self) -> None:
         errors, line = law_coverage.check(self.project())
         self.assertEqual(errors, [])
-        self.assertEqual(line, "LAW_COVERAGE judged=1 declared_out=0 remainder=1 of 2")
+        self.assertEqual(line, "LAW_COVERAGE judged=1 declared_out=1 remainder=0 of 2")
 
     def test_a_new_function_with_no_entry(self) -> None:
         extra = FILES["Extracted/WritfoldCore/K.lean"] + "\ndef k.fresh (x : Bool) : Result Bool := do\n  ok x\n"
         self.refused("k.fresh: translated, but neither linked", **{"Extracted/WritfoldCore/K.lean": extra})
 
-    def test_the_backlog_only_shrinks(self) -> None:
-        self.refused("the backlog only shrinks", **{"unlinked.txt": "# entries: 1\nk.helper\nk.other\n"})
-        self.refused("not a translated function", **{"unlinked.txt": "# entries: 2\nk.helper\nk.gone\n"})
+    def test_nothing_is_left_unaccounted(self) -> None:
+        laws = FILES["laws.toml"].replace('[[out]]\nfunction = "k.helper"\nwhy = "a fixture helper"\n', "")
+        self.refused("k.helper: translated, but neither linked nor declared out", **{"laws.toml": laws})
+        self.refused("the backlog is closed", **{"unlinked.txt": "# entries: 1\nk.helper\n"})
+        gone = FILES["laws.toml"] + '\n[[out]]\nfunction = "k.gone"\nwhy = "removed"\n'
+        self.refused("not a translated function", **{"laws.toml": gone})
+
+    def test_an_out_needs_a_reason(self) -> None:
+        laws = FILES["laws.toml"].replace('why = "a fixture helper"', 'why = " "')
+        self.refused("declared out without a reason", **{"laws.toml": laws})
 
     def test_a_word_result_may_not_be_out(self) -> None:
         laws = FILES["laws.toml"] + '\n[[out]]\nfunction = "k.decide"\nwhy = "no"\n'

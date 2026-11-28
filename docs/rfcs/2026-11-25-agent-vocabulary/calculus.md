@@ -381,6 +381,8 @@ Writfold.
 
 ## 5. Proof ledger
 
+**Since v0.6.0-dev.29 (#213).** Every law this document states is a theorem of the core in `proofs/Calculus` (plain Lean, independent of the Rust) or a link: a theorem in `proofs/Writfold/Conform` showing a shipped kernel's translation implements the core operation the law is about, so the law holds of the kernel by transfer. Every translated function is linked or declared out with a reason (`LAW_COVERAGE judged=107 declared_out=156 remainder=0 of 263`), and both gates refuse one that is neither. The generated [laws page](../../writfold/laws.md) is the current ledger; the tables below record how the drafts' obligations were first resolved.
+
 ### 5.1 The drafts' obligations, resolved
 
 | Draft obligation | Resolution |
