@@ -3,6 +3,7 @@ import Calculus.Account
 import Calculus.Evidence
 import Calculus.Site
 import Calculus.Referent
+import Calculus.Knowledge
 
 /-!
 # The calculus (docs/rfcs/2026-11-27-calculus-in-lean.md)

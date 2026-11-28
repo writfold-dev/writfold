@@ -44,3 +44,9 @@ import Writfold.Conform.Words
 import Writfold.Conform.Links
 import Writfold.Conform.Referents
 import Writfold.Conform.Target
+import Writfold.Conform.AdmissionGuard
+import Writfold.Conform.AdmissionPlan
+import Writfold.Conform.Evidence
+import Writfold.Conform.EvidenceGround
+import Writfold.Conform.Universal
+import Writfold.Conform.Verdict

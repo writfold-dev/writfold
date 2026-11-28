@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Every translated function is linked to the calculus, declared out, or on
-a backlog that only shrinks (#206, docs/rfcs/2026-11-27-calculus-in-lean.md).
+"""Every translated function is linked to the calculus or declared out
+with a reason (#206, #213, docs/rfcs/2026-11-27-calculus-in-lean.md).
 
 The universe is every function of the translation (proofs/Extracted), loop
 bodies and trait instances excluded. `proofs/laws.toml` registers:
@@ -10,17 +10,15 @@ bodies and trait instances excluded. `proofs/laws.toml` registers:
   [[link]]  function, implements, theorem, laws
   [[out]]   function, why                   a function the calculus is not about
 
-`proofs/unlinked.txt` is the backlog: functions (and, as `type:<name>`,
-enums) not yet registered. Its first line, `# entries: N`, must equal the
-number of entries, so growing it is a visible edit of the ceiling.
-
-Refused: a function in none or in two of linked, out and backlog; a
-backlog entry that is registered or no longer exists; a link whose theorem
+There is no backlog since #213: `remainder` is always 0 on a passing run.
+Refused: a function neither linked nor out, or both; a registered function
+that no longer exists; an `[[out]]` without a reason; a link whose theorem
 is not a required claim, is not stated over its function or does not name
 its `implements` constant; a law that is not a calculus theorem naming
 that constant; a function whose result is a registered word declared out;
-an enum neither a word, local nor on the backlog; a word whose abstraction
-or `_onto` theorem is missing. It reads text files only: tested, not proved.
+an enum neither a word nor local; a word whose abstraction or `_onto`
+theorem is missing; a `proofs/unlinked.txt` (the closed backlog). It reads
+text files only: tested, not proved.
 
     python3 proofs/law_coverage.py [PROOFS_DIR]
 """
@@ -34,7 +32,6 @@ from pathlib import Path
 DEF = re.compile(r"^def\s+(?P<name>[\w.']+)", re.M)
 INDUCTIVE = re.compile(r"^inductive\s+(?P<name>[\w.']+)\s+where", re.M)
 NAMESPACE = re.compile(r"^namespace\s+(?P<name>\S+)", re.M)
-CEILING = re.compile(r"^# entries: (\d+)\s*$")
 
 
 def functions(extracted: Path) -> dict[str, str]:
@@ -84,17 +81,6 @@ def required(audit: Path) -> set[str]:
     return set(re.findall(r"``([\w.']+)", text[start:text.index("\n]", start)]))
 
 
-def backlog(path: Path) -> tuple[list[str], list[str]]:
-    lines = path.read_text().splitlines()
-    errors = []
-    ceiling = CEILING.match(lines[0]) if lines else None
-    entries = [line.strip() for line in lines if line.strip() and not line.startswith("#")]
-    if ceiling is None:
-        errors.append(f"{path.name}: the first line must be '# entries: N'")
-    elif int(ceiling.group(1)) != len(entries):
-        errors.append(f"{path.name}: '# entries: {ceiling.group(1)}' but {len(entries)} entries; "
-                      "the backlog only shrinks: lower the ceiling with the line you remove")
-    return entries, errors
 
 
 def check(proofs: Path) -> tuple[list[str], str]:
@@ -107,23 +93,21 @@ def check(proofs: Path) -> tuple[list[str], str]:
     local = {t["type"] for t in register.get("local", [])}
     links = {l["function"]: l for l in register.get("link", [])}
     outs = {o["function"]: o for o in register.get("out", [])}
-    pending, problems = backlog(proofs / "unlinked.txt")
-    errors += problems
-    pending_fns = {p for p in pending if not p.startswith("type:")}
-    pending_types = {p[5:] for p in pending if p.startswith("type:")}
+    if (proofs / "unlinked.txt").exists():
+        errors.append("unlinked.txt: the backlog is closed (#213); link the function or declare it out")
     claims = required(proofs / "Audit.lean")
     stated = theorems(proofs / "Writfold")
     laws = theorems(proofs / "Calculus")
     conform_defs = "\n".join(p.read_text() for p in (proofs / "Writfold" / "Conform").glob("*.lean"))
 
     for name in sorted(universe):
-        places = [k for k, s in (("linked", links), ("out", outs), ("backlog", pending_fns)) if name in s]
+        places = [k for k, s in (("linked", links), ("out", outs)) if name in s]
         if not places:
-            errors.append(f"{name}: translated, but neither linked, out nor on the backlog")
+            errors.append(f"{name}: translated, but neither linked nor declared out")
         elif len(places) > 1:
             errors.append(f"{name}: in more than one of {places}")
-    for name in sorted((set(links) | set(outs) | pending_fns) - set(universe)):
-        errors.append(f"{name}: registered or on the backlog, but not a translated function")
+    for name in sorted((set(links) | set(outs)) - set(universe)):
+        errors.append(f"{name}: registered, but not a translated function")
     for name, link in sorted(links.items()):
         theorem, implements = link.get("theorem", ""), link.get("implements", "")
         if theorem not in claims:
@@ -142,23 +126,21 @@ def check(proofs: Path) -> tuple[list[str], str]:
                 errors.append(f"{name}: law {law} is not a theorem under proofs/Calculus")
             elif short not in laws[law]:
                 errors.append(f"{name}: law {law} does not mention {implements}")
-    for name in sorted(outs):
+    for name, out in sorted(outs.items()):
+        if not str(out.get("why", "")).strip():
+            errors.append(f"{name}: declared out without a reason")
         if universe.get(name) in words:
             errors.append(f"{name}: returns the word {universe[name]}, so it may not be declared out")
     for name in sorted(types):
-        if name not in words and name not in local and name not in pending_types:
-            errors.append(f"type {name}: neither a [[word]], a [[local]] nor on the backlog")
-    for name in sorted(pending_types & (set(words) | local)):
-        errors.append(f"type {name}: registered, so it is no longer on the backlog")
-    for name in sorted(pending_types - types):
-        errors.append(f"type {name}: on the backlog, but not an enum of the translation")
+        if name not in words and name not in local:
+            errors.append(f"type {name}: neither a [[word]] nor a [[local]]")
     for name, word in sorted(words.items()):
         abstraction = word.get("abstraction", "")
         if not re.search(rf"^def {re.escape(abstraction)}\b", conform_defs, re.M):
             errors.append(f"word {name}: abstraction {abstraction} is not defined in proofs/Writfold/Conform")
         if f"Writfold.Core.Conform.{word.get('onto', '')}" not in stated:
             errors.append(f"word {name}: no onto theorem {word.get('onto')}")
-    remainder = len(pending_fns & set(universe))
+    remainder = len(set(universe) - set(links) - set(outs))
     line = (f"LAW_COVERAGE judged={len(links)} declared_out={len(outs)} "
             f"remainder={remainder} of {len(universe)}")
     return errors, line

@@ -176,3 +176,1491 @@ why = "a tip's commit, inside choose_in (tip_commit_spec)"
 [[out]]
 function = "target.tip_is"
 why = "a tip compared with a commit, inside choose_in (tip_is_spec)"
+
+# --- #209 admission ---
+
+[[word]]
+type = "gate.Ending"
+core = "Calculus.Tri"
+abstraction = "endingTri"
+onto = "endingTri_onto"
+
+[[local]]
+type = "compose.RefFact"
+why = "a reference's resolution; mapped to a requirement by refTri inside compose_closure_implements, not onto Tri (no unknown)"
+
+[[local]]
+type = "compose.Refusal"
+why = "a closure refusal's reason and index; a refusal is never a pass"
+
+[[local]]
+type = "decision.Flag"
+why = "a decision write's missing fact; the decision-state table"
+
+[[local]]
+type = "decision.State"
+why = "a decision's state; the decision-state table"
+
+[[local]]
+type = "delivery.Body"
+why = "whether a delivery's body was read; selects the guard's branch in delivery_guard_implements"
+
+[[local]]
+type = "delivery.Unread"
+why = "what an unread body admits; selects the guard's branch in delivery_guard_implements"
+
+[[local]]
+type = "gate.Kept"
+why = "kept outputs; missing ones are unknown and the rest yes (keptTri), not onto Tri"
+
+[[local]]
+type = "guard.Mode"
+why = "enforce or audit; an audit rule is no rule at the site (modeBasis)"
+
+[[local]]
+type = "guard.Repeat"
+why = "how often a stop rule nudges; a schedule, not a judgment"
+
+[[local]]
+type = "guard.require.Looked"
+why = "how far a read got; folded into each requirement fact (step_fact_implements)"
+
+[[local]]
+type = "handoff.Reason"
+why = "a handoff refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "handoff.Verdict"
+why = "accepted or refused with a reason; accepted is linked as universal (handoff_strict_implements)"
+
+[[local]]
+type = "investigation.Hypothesis"
+why = "an investigation hypothesis's state; the investigation-state table"
+
+[[local]]
+type = "invoke.ForItem"
+why = "a for: item absent, known or unread; unread is unknown (forTri), not onto Tri"
+
+[[local]]
+type = "invoke.PrepareRefusal"
+why = "a prepare refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "plan.Refusal"
+why = "an advance refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "plan.SkipRefusal"
+why = "a skip refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "plan.SpliceRefusal"
+why = "a splice refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "plan.Spliced"
+why = "where a splice inserted; the plan's order"
+
+[[local]]
+type = "plan.recheck.Decided"
+why = "a recorded recheck decision; plan bookkeeping"
+
+[[local]]
+type = "plan.recheck.Moved"
+why = "how a rechecked plan moved; plan bookkeeping"
+
+[[local]]
+type = "plan.round.AgainRefusal"
+why = "an again refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "plan.round.Exit"
+why = "a loop step's exit; met is linked as Tri.all (round_exit_implements)"
+
+[[local]]
+type = "plan.round.Next"
+why = "a loop step's next action; the plan's order"
+
+[[local]]
+type = "plan.round.Refusal"
+why = "a round refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "policy.repin.Refusal"
+why = "a repin refusal's reason; a refusal is never a pass"
+
+[[local]]
+type = "prose.Weight"
+why = "an alert's weight, counted inside prose::verdict"
+
+[[local]]
+type = "vale.BlockFrom"
+why = "the level alerts block from; configuration"
+
+[[local]]
+type = "vale.Level"
+why = "an alert's level; configuration"
+
+[[local]]
+type = "vale.Tool"
+why = "which Vale ran; read inside usable"
+
+[[link]]
+function = "guard.met"
+implements = "Calculus.Tri.admits"
+theorem = "Writfold.Core.Conform.guard_met_implements"
+laws = ["Calculus.Tri.admits_iff", "Calculus.Tri.unknown_never_admits"]
+
+[[link]]
+function = "guard.all_met"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.guard_all_met_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "guard.verdict"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.guard_verdict_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "guard.effect"
+implements = "Calculus.Site.decide"
+theorem = "Writfold.Core.Conform.guard_effect_implements"
+laws = ["Calculus.judged_unchanged", "Calculus.posture_only_narrows"]
+
+[[link]]
+function = "guard.call.ruled"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.guard_ruled_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "guard.call.decide_all"
+implements = "Calculus.Decision.join"
+theorem = "Writfold.Core.Conform.guard_decide_all_implements"
+laws = ["Calculus.Decision.join_comm", "Calculus.Decision.join_assoc", "Calculus.Decision.join_eq_pass"]
+
+[[link]]
+function = "guard.gates_fact"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.gates_fact_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no"]
+
+[[link]]
+function = "guard.require.run_current"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.run_current_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no"]
+
+[[link]]
+function = "guard.require.step_fact"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.step_fact_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits"]
+
+[[link]]
+function = "guard.require.settled_fact"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.settled_fact_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits"]
+
+[[link]]
+function = "guard.require.gate_fact"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.gate_fact_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits"]
+
+[[link]]
+function = "guard.require.gates_read"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.gates_read_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits"]
+
+[[link]]
+function = "guard.nudge"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.nudge_implements"
+laws = ["Calculus.Tri.all_eq_yes"]
+
+[[link]]
+function = "guard.nudge_with"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.nudge_with_implements"
+laws = ["Calculus.Tri.all_eq_yes"]
+
+[[link]]
+function = "gate.outcome"
+implements = "Calculus.settle"
+theorem = "Writfold.Core.Conform.gate_outcome_implements"
+laws = ["Calculus.settle_only_withholds", "Calculus.unresolved_never_judged"]
+
+[[link]]
+function = "gate.outcome_kept"
+implements = "Calculus.Tri.and"
+theorem = "Writfold.Core.Conform.gate_outcome_kept_implements"
+laws = ["Calculus.Tri.and_eq_yes", "Calculus.Tri.and_eq_no", "Calculus.Tri.and_mono"]
+
+[[link]]
+function = "prose.verdict"
+implements = "Calculus.settle"
+theorem = "Writfold.Core.Conform.prose_verdict_implements"
+laws = ["Calculus.settle_only_withholds", "Calculus.unresolved_never_judged"]
+
+[[link]]
+function = "vale.settle"
+implements = "Calculus.settle"
+theorem = "Writfold.Core.Conform.vale_settle_implements"
+laws = ["Calculus.settle_only_withholds", "Calculus.unresolved_never_judged"]
+
+[[link]]
+function = "invoke.bound"
+implements = "Calculus.settle"
+theorem = "Writfold.Core.Conform.invoke_bound_implements"
+laws = ["Calculus.settle_only_withholds", "Calculus.unresolved_never_judged"]
+
+[[link]]
+function = "invoke.prepare_check"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.prepare_check_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "invoke.prepare"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.prepare_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "plan.fact_met"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.plan_fact_met_implements"
+laws = ["Calculus.met_inf", "Calculus.met_narrows", "Calculus.unknown_never_met", "Calculus.reported_never_met"]
+
+[[link]]
+function = "plan.met_all"
+implements = "Calculus.Tri.admits"
+theorem = "Writfold.Core.Conform.plan_met_all_implements"
+laws = ["Calculus.Tri.admits_iff"]
+
+[[link]]
+function = "plan.advance_check"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.plan_advance_check_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "plan.advance"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.plan_advance_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "plan.skip_check"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.plan_skip_check_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "plan.first_owed"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.plan_first_owed_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no"]
+
+[[link]]
+function = "plan.round.all_met"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.round_all_met_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no"]
+
+[[link]]
+function = "plan.round.exit"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.round_exit_implements"
+laws = ["Calculus.Tri.all_eq_yes"]
+
+[[link]]
+function = "plan.round.advance_check"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.round_advance_check_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "plan.round.again_check"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.round_again_check_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "delivery.unmet"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.delivery_unmet_implements"
+laws = ["Calculus.met_inf", "Calculus.met_narrows", "Calculus.unknown_never_met"]
+
+[[link]]
+function = "delivery.ready"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.delivery_ready_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[link]]
+function = "delivery.postable"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.delivery_postable_implements"
+laws = ["Calculus.Tri.all_eq_yes"]
+
+[[link]]
+function = "delivery.guard_all"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.delivery_guard_all_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[link]]
+function = "delivery.guard_any"
+implements = "Calculus.search"
+theorem = "Writfold.Core.Conform.delivery_guard_any_implements"
+laws = ["Calculus.search_yes_iff", "Calculus.absence_needs_whole"]
+
+[[link]]
+function = "delivery.guard"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.delivery_guard_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[link]]
+function = "handoff.strict"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.handoff_strict_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[link]]
+function = "handoff.checked"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.handoff_checked_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[link]]
+function = "compose.covers"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.compose_covers_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_append"]
+
+[[link]]
+function = "compose.closure"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.compose_closure_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[link]]
+function = "inventory.unplanned_clean"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.unplanned_clean_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[link]]
+function = "inventory.lines_clean_over"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.lines_clean_over_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole"]
+
+[[link]]
+function = "policy.lines.owed_met"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.owed_met_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole"]
+
+[[link]]
+function = "policy.lines.lines_clean"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.lines_clean_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole"]
+
+[[link]]
+function = "policy.repin.repin_check"
+implements = "Calculus.admit"
+theorem = "Writfold.Core.Conform.repin_check_implements"
+laws = ["Calculus.admit_pass_iff", "Calculus.unknown_never_passes"]
+
+[[out]]
+function = "bytes.same"
+why = "byte equality, the plumbing under every key and path comparison (same_spec)"
+
+[[out]]
+function = "command.is_help"
+why = "reads one command word; a parser, not a judgment (is_help_spec)"
+
+[[out]]
+function = "command.named"
+why = "matches a command name against a prefix; a parser, not a judgment (named_spec)"
+
+[[out]]
+function = "decision.facts"
+why = "collects the facts a decision write is checked on; the decision-state table (#213)"
+
+[[out]]
+function = "decision.flags"
+why = "names the first missing fact of a decision write; the decision-state table (flags_none_iff)"
+
+[[out]]
+function = "decision.given_flags"
+why = "collects the flags given to a decision write; the decision-state table"
+
+[[out]]
+function = "decision.needs"
+why = "what a decision-state transition needs; the decision-state table"
+
+[[out]]
+function = "decision.step"
+why = "the decision-state transition table (step_spec)"
+
+[[out]]
+function = "decision.writes"
+why = "whether a decision write has what its transition needs; the decision-state table (writes_spec)"
+
+[[out]]
+function = "delivery.first_unmet"
+why = "names the lowest unmet line, the refusal's index; ready decides (first_unmet_spec)"
+
+[[out]]
+function = "delivery.refused"
+why = "whether the first unmet line is a met standing the policy refused; a message choice (refused_iff)"
+
+[[out]]
+function = "diag.blocks"
+why = "whether diagnostics block under a deny setting; a severity rule, no law above it (blocks_iff)"
+
+[[out]]
+function = "find.admit"
+why = "find's result limit: whether one more hit is shown (admit_iff)"
+
+[[out]]
+function = "find.among"
+why = "membership of a rank in a list; plumbing for find (among_spec)"
+
+[[out]]
+function = "find.exact_stops"
+why = "whether an exact id lookup stops the search (exact_stops_spec)"
+
+[[out]]
+function = "find.full"
+why = "whether find's result limit is reached (full_spec)"
+
+[[out]]
+function = "find.next_from"
+why = "the next word match in find's index (next_from_spec)"
+
+[[out]]
+function = "find.prefixed"
+why = "prefix matching of a query against a name (prefixed_spec)"
+
+[[out]]
+function = "find.query_ok"
+why = "whether a query is well formed (query_ok_spec)"
+
+[[out]]
+function = "find.show"
+why = "which hits find shows, in order (show_spec)"
+
+[[out]]
+function = "find.starts"
+why = "whether a word starts with a prefix (starts_spec)"
+
+[[out]]
+function = "guard.call.logged"
+why = "whether a decision is written to the guard log; a record of the decision, not a decision (logged_iff)"
+
+[[out]]
+function = "handoff.first_failing"
+why = "names the lowest failing item, the refusal's index; strict decides (first_failing_spec)"
+
+[[out]]
+function = "handoff.item"
+why = "one item's refusal reason; strict decides acceptance through itemOf (item_spec)"
+
+[[out]]
+function = "idle.idle"
+why = "idle time since the newest activity; clock arithmetic (idle_spec)"
+
+[[out]]
+function = "idle.newer"
+why = "compares two timestamps (newer_spec)"
+
+[[out]]
+function = "idle.newest"
+why = "the newest timestamp of a list (newest_spec)"
+
+[[out]]
+function = "idle.since"
+why = "saturating difference of two timestamps (since_spec)"
+
+[[out]]
+function = "investigation.Missing.none"
+why = "whether an investigation conclusion lacks nothing; the investigation-state table (none_spec)"
+
+[[out]]
+function = "investigation.conclude"
+why = "what an investigation conclusion still lacks; the investigation-state table (conclude_spec)"
+
+[[out]]
+function = "invoke.first_unmet"
+why = "names the lowest unmet need, the refusal's index; prepare decides (first_unmet_spec)"
+
+[[out]]
+function = "plan.close_check"
+why = "names the first owed line when the last step closes; the refusal's index (close_check_spec)"
+
+[[out]]
+function = "plan.closed"
+why = "whether a plan node is done or skipped; the plan's order (closed_spec)"
+
+[[out]]
+function = "plan.contains"
+why = "whether a splice key is already in the plan; the plan's order (contains_spec)"
+
+[[out]]
+function = "plan.current"
+why = "the plan's current step, the least open node; the plan's order (current_spec)"
+
+[[out]]
+function = "plan.recheck.still_stands"
+why = "whether a recorded recheck decision still stands; plan bookkeeping (still_stands_spec)"
+
+[[out]]
+function = "plan.recheck.writable"
+why = "whether a recheck may be written, sidecar over manifest (writable_spec)"
+
+[[out]]
+function = "plan.round.bounds_ok"
+why = "whether a loop step's round bounds are well formed; a parser check"
+
+[[out]]
+function = "plan.round.has_exit"
+why = "whether a loop node declares an exit; the plan's shape"
+
+[[out]]
+function = "plan.round.judged_at"
+why = "whether gate i was judged this round; an index read (judged_at_spec)"
+
+[[out]]
+function = "plan.round.next"
+why = "which action a loop step takes next; built on exit, linked through it (next_spec)"
+
+[[out]]
+function = "plan.round.over"
+why = "whether rounds exceed the maximum (over_iff)"
+
+[[out]]
+function = "plan.round.owed_or"
+why = "the next gate to judge or the fallback action; the refusal's index (owed_or_spec)"
+
+[[out]]
+function = "plan.round.stale"
+why = "whether an earlier round's done step went stale; the plan's order (superseded_never_stale)"
+
+[[out]]
+function = "plan.round.superseded"
+why = "whether a place is an earlier round (superseded_iff)"
+
+[[out]]
+function = "plan.round.superseded_any"
+why = "whether any place on a path is an earlier round (superseded_any_iff)"
+
+[[out]]
+function = "plan.skipped"
+why = "whether a skip was recorded and the step is not locked (skipped_spec)"
+
+[[out]]
+function = "plan.splice"
+why = "inserts nodes into the plan; the plan's order (splice_spec)"
+
+[[out]]
+function = "plan.splice_check"
+why = "where a splice inserts, or that it already did; the plan's order (splice_check_spec)"
+
+[[out]]
+function = "plan.stale"
+why = "whether a done step's gates no longer hold; the plan's order (stale_spec, stale_never_current)"
+
+[[out]]
+function = "policy.lines.all_skipped"
+why = "whether every closing line was skipped; a summary label (all_skipped_spec)"
+
+[[out]]
+function = "policy.lines.closes"
+why = "whether a summary closes the run; a label read, used inside lines_clean (closes_spec)"
+
+[[out]]
+function = "policy.lines.is_skipped"
+why = "whether one closing line was skipped (is_skipped_spec)"
+
+[[out]]
+function = "policy.repin.in_force"
+why = "the newest pin in force; an index (in_force_spec)"
+
+[[out]]
+function = "prose.agrees"
+why = "cross-checks a recorded outcome with its blocking count (agrees_spec)"
+
+[[out]]
+function = "prose.blocking"
+why = "counts blocking alerts; plumbing inside prose::verdict (blocking_spec)"
+
+[[out]]
+function = "scope.char_step"
+why = "one step of glob matching on characters (char_step_spec)"
+
+[[out]]
+function = "scope.covers"
+why = "whether a path is in a glob scope (covers_iff)"
+
+[[out]]
+function = "scope.globstar"
+why = "whether a segment is ** (globstar_spec)"
+
+[[out]]
+function = "scope.include"
+why = "one pattern's effect on inclusion (include_spec)"
+
+[[out]]
+function = "scope.path_step"
+why = "one step of glob matching on segments (path_step_spec)"
+
+[[out]]
+function = "scope.same_char"
+why = "character equality for globs (same_char_spec)"
+
+[[out]]
+function = "scope.segment"
+why = "glob matching of one segment (segment_iff)"
+
+[[out]]
+function = "scope.segments"
+why = "glob matching of a path (segments_iff)"
+
+[[out]]
+function = "scope.start"
+why = "the glob matcher's start cursor (start_spec)"
+
+[[out]]
+function = "vale.rules"
+why = "how many rules a Vale run enabled; the resolved input of vale::settle (rules_spec)"
+
+[[out]]
+function = "vale.usable"
+why = "whether a Vale run can be read; the resolved input of vale::settle (usable_spec)"
+
+[[out]]
+function = "vale.weigh"
+why = "an alert's weight under the blocking level (weigh_spec)"
+
+# --- #210 evidence ---
+
+[[word]]
+type = "gate.State"
+core = "Calculus.Tri"
+abstraction = "stateTri"
+onto = "stateTri_onto"
+
+[[word]]
+type = "grounding.Grounding"
+core = "Calculus.Standing"
+abstraction = "groundingOf"
+onto = "groundingOf_onto"
+
+[[word]]
+type = "policy.How"
+core = "Calculus.Class"
+abstraction = "howClass"
+onto = "howClass_onto"
+
+[[local]]
+type = "checklist.Item"
+why = "a checklist row's six states; its coverage is decided per policy by covered_under and reaches the core through checklist.standing (attested)"
+
+[[local]]
+type = "checklist.Outcome"
+why = "a parsed row's outcome, the input of checklist.item"
+
+[[local]]
+type = "delivery.Place"
+why = "a candidate's place; Calculus.deciding counts every place but withdrawn (placeLive) and the kernel names the decider when open"
+
+[[local]]
+type = "policy.Close"
+why = "a step's close; policy.summary reads it as a member of the plan's universe (closeMember)"
+
+[[local]]
+type = "policy.Pin"
+why = "whether a policy moved: a fact the summary reads, not a word of the core"
+
+[[local]]
+type = "policy.Summary"
+why = "the seven-word report of a plan; its complete word is linked to Calculus.universal (policy_summary_implements)"
+
+[[local]]
+type = "pin.Pin"
+why = "a citation pin's four states; the core reads them as requirements that hold or not (pinHeldTri, Tri.all)"
+
+[[local]]
+type = "bind.Bound"
+why = "what a reference is bound to; a matching table input"
+
+[[local]]
+type = "bind.Need"
+why = "what a checklist item needs bound; a matching table input"
+
+[[local]]
+type = "observe.Status"
+why = "a look's transport status; the core reads ok (statusOk) and empty (statusEmpty)"
+
+[[link]]
+function = "gate.state"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.gate_state_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.uncounted_never_decides", "Calculus.older_never_outvotes", "Calculus.deciding_none_iff"]
+
+[[link]]
+function = "gate.judge"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.gate_judge_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.uncounted_never_decides", "Calculus.older_never_outvotes"]
+
+[[link]]
+function = "gate.newest_bound"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.gate_newest_bound_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.deciding_none_iff"]
+
+[[link]]
+function = "gate.Standing.met"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.gate_met_implements"
+laws = ["Calculus.reported_never_met", "Calculus.unknown_never_met", "Calculus.met_narrows"]
+
+[[link]]
+function = "gate.standing"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.gate_standing_implements"
+laws = ["Calculus.class_never_promoted", "Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "checklist.state"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.checklist_state_implements"
+laws = ["Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "checklist.standing"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.checklist_standing_implements"
+laws = ["Calculus.class_never_promoted", "Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "delivery.deciding"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.delivery_deciding_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.uncounted_never_decides", "Calculus.older_never_outvotes"]
+
+[[link]]
+function = "delivery.standing"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.delivery_standing_implements"
+laws = ["Calculus.met_inf", "Calculus.met_narrows", "Calculus.reported_never_met", "Calculus.unknown_never_met"]
+
+[[link]]
+function = "delivery.posted"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.delivery_posted_implements"
+laws = ["Calculus.class_never_promoted", "Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "delivery.rechecked"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.delivery_rechecked_implements"
+laws = ["Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "ground.of_gate"
+implements = "Calculus.Standing.cls"
+theorem = "Writfold.Core.Conform.ground_of_gate_implements"
+laws = ["Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_receipt"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_receipt_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_token"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_token_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_observation"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_observation_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_statement"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_statement_implements"
+laws = ["Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_delivery"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_delivery_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "pin.holds"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.pin_holds_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "pin.current_under"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.pin_current_under_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "pin.nothing_found"
+implements = "Calculus.search"
+theorem = "Writfold.Core.Conform.pin_nothing_found_implements"
+laws = ["Calculus.absence_needs_whole", "Calculus.search_yes_iff"]
+
+[[link]]
+function = "policy.summary"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.policy_summary_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[out]]
+function = "gate.about"
+why = "byte equality of a record's definition and content with the present ones (about_spec); an input of the deciding record's counts predicate"
+
+[[out]]
+function = "gate.bound"
+why = "a conjunction of three facts (bound_spec); an input of the counts predicate"
+
+[[out]]
+function = "gate.current"
+why = "the counts predicate of the deciding receipt (current_spec); linked through gate.state"
+
+[[out]]
+function = "gate.evidence"
+why = "assembles a receipt's facts from bytes (evidence_spec); linked through gate.judge"
+
+[[out]]
+function = "gate.stands"
+why = "whether one statement is about the present (stands_spec); inside gate.statements, whose flags gate.standing reads"
+
+[[out]]
+function = "gate.attests"
+why = "whether one statement is a bound attestation (attests_spec); inside gate.statements"
+
+[[out]]
+function = "gate.statements"
+why = "folds statements into three flags (statements_spec); the flags are gate.standing's inputs, linked there"
+
+[[out]]
+function = "checklist.item"
+why = "a row's six-word state from a parsed row (item_spec); its coverage is decided per policy by covered_under"
+
+[[out]]
+function = "checklist.covered_under"
+why = "a row's coverage under the checklist's policy (covered_under_spec); the per-member test of rollup_under (#211)"
+
+[[out]]
+function = "checklist.owes"
+why = "a required entry not covered (owes_spec): the remainder test inside rollup_under"
+
+[[out]]
+function = "checklist.first_owed"
+why = "the first owed entry, a witness for the report (first_owed_spec); inside rollup_under"
+
+[[out]]
+function = "checklist.stale"
+why = "whether an entry's row is stale (stale_spec); inside rollup_under"
+
+[[out]]
+function = "checklist.any_stale"
+why = "whether any required row is stale (any_stale_spec); inside rollup_under"
+
+[[out]]
+function = "delivery.is_open"
+why = "a constructor test on a candidate's place (is_open_spec)"
+
+[[out]]
+function = "delivery.is_bound"
+why = "a constructor test on a candidate's place (is_bound_spec)"
+
+[[out]]
+function = "delivery.is_waived"
+why = "a constructor test on a standing, inside delivery.standing (is_waived_spec)"
+
+[[out]]
+function = "delivery.is_attested"
+why = "a constructor test on a standing, inside delivery.standing (is_attested_spec)"
+
+[[out]]
+function = "delivery.fact"
+why = "packages delivery.standing and delivery.ready as a plan gate fact (fact_met_iff_ready); linked through delivery.standing"
+
+[[out]]
+function = "ground.moved"
+why = "compares a recorded grounding with today's (moved_iff): change detection, about no law of the core"
+
+[[out]]
+function = "observe.grounds"
+why = "an ok look with fresh citations (grounds_iff); inside ground.of_observation, linked there"
+
+[[out]]
+function = "observe.embeds"
+why = "whether a look's status carries citations to embed (embeds_iff); a rendering choice"
+
+[[out]]
+function = "pin.holds_from"
+why = "the loop inside pin.holds, linked through it (holds_from_loop_spec)"
+
+[[out]]
+function = "pin.timed"
+why = "a pin's age from a lifetime and a clock (timed_spec); arithmetic on time, about no law of the core"
+
+[[out]]
+function = "bind.answers"
+why = "whether a reference's binding answers a need (answers_spec); a matching table, about no law of the core"
+
+[[out]]
+function = "bind.answered_from"
+why = "the loop inside bind.answered (answered_from_loop_spec)"
+
+[[out]]
+function = "bind.answered"
+why = "whether some grounded reference answers a need (answered_iff); a witness search with no account of a universe"
+
+[[out]]
+function = "bind.item_under"
+why = "a row's item under a binding answer (item_under_spec); returns the local checklist.Item"
+
+[[out]]
+function = "order.less"
+why = "byte-lexicographic order (less_spec); a total order, about no law of the core"
+
+[[out]]
+function = "order.precedes"
+why = "the (seq, name) order (precedes_spec); a total order, about no law of the core"
+
+[[out]]
+function = "order.newest"
+why = "the newest by (seq, name): Calculus.deciding orders by a Nat seq alone and cannot express the name tiebreak (newest_spec)"
+
+[[out]]
+function = "verdict.recorded.better"
+why = "one step of best_recorded under Before (better_spec)"
+
+[[out]]
+function = "verdict.recorded.best_recorded"
+why = "the best recorded statement under Before (recorded time, then severity); Calculus.deciding's Nat seq cannot express that order (best_recorded_spec)"
+
+[[out]]
+function = "verdict.recorded.newest"
+why = "picks the local or the best recorded statement by age and Before (newest_spec); the same order, inexpressible as a Nat seq"
+
+[[out]]
+function = "policy.pin_one"
+why = "a policy pin from recorded and present bytes (pin_one_spec); a fact, about no law of the core"
+
+[[out]]
+function = "policy.is_moved"
+why = "a constructor test on a policy pin (is_moved_spec)"
+
+[[out]]
+function = "policy.is_unpinned"
+why = "a constructor test on a policy pin (is_unpinned_spec)"
+
+[[out]]
+function = "policy.any_moved"
+why = "whether any pin moved (any_moved_spec); inside pin_all"
+
+[[out]]
+function = "policy.any_unpinned"
+why = "whether any pin is unpinned (any_unpinned_spec); inside pin_all"
+
+[[out]]
+function = "policy.pin_all"
+why = "combines pins: moved if any moved, else unpinned if any is (pin_all_spec); a fact policy.summary reads"
+
+[[out]]
+function = "policy.how_waived"
+why = "a constructor test on how a gate was met (how_waived_spec); inside policy.close"
+
+[[out]]
+function = "policy.how_attested"
+why = "a constructor test on how a gate was met (how_attested_spec); inside policy.close"
+
+[[out]]
+function = "policy.any_waived"
+why = "whether any gate was met by waiver (any_waived_spec); inside policy.close"
+
+[[out]]
+function = "policy.any_attested"
+why = "whether any gate was met by attestation (any_attested_spec); inside policy.close"
+
+[[out]]
+function = "policy.close"
+why = "a step's close: done (with its weakest class), skipped or open (close_spec); the core has no weakest-class operation, and summary reads the close as a member (closeMember)"
+
+[[out]]
+function = "policy.is_open"
+why = "a constructor test on a close (is_open_spec); inside summary"
+
+[[out]]
+function = "policy.is_passed"
+why = "a constructor test on a close (is_passed_spec); inside summary"
+
+[[out]]
+function = "policy.any_open"
+why = "whether any step is open (any_open_spec); inside summary, linked there"
+
+[[out]]
+function = "policy.all_passed"
+why = "whether every step passed (all_passed_spec); inside summary, linked there"
+
+# --- #211 universal ---
+
+[[word]]
+type = "catalog.Verdict"
+core = "Calculus.Tri"
+abstraction = "catalogTri"
+onto = "catalogTri_onto"
+
+[[link]]
+function = "catalog.verdict"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.catalog_verdict_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.universal_no_of_witness"]
+
+[[link]]
+function = "catalog.plan"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.catalog_plan_implements"
+laws = ["Calculus.remainder_never_whole", "Calculus.universal_no_of_witness"]
+
+[[link]]
+function = "checklist.rollup_under"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.rollup_under_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole"]
+
+[[link]]
+function = "units.generated"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.generated_implements"
+laws = ["Calculus.remainder_never_whole", "Calculus.empty_never_yes", "Calculus.universal_yes_iff"]
+
+[[link]]
+function = "units.universe"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.universe_implements"
+laws = ["Calculus.whole_iff_no_remainder"]
+
+[[link]]
+function = "inventory.unreadable"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.unreadable_implements"
+laws = ["Calculus.whole_iff_no_remainder", "Calculus.whole_append"]
+
+[[link]]
+function = "inventory.all_true"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.all_true_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.universal_no_of_witness"]
+
+[[link]]
+function = "packet.required_omitted"
+implements = "Calculus.remainder"
+theorem = "Writfold.Core.Conform.required_omitted_implements"
+laws = ["Calculus.remainder_counts", "Calculus.remainder_append"]
+
+[[link]]
+function = "graph.plan"
+implements = "Calculus.search"
+theorem = "Writfold.Core.Conform.graph_plan_implements"
+laws = ["Calculus.search_yes_iff", "Calculus.absence_needs_whole"]
+
+[[out]]
+function = "catalog.action"
+why = "one slot's write action (create, replace, remove, keep, conflict): a table of writes, not a word of the calculus"
+
+[[out]]
+function = "catalog.conflicts"
+why = "the per-slot conflict test inside catalog::plan, linked through it (conflicts_spec)"
+
+[[out]]
+function = "catalog.changes"
+why = "the per-slot change test inside catalog::plan, linked through it (changes_spec)"
+
+[[out]]
+function = "catalog.any_conflict"
+why = "the conflict fold inside catalog::plan, linked through it (any_conflict_spec)"
+
+[[out]]
+function = "catalog.any_change"
+why = "the change fold inside catalog::plan, linked through it (any_change_spec)"
+
+[[out]]
+function = "catalog.patches"
+why = "whether a verdict may write: any verdict but invalid; the verdict itself is linked (partial_never_patches)"
+
+[[out]]
+function = "inventory.readable"
+why = "the per-root test inside inventory::complete and unreadable, linked through them (readable_spec)"
+
+[[out]]
+function = "packet.cut"
+why = "how many rows fit a byte budget: prefix-sum arithmetic (cut_spec), no law of the calculus"
+
+[[out]]
+function = "graph.affected"
+why = "whether one file's edges may have changed: a disjunction of three change facts (affected_iff), inside graph::plan's input"
+
+[[out]]
+function = "graph.any"
+why = "the fold inside graph::plan, linked through it (any_spec)"
+
+[[out]]
+function = "runs.shown"
+why = "which runs a listing shows under a filter: presentation (shown_spec), no law of the calculus"
+
+[[out]]
+function = "units.pairs"
+why = "enumerates the member pairs of a generated checklist under a cap (pairs_spec): enumeration, no law of the calculus"
+
+[[out]]
+function = "units.unit_moved"
+why = "names the first input of a unit that moved (unit_first_moved): a byte comparison's report, no law of the calculus"
+
+[[out]]
+function = "publish.repair"
+why = "index publication's repair choice (replace, keep, retry) against concurrent writers: protocol, modelled in TLA+, not a word of the calculus"
+
+[[out]]
+function = "publish.derived"
+why = "index publication of a derived file: protocol (derived_replace_iff), not a word of the calculus"
+
+[[out]]
+function = "pointer.is_set"
+why = "whether one pointer level is set, inside pointer::level, linked through it (is_set_spec)"
+
+[[out]]
+function = "pointer.writes"
+why = "which pointer files a run writes (writes_spec): file protocol, not a word of the calculus"
+
+[[out]]
+function = "referent.claims_change"
+why = "which said verdicts claim change, inside referent::settle, linked through it (Calculus.settle's refutable test)"
+
+[[local]]
+type = "catalog.Action"
+why = "a slot's write action: a table of writes, not a word"
+
+[[local]]
+type = "catalog.Owner"
+why = "who owns a slot: an input fact, not a word"
+
+[[local]]
+type = "graph.Plan"
+why = "skip or delta: a refresh strategy; graph::plan is linked through Calculus.search"
+
+[[local]]
+type = "inventory.Root"
+why = "how a root was read; read as a member by rootMember (never declared out, so not onto Calculus.Member)"
+
+[[local]]
+type = "pointer.Pointer"
+why = "the state of one pointer file; pointer::level and open are linked through Calculus.resolve"
+
+[[local]]
+type = "pointer.Level"
+why = "which pointer file decided: a referent of Calculus.resolve, not a word"
+
+[[local]]
+type = "publish.Publish"
+why = "an index publication step (replace, keep, retry): protocol, not a word"
+
+[[local]]
+type = "referent.Relation"
+why = "Git's ancestry relation of two commits: a fact handed to Calculus.settle, not a word"
+
+[[local]]
+type = "runs.Shown"
+why = "how a listing shows a run: presentation, not a word"
+
+[[local]]
+type = "runs.State"
+why = "a run's recorded state as a listing reads it: an input fact, not a word"
+
+[[local]]
+type = "subject.Pick"
+why = "which subject was chosen: a referent of Calculus.resolve (subject::pick is linked), not a word"
+
+[[local]]
+type = "units.Absent"
+why = "the first reason a scope gives no universe: a refusal's name; units::universe is linked through Calculus.whole"
+
+[[local]]
+type = "units.Moved"
+why = "which input of a unit moved: a report, not a word"
+
+# --- #212 verdicts ---
+
+[[word]]
+type = "verdict.Verdict"
+core = "Calculus.Tri"
+abstraction = "verdictTri"
+onto = "verdictTri_onto"
+
+[[word]]
+type = "verdict.Said"
+core = "Calculus.Tri"
+abstraction = "saidTri"
+onto = "saidTri_onto"
+
+[[local]]
+type = "verdict.Absence"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Located"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Target"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Observed"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Checker"
+why = "a checker's reply or why there is none; it reaches a verdict through observed's Checked row and recorded::recordable"
+
+[[local]]
+type = "verdict.Handshake"
+why = "the checker protocol's outcome"
+
+[[local]]
+type = "verdict.locate.Place"
+why = "the span search's result, a fact observed reads"
+
+[[local]]
+type = "verdict.locate.Window"
+why = "the span search's window, a fact observed reads"
+
+[[local]]
+type = "verdict.recorded.Pick"
+why = "which statement decides, the local one or a receipt; the choice is best_recorded's"
+
+[[local]]
+type = "store.Basis"
+why = "which rule judges a store citation, head or pin"
+
+[[local]]
+type = "store.Commit"
+why = "a fact about a store's clone; ordered by CommitBelow for store_pinned_implements"
+
+[[local]]
+type = "store.AtPin"
+why = "a fact about the bytes at a pin; ordered by CommitBelow for store_pinned_implements"
+
+[[local]]
+type = "store.Candidate"
+why = "how a clone was found: a candidate of store_resolve_implements (storeCands)"
+
+[[local]]
+type = "store.Via"
+why = "the way a clone was found: the referent store_resolve_implements resolves to"
+
+[[local]]
+type = "store.Resolved"
+why = "store::resolve's outcome; viaOf abstracts it onto Calculus.Resolution"
+
+[[local]]
+type = "store.Claim"
+why = "store::claim's outcome; claimOf maps Calculus.Resolution onto it (claim_implements)"
+
+[[local]]
+type = "store.Artifact"
+why = "an admission outcome: admitted exactly when Calculus.Tri.all of its facts is yes (store_artifact_implements)"
+
+[[local]]
+type = "store.Snapshot"
+why = "an admission outcome: recorded exactly when Calculus.Tri.all of its facts is yes (store_snapshot_implements)"
+
+[[local]]
+type = "store.Refusal"
+why = "the first failing fact of an artifact's admission, for the report"
+
+[[local]]
+type = "store.Withheld"
+why = "the first failing fact of a snapshot's admission, for the report"
+
+[[local]]
+type = "target.Choice"
+why = "target::choose_in's outcome; Conform.Target's resolutionOf relates it to Calculus.Resolution (choose_in_resolves)"
+
+[[local]]
+type = "target.Names"
+why = "how a remote names the cited repository: a candidate's level (rank)"
+
+[[local]]
+type = "target.Tip"
+why = "a remote's default-branch tip: what a candidate offers"
+
+[[local]]
+type = "target.Pinned"
+why = "whether an operator's pin resolves: the pin candidate"
+
+[[local]]
+type = "target.Why"
+why = "why a choice is ambiguous, for the report"
+
+[[link]]
+function = "verdict.observed"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Verdict.observed_monotone"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines", "Calculus.Words.refines_disagree", "Calculus.Words.refines_unknown_iff"]
+
+[[link]]
+function = "verdict.other_blob"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_other_blob_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines", "Calculus.Words.refines_disagree"]
+
+[[link]]
+function = "verdict.missing"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_missing_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines", "Calculus.Words.refines_disagree"]
+
+[[link]]
+function = "verdict.with_mark"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_with_mark_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines"]
+
+[[link]]
+function = "verdict.decide"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_decide_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines"]
+
+[[link]]
+function = "store.pinned"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.store_pinned_implements"
+laws = ["Calculus.Words.unknown_refines", "Calculus.Words.told_refines"]
+
+[[link]]
+function = "store.use_recorded"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.store_use_recorded_implements"
+laws = ["Calculus.Words.unknown_refines", "Calculus.Words.refines_unknown_iff"]
+
+[[link]]
+function = "store.pin_recordable"
+implements = "Calculus.Words.told"
+theorem = "Writfold.Core.Conform.store_pin_recordable_implements"
+laws = ["Calculus.Words.told_refines", "Calculus.Words.unknown_never_told"]
+
+[[link]]
+function = "verdict.recorded.usable"
+implements = "Calculus.Words.told"
+theorem = "Writfold.Core.Conform.recorded_usable_implements"
+laws = ["Calculus.Words.told_refines", "Calculus.Words.unknown_never_told"]
+
+[[link]]
+function = "verdict.recorded.recordable"
+implements = "Calculus.Words.told"
+theorem = "Writfold.Core.Conform.recorded_recordable_implements"
+laws = ["Calculus.Words.told_refines", "Calculus.Words.unknown_never_told"]
+
+[[link]]
+function = "store.resolve"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.store_resolve_implements"
+laws = ["Calculus.resolve_nil", "Calculus.resolve_one_mem", "Calculus.resolve_one_agree", "Calculus.resolve_order_free"]
+
+[[link]]
+function = "store.artifact"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.store_artifact_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "store.snapshot"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.store_snapshot_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no", "Calculus.Tri.more_never_admits"]
+
+[[out]]
+function = "verdict.aged"
+why = "a cached checker reply's age against its max_age: lifetime arithmetic (aged_spec); no law of the calculus is about it"
+
+[[out]]
+function = "verdict.exchange"
+why = "the checker protocol: which reply counts (exchange_spec); its result reaches a verdict through observed's Checked row"
+
+[[out]]
+function = "verdict.expired"
+why = "now - seen > ttl over the integers: lifetime arithmetic (expired_spec)"
+
+[[out]]
+function = "verdict.handshake"
+why = "the checker handshake (handshake_spec): protocol, not judgment"
+
+[[out]]
+function = "verdict.lifetime"
+why = "which ttl applies to a timed citation (lifetime_spec): configuration, not judgment"
+
+[[out]]
+function = "verdict.reply"
+why = "reading one checker reply (reply_spec): protocol, not judgment"
+
+[[out]]
+function = "verdict.locate.place"
+why = "the span search: where the cited span sits (place_same_iff, place_at_iff, place_absent_iff); its result is a fact observed reads"
+
+[[out]]
+function = "verdict.locate.window"
+why = "the span search: one window's flags (window_spec); a fact observed reads"
+
+[[out]]
+function = "verdict.recorded.CLOCK_SKEW"
+why = "a constant: the clock skew tolerated for a receipt's date"
+
+[[out]]
+function = "verdict.recorded.before"
+why = "the order of two statements inside best_recorded (before_spec); the deciding choice is linked through best_recorded"
+
+[[out]]
+function = "verdict.recorded.recorded_age"
+why = "a receipt's age, clamped, over the integers (recorded_age_spec): arithmetic"
+
+[[out]]
+function = "verdict.recorded.worst"
+why = "a said word's rank inside before (worst_spec)"
+
+[[out]]
+function = "store.basis"
+why = "which rule (head or pin) judges a store citation, from declaration flags (basis_pin_iff); the verdict it selects is linked through pinned"
+
+[[out]]
+function = "store.recorded"
+why = "whether a store's declaration lets a receipt stand in (code_recorded_iff); where one may is linked through use_recorded"
