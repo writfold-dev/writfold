@@ -825,6 +825,11 @@ MUTANTS = (
            "        covered: first.is_none(),",
            "        covered: true,",
            ("Writfold.Core.Checklist.rollup_under_spec",)),
+    # checklist: a stale checklist reports stale, never open
+    Mutant("state-hides-stale", "checklist.rs",
+           "        State::Stale",
+           "        State::Open",
+           ("Writfold.Core.Checklist.state_spec",)),
     Mutant("rollup-ignores-required", "checklist.rs",
            "    entry.required && !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)",
            "    !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)",
@@ -1837,6 +1842,11 @@ MUTANTS = (
            "            Pin::Held => {}\n            Pin::Moved | Pin::Aged | Pin::Unreadable => return false,",
            "            Pin::Held | Pin::Unreadable => {}\n            Pin::Moved | Pin::Aged => return false,",
            ("Writfold.Core.Pin.holds_from_loop_spec",)),
+    # pin: every pin is looked at, the first included
+    Mutant("holds-skips-first", "pin.rs",
+           "    holds_from(pins, 0)",
+           "    holds_from(pins, 1)",
+           ("Writfold.Core.Pin.holds_spec",)),
     # pin: a catalog default lifetime ages like a token's own
     Mutant("timed-default-never-ages", "pin.rs",
            "        Lifetime::Immutable | Lifetime::Never => Pin::Held,\n        Lifetime::Token(ttl) | Lifetime::Default(ttl) => {",

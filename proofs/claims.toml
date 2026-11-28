@@ -3588,6 +3588,9 @@ lean = "writfold_core.checklist.state"
 theorems = [
   "Writfold.Core.Conform.checklist_state_implements",
 ]
+mutants = [
+  "state-hides-stale",
+]
 
 [[claim]]
 crate = "writfold-core"
@@ -3596,6 +3599,9 @@ function = "holds"
 lean = "writfold_core.pin.holds"
 theorems = [
   "Writfold.Core.Conform.pin_holds_implements",
+]
+mutants = [
+  "holds-skips-first",
 ]
 
 [[claim]]
