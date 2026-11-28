@@ -6,6 +6,11 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.29
+
+- **Partial clones, what to fetch** ([#215](https://github.com/writfold-dev/writfold/issues/215)): a partial clone's `kb repos` row gains `blobs: N decided, M need contents (K to fetch)`, and `kb repos --need-blobs` prints `<clone git dir>\t<blob id>` per blob a verdict still needs. The `blob-not-local` reason names that command. A cited path absent at the target and not an exact rename reads `unverifiable (path-not-followed: …)` where it read `blob-not-local`; no verdict word changes.
+- No other answer changes. The calculus now covers every kernel: each translated decision function is linked to the law it implements or declared out with a reason, and both gates refuse one that is neither ([#209](https://github.com/writfold-dev/writfold/issues/209)–[#213](https://github.com/writfold-dev/writfold/issues/213)). The laws are listed in [assurance](assurance.md#laws) and [the laws page](../writfold/laws.md).
+
 ## v0.6.0-dev.28
 
 - **Declared repositories** ([#197](https://github.com/writfold-dev/writfold/issues/197)): a new KB directory, `.writfold/repos/<slug>.toml` (`writfold-repo/1`: `name`, `url`, optional `mirrors`, `aliases`, `ref`, `description`). A declared repository is judged only at a remote at its URL, whatever a token's `url=` says (a token minted in a fork clone no longer makes the fork the target); a clone with no remote there is `unverifiable (target-ambiguous: no remote of this clone is at the declared url …)`. Declarations join `kb policy`'s identity and `kb lint`; a KB without the directory reads as before.
