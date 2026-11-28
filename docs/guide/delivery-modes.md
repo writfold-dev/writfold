@@ -303,6 +303,8 @@ Under a route, the call passes exactly when a candidate of the run is **postable
 
 A body the guard **cannot read** is denied under a route. It is unread when: no listed flag is present; a listed flag appears more than once; a flag has no value; the value holds a shell expansion; a file value is `-` (standard input) or cannot be read; the tool input has no string at `field`; or the command acts in another directory and the file is relative. A command acts elsewhere when a `cd` or `pushd` before it in the line, `git -C`, `--work-tree`, `--git-dir` or a `GIT_DIR`/`GIT_WORK_TREE` assignment moves it ([how a command is read](hooks.md#how-a-command-is-read)). A relative body file is then never read from the hook's directory, which the shell would not have posted.
 
+**A positional body** (built in v0.6.0-dev.31, [#187](https://github.com/writfold-dev/writfold/issues/187)). `file=@1`, `@2` … `@9` or `@last` names the command's first, second or last positional argument as the body file, and `flags=` the flags that take a value, so their values are not counted as positionals: `gh gist create: mode=pr-comment file=@last flags=--desc,-d`. An unlisted flag followed by a word might take that word as its value, so the body is unread (and denied under the route): list the flag in `flags=`. A positional `file` stands alone: no `body=`, no second `file`.
+
 ### Listed commands and tools: the lenient rule
 
 A Bash call that begins with a `commands` entry is read by `--body`, `-b`, `--body-file` or `-F`; a `tools` entry is guarded as a whole, its body never read. A listed call keeps the rule it had:
@@ -311,6 +313,25 @@ A Bash call that begins with a `commands` entry is read by `--body`, `-b`, `--bo
 - bytes not read (a tool, a shell expansion, no body flag, or a relative file after `cd`): the call passes when the run has at least one live candidate and every live candidate is ready.
 
 Two things changed for listed calls in v0.6.0-dev.4: a withdrawn candidate no longer counts, and a candidate recorded as posted no longer passes a second time.
+
+### Everything else: `local` and `unclassified`
+
+Built in v0.6.0-dev.31 ([#187](https://github.com/writfold-dev/writfold/issues/187)). Without the keys below the guard judges only what its lists name: a `gh gist create` beside a routed `gh pr comment` passes in silence, as before. With them, **every** simple command of a Bash line and every tool call gets a class:
+
+```toml
+local = ["ls", "cargo test", "git status"]     # what the team says stays here
+local_tools = ["Edit", "Write", "Read"]
+unclassified = "log"                            # pass | log | ask | deny
+```
+
+- **routed** or **listed**: judged as above;
+- **local**: named by `local` or `local_tools`; it never refuses;
+- **opaque**: a program that runs its arguments, which the guard cannot read: `bash -c`, `sh -c`, `zsh -c`, `eval`, `xargs`, `find -exec`, `watch`, `ssh` with a remote command, and backquote or `$(…)` substitution. It is never local, whatever the list says;
+- **unclassified**: anything else.
+
+An opaque or unclassified member gets the policy: `pass` and `log` let it through (`log` also writes it to the guard log), `ask` makes Claude Code ask, `deny` refuses, with a reason naming the two ways out: route the command, or add it to `local`. A line takes its strictest member (a denial wins over a question, which wins over a pass). The decision is `writfold_core::delivery::outbound::outbound`, proved in `proofs/Writfold/Outbound.lean`: under `pass` only routed and listed members decide (`default_unchanged`), a wrapper is never a way round the policy (`opaque_is_unclassified`), local calls never refuse (`local_never_refuses`).
+
+`local` is a list the team keeps, not a detector of external writes: a local command that posts is not caught. Build it with `unclassified = "log"`: `writfold kb guard log` lists each unclassified command with how often it was seen (`guard-log unclassified … seen=N`, trailer `unclassified=N`). Add what is local, route what posts, then turn on `ask`. The init example starts that way.
 
 ### Denials
 

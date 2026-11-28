@@ -167,6 +167,36 @@ inductive decision.Flag where
 | RunOrRepoNotTaken : decision.Flag
 | SuccessorNotTaken : decision.Flag
 
+/-- [writfold_core::guard::Decision]
+    Source: 'crates/writfold-core/src/guard.rs', lines 60:0-64:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Decision where
+| Pass : guard.Decision
+| Deny : guard.Decision
+| Ask : guard.Decision
+
+/-- [writfold_core::delivery::outbound::Class]
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 13:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive delivery.outbound.Class where
+| Local : delivery.outbound.Class
+| Routed : guard.Decision → delivery.outbound.Class
+| Listed : guard.Decision → delivery.outbound.Class
+| Opaque : delivery.outbound.Class
+| Unclassified : delivery.outbound.Class
+
+/-- [writfold_core::delivery::outbound::Unclassified]
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 28:0-34:1
+    Visibility: public -/
+@[discriminant isize]
+inductive delivery.outbound.Unclassified where
+| Pass : delivery.outbound.Unclassified
+| Log : delivery.outbound.Unclassified
+| Ask : delivery.outbound.Unclassified
+| Deny : delivery.outbound.Unclassified
+
 /-- [writfold_core::delivery::Place]
     Source: 'crates/writfold-core/src/delivery.rs', lines 30:0-37:1
     Visibility: public -/
@@ -265,15 +295,6 @@ inductive guard.Mode where
 inductive guard.Action where
 | Deny : guard.Action
 | Ask : guard.Action
-
-/-- [writfold_core::guard::Decision]
-    Source: 'crates/writfold-core/src/guard.rs', lines 60:0-64:1
-    Visibility: public -/
-@[discriminant isize]
-inductive guard.Decision where
-| Pass : guard.Decision
-| Deny : guard.Decision
-| Ask : guard.Decision
 
 /-- [writfold_core::guard::require::Looked]
     Source: 'crates/writfold-core/src/guard/require.rs', lines 8:0-14:1

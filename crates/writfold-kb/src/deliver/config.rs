@@ -217,6 +217,12 @@ pub struct Guard {
     pub tools: Vec<String>,
     /// Posting commands and tools with their mode and body ([`super::route`]).
     pub routes: Vec<super::route::Route>,
+    /// Commands the team says are local (#187): what they write stays here.
+    pub local: Vec<Vec<String>>,
+    /// Tools the team says are local.
+    pub local_tools: Vec<String>,
+    /// What a call no list classifies gets; `None`: only the lists decide.
+    pub unclassified: Option<writfold_core::delivery::outbound::Unclassified>,
 }
 
 /// The guard configuration, or `None` when there is none (the hook then

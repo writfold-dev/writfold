@@ -140,6 +140,30 @@ fn removed(answer: &mut Answer, entries: &[&Value], found: &[Rule]) {
     }
 }
 
+/// One row per unclassified command the delivery guard passed under
+/// `unclassified = "log"` (#187), with how often: what to add to `local`
+/// or route before turning on `ask`.
+fn unclassified_rows(answer: &mut Answer, entries: &[&Value]) {
+    let mut seen: Vec<(String, usize)> = Vec::new();
+    for e in entries {
+        let command = text(e, "command");
+        match seen.iter_mut().find(|(c, _)| *c == command) {
+            Some((_, n)) => *n += 1,
+            None => seen.push((command, 1)),
+        }
+    }
+    seen.sort();
+    for (command, n) in seen {
+        answer.rows.push(Row {
+            kind: "guard-log",
+            id: "unclassified".into(),
+            status: Some("unclassified".into()),
+            text: format!("{command} seen={n}: route it, or add it to local in .writfold/deliveries/guard.toml"),
+            ..Row::default()
+        });
+    }
+}
+
 /// The trailer counts.
 fn counts(entries: &[&Value], rules: usize, unparsed: usize) -> Vec<(&'static str, usize)> {
     let total = |d: &str, mode: &str| {
@@ -176,9 +200,14 @@ pub fn execute(
         (Some(age), Some(at)) => now - at <= age,
         (Some(_), None) => false,
     };
+    let unclassified: Vec<&Value> = (entries.iter())
+        .filter(recent)
+        .filter(|e| e["kind"] == "unclassified" && only.is_none())
+        .collect();
     let entries: Vec<&Value> = entries
         .iter()
         .filter(recent)
+        .filter(|e| e["kind"] != "unclassified")
         .filter(|e| only.is_none_or(|id| e["rule"] == id))
         .collect();
     let (mut found, _) = rules::all(&ws.root, &request.cwd);
@@ -202,7 +231,11 @@ pub fn execute(
         answer.rows.push(row);
     }
     removed(&mut answer, &entries, &found);
+    unclassified_rows(&mut answer, &unclassified);
     answer.counts = counts(&entries, found.len(), unparsed);
+    if !unclassified.is_empty() {
+        answer.counts.push(("unclassified", unclassified.len()));
+    }
     answer.notes.push(format!(
         "from the local log {}: this machine only, never committed; a guard, not enforcement",
         path.display()

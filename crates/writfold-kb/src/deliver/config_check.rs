@@ -4,6 +4,7 @@
 use super::config::{Deny, Guard, Rule, is_name};
 use crate::defs::{Check, Spanned, Text};
 use crate::gate::def_check::schema;
+use writfold_core::delivery::outbound::Unclassified;
 use writfold_core::diag::Report;
 
 pub(super) fn list(c: &mut Check<'_>, key: &str) -> Option<Vec<Spanned<Text>>> {
@@ -100,9 +101,42 @@ pub fn deny(audience: &str, path: &str, text: &str) -> Result<Deny, Report> {
 }
 
 /// `guard.toml`; `root` (when known) is where route modes load from.
+fn words(list: Vec<Spanned<Text>>) -> Vec<Vec<String>> {
+    (list.iter())
+        .map(|c| c.str().split_whitespace().map(str::to_owned).collect())
+        .filter(|w: &Vec<String>| !w.is_empty())
+        .collect()
+}
+
+/// `unclassified`: what a call no list classifies gets (#187); absent, the
+/// guard judges only what its lists name, as before.
+fn policy(c: &mut Check<'_>) -> Option<Option<Unclassified>> {
+    match c.text("unclassified") {
+        crate::defs::Field::Absent => Some(None),
+        crate::defs::Field::Bad => None,
+        crate::defs::Field::Got(t) => match Unclassified::parse(t.str()) {
+            Some(p) => Some(Some(p)),
+            None => {
+                let why = format!("unknown policy {:?}", t.str());
+                let set = ["pass", "log", "ask", "deny"];
+                c.unknown_value(t.span, why, "not a policy", t.str(), &set, '"');
+                None
+            }
+        },
+    }
+}
+
 pub fn guard(path: &str, text: &str, root: Option<&std::path::Path>) -> Result<Guard, Report> {
     let mut c = Check::read(path, text, "the delivery guard");
-    let keys = ["schema", "commands", "tools", "routes"];
+    let keys = [
+        "schema",
+        "commands",
+        "tools",
+        "routes",
+        "local",
+        "local_tools",
+        "unclassified",
+    ];
     c.unknown_keys(&keys, &keys, "not a delivery guard key");
     schema(&mut c, "writfold-guard/1");
     let commands = list(&mut c, "commands");
@@ -132,7 +166,13 @@ pub fn guard(path: &str, text: &str, root: Option<&std::path::Path>) -> Result<G
             _ => routes = None,
         }
     }
+    let local = list(&mut c, "local");
+    let local_tools = list(&mut c, "local_tools");
+    let unclassified = policy(&mut c);
     let guard = (|| {
+        let local = words(local?);
+        let local_tools = local_tools?.into_iter().map(|t| t.value.text).collect();
+        let unclassified = unclassified?;
         let commands = commands?
             .iter()
             .map(|c| c.str().split_whitespace().map(str::to_owned).collect())
@@ -144,6 +184,9 @@ pub fn guard(path: &str, text: &str, root: Option<&std::path::Path>) -> Result<G
             commands,
             tools,
             routes,
+            local,
+            local_tools,
+            unclassified,
         })
     })();
     c.finish(guard)

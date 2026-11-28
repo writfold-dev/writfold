@@ -1692,3 +1692,31 @@ laws = ["Calculus.stricter_comm", "Calculus.stricter_assoc", "Calculus.stricter_
 [[out]]
 function = "site.block_again"
 why = "a bounded schedule for a blocking stop rule, not a judgment (block_again_spec, block_bounded)"
+
+[[local]]
+type = "delivery.outbound.Class"
+why = "a member's classification; mapped to a site's basis by classBasis (no member is 'no rules')"
+
+[[word]]
+type = "delivery.outbound.Unclassified"
+core = "Calculus.Posture"
+abstraction = "policyPosture"
+onto = "policyPosture_onto"
+
+[[link]]
+function = "delivery.outbound.contribution"
+implements = "Calculus.Site.decide"
+theorem = "Writfold.Core.Conform.outbound_contribution_implements"
+laws = ["Calculus.judged_unchanged", "Calculus.closed_pass_iff", "Calculus.posture_only_narrows", "Calculus.open_is_declared"]
+
+[[link]]
+function = "delivery.outbound.outbound"
+implements = "Calculus.Decision.join"
+theorem = "Writfold.Core.Conform.outbound_implements"
+laws = ["Calculus.Decision.join_comm", "Calculus.Decision.join_eq_pass"]
+
+[[link]]
+function = "delivery.outbound.left_over"
+implements = "Calculus.Site.decide"
+theorem = "Writfold.Core.Conform.outbound_left_over_implements"
+laws = ["Calculus.closed_pass_iff", "Calculus.open_is_declared"]

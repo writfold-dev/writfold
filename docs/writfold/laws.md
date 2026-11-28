@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=109 declared_out=157 remainder=0 of 266`
+`LAW_COVERAGE judged=112 declared_out=157 remainder=0 of 269`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: functions in neither, which
@@ -234,7 +234,7 @@ Several rules: the order they are read in does not matter.
 join_comm (a b : Decision) : join a b = join b a
 ```
 
-- Implemented by: `guard.call.decide_all`, `guard.combine`
+- Implemented by: `delivery.outbound.outbound`, `guard.call.decide_all`, `guard.combine`
 - Caught by: `join-ask-beats-deny`
 
 ### `Calculus.Decision.join_assoc`
@@ -276,7 +276,7 @@ Several rules pass exactly when each passes.
 join_eq_pass {a b : Decision} : join a b = pass ↔ a = pass ∧ b = pass
 ```
 
-- Implemented by: `guard.call.decide_all`, `guard.combine`
+- Implemented by: `delivery.outbound.outbound`, `guard.call.decide_all`, `guard.combine`
 - Derived: decided over the table of join
 
 ### `Calculus.admit_pass_iff`
@@ -634,7 +634,7 @@ A posture never changes a judged decision.
 judged_unchanged (d : Decision) (p q : Posture) : Site.decide (.judged d) p = Site.decide (.judged d) q
 ```
 
-- Implemented by: `guard.effect`, `site.decide`
+- Implemented by: `delivery.outbound.contribution`, `guard.effect`, `site.decide`
 - Caught by: `posture-overrides-judged`
 
 ### `Calculus.closed_pass_iff`
@@ -645,7 +645,7 @@ Under a closed posture an undecided event never passes.
 closed_pass_iff (b : Basis) (p : Posture) (h : p ≠ .open) : Site.decide b p = .pass ↔ b = .noRules ∨ b = .noMatch ∨ b = .judged .pass
 ```
 
-- Implemented by: `site.decide`
+- Implemented by: `delivery.outbound.contribution`, `delivery.outbound.left_over`, `site.decide`
 - Caught by: `undecided-passes-closed`, `posture-overrides-judged`
 
 ### `Calculus.posture_only_narrows`
@@ -656,7 +656,7 @@ A posture only narrows: what passes under any posture passes under `open`.
 posture_only_narrows (b : Basis) (p : Posture) (h : Site.decide b p = .pass) : Site.decide b .open = .pass
 ```
 
-- Implemented by: `guard.effect`, `site.decide`
+- Implemented by: `delivery.outbound.contribution`, `guard.effect`, `site.decide`
 - Derived: decided over the bases and postures
 
 ### `Calculus.stricter_never_loosens`
@@ -711,7 +711,7 @@ Under `open`, the only pass without a decision is the undecided row: the exempti
 open_is_declared (b : Basis) (h : Site.decide b .open = .pass) (hn : b ≠ .noRules) (hm : b ≠ .noMatch) (hj : b ≠ .judged .pass) : b = .undecided
 ```
 
-- Implemented by: `site.decide`
+- Implemented by: `delivery.outbound.contribution`, `delivery.outbound.left_over`, `site.decide`
 - Caught by: `posture-overrides-judged`
 
 ## Referents and the asset boundary (laws R and A)
@@ -964,6 +964,9 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 | `delivery.guard` | `Calculus.universal` | `Writfold.Core.Conform.delivery_guard_implements` |
 | `delivery.guard_all` | `Calculus.universal` | `Writfold.Core.Conform.delivery_guard_all_implements` |
 | `delivery.guard_any` | `Calculus.search` | `Writfold.Core.Conform.delivery_guard_any_implements` |
+| `delivery.outbound.contribution` | `Calculus.Site.decide` | `Writfold.Core.Conform.outbound_contribution_implements` |
+| `delivery.outbound.left_over` | `Calculus.Site.decide` | `Writfold.Core.Conform.outbound_left_over_implements` |
+| `delivery.outbound.outbound` | `Calculus.Decision.join` | `Writfold.Core.Conform.outbound_implements` |
 | `delivery.postable` | `Calculus.Tri.all` | `Writfold.Core.Conform.delivery_postable_implements` |
 | `delivery.posted` | `Calculus.stand` | `Writfold.Core.Conform.delivery_posted_implements` |
 | `delivery.ready` | `Calculus.universal` | `Writfold.Core.Conform.delivery_ready_implements` |
@@ -1067,6 +1070,7 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 |---|---|---|
 | `account.Member` | `Calculus.Member` | `memberOf` (onto: `memberOf_onto`) |
 | `catalog.Verdict` | `Calculus.Tri` | `catalogTri` (onto: `catalogTri_onto`) |
+| `delivery.outbound.Unclassified` | `Calculus.Posture` | `policyPosture` (onto: `policyPosture_onto`) |
 | `gate.Ending` | `Calculus.Tri` | `endingTri` (onto: `endingTri_onto`) |
 | `gate.Outcome` | `Calculus.Tri` | `outcomeTri` (onto: `outcomeTri_onto`) |
 | `gate.Standing` | `Calculus.Standing` | `standingOf` (onto: `standingOf_onto`) |

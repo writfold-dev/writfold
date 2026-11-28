@@ -263,5 +263,7 @@ pub fn guard(body: Body, unread: Unread, seen: &[Seen]) -> bool {
     }
 }
 
+pub mod outbound;
+
 #[cfg(test)]
 mod tests;

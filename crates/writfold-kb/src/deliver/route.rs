@@ -20,6 +20,8 @@ pub struct Route {
     pub file: Vec<String>,
     /// A tool route's input key.
     pub field: Option<String>,
+    /// With a positional `file=@N`, the flags that take a value (#187).
+    pub flags: Vec<String>,
 }
 
 impl Route {
@@ -38,6 +40,19 @@ fn split(list: &str) -> Vec<String> {
         .filter(|f| !f.is_empty())
         .map(str::to_owned)
         .collect()
+}
+
+/// `file=@N` is one positional (`@1` … `@9`, `@last`) and nothing else;
+/// `flags=` only goes with it.
+fn positional_ok(route: &Route) -> bool {
+    let at: Vec<&String> = route.file.iter().filter(|f| f.starts_with('@')).collect();
+    let well =
+        |f: &str| f == "@last" || f.len() == 2 && f[1..].chars().all(|c| ('1'..='9').contains(&c));
+    match at.as_slice() {
+        [] => route.flags.is_empty(),
+        [one] => route.file.len() == 1 && route.body.is_empty() && well(one),
+        _ => false,
+    }
 }
 
 /// Read one route entry, reporting each fault at its place; `taken` are
@@ -66,8 +81,9 @@ pub fn read(
             Some(("body", v)) => route.body = split(v),
             Some(("file", v)) => route.file = split(v),
             Some(("field", v)) if !v.is_empty() => route.field = Some(v.to_owned()),
+            Some(("flags", v)) => route.flags = split(v),
             _ => {
-                let why = format!("{pair:?} is not mode=, body=, file= or field=");
+                let why = format!("{pair:?} is not mode=, body=, file=, flags= or field=");
                 c.error("value.form", Some(at), why)
                     .label("not a route key");
                 ok = false;
@@ -78,6 +94,9 @@ pub fn read(
     let fault = match (&route.field, route.body.is_empty() && route.file.is_empty()) {
         (Some(_), false) => Some(conflict("a tool route (field=) takes no body= or file=")),
         (None, true) => Some(conflict("a route needs body=, file= or field=")),
+        _ if !positional_ok(&route) => Some(conflict(
+            "a positional body is one file=@1, @2 … or @last, alone; flags= goes with it only",
+        )),
         _ if taken.contains(&route.name()) => Some(conflict(
             "this command or tool is also listed under commands or tools",
         )),

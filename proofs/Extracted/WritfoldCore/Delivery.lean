@@ -6,6 +6,7 @@ public import Extracted.WritfoldCore.Types
 public import Extracted.WritfoldCore.Gate
 public import Extracted.WritfoldCore.Policy
 public import Extracted.WritfoldCore.Plan
+public import Extracted.WritfoldCore.Guard
 @[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
@@ -23,6 +24,78 @@ set_option maxHeartbeats 1000000
 set_option maxRecDepth 2048
 
 namespace writfold_core
+
+/-- [writfold_core::delivery::outbound::left_over]:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 58:0-65:1
+    Visibility: public -/
+def delivery.outbound.left_over
+  (policy : delivery.outbound.Unclassified) : Result guard.Decision := do
+  match policy with
+  | delivery.outbound.Unclassified.Pass => ok guard.Decision.Pass
+  | delivery.outbound.Unclassified.Log => ok guard.Decision.Pass
+  | delivery.outbound.Unclassified.Ask => ok guard.Decision.Ask
+  | delivery.outbound.Unclassified.Deny => ok guard.Decision.Deny
+
+/-- [writfold_core::delivery::outbound::contribution]:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 68:0-76:1
+    Visibility: public -/
+def delivery.outbound.contribution
+  («class» : delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) :
+  Result guard.Decision
+  := do
+  match «class» with
+  | delivery.outbound.Class.Local => ok guard.Decision.Pass
+  | delivery.outbound.Class.Routed decided => ok decided
+  | delivery.outbound.Class.Listed decided => ok decided
+  | delivery.outbound.Class.Opaque => delivery.outbound.left_over policy
+  | delivery.outbound.Class.Unclassified => delivery.outbound.left_over policy
+
+/-- [writfold_core::delivery::outbound::outbound]: loop body 0:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 83:4-86:5
+    Visibility: public -/
+@[rust_loop_body]
+def delivery.outbound.outbound_loop.body
+  (classes : Slice delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) (decided : guard.Decision)
+  (index : Std.Usize) :
+  Result (ControlFlow (guard.Decision × Std.Usize) guard.Decision)
+  := do
+  let i := Slice.len classes
+  if index < i
+  then
+    let c ← Slice.index_usize classes index
+    let d ← delivery.outbound.contribution c policy
+    let decided1 ← guard.combine decided d
+    let index1 ← index + 1#usize
+    ok (cont (decided1, index1))
+  else ok (done decided)
+
+/-- [writfold_core::delivery::outbound::outbound]: loop 0:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 83:4-86:5
+    Visibility: public -/
+@[rust_loop]
+def delivery.outbound.outbound_loop
+  (classes : Slice delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) (decided : guard.Decision)
+  (index : Std.Usize) :
+  Result guard.Decision
+  := do
+  loop
+    (fun (decided1, index1) => delivery.outbound.outbound_loop.body classes
+      policy decided1 index1)
+    (decided, index)
+
+/-- [writfold_core::delivery::outbound::outbound]:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 80:0-88:1
+    Visibility: public -/
+@[reducible]
+def delivery.outbound.outbound
+  (classes : Slice delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) :
+  Result guard.Decision
+  := do
+  delivery.outbound.outbound_loop classes policy guard.Decision.Pass 0#usize
 
 /-- [writfold_core::delivery::Owed]
     Source: 'crates/writfold-core/src/delivery.rs', lines 22:0-25:1

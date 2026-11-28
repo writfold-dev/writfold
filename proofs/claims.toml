@@ -3754,3 +3754,55 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "block-ignores-limit",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/delivery/outbound.rs"
+function = "left_over"
+lean = "writfold_core.delivery.outbound.left_over"
+theorems = [
+  "Writfold.Core.Delivery.left_over_spec",
+  "Writfold.Core.Conform.outbound_left_over_implements",
+]
+total = "Writfold.Core.Delivery.left_over_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "unclassified-ignores-policy",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/delivery/outbound.rs"
+function = "contribution"
+lean = "writfold_core.delivery.outbound.contribution"
+theorems = [
+  "Writfold.Core.Delivery.contribution_spec",
+  "Writfold.Core.Conform.outbound_contribution_implements",
+]
+total = "Writfold.Core.Delivery.contribution_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "opaque-passes",
+  "local-refuses",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/delivery/outbound.rs"
+function = "outbound"
+lean = "writfold_core.delivery.outbound.outbound"
+theorems = [
+  "Writfold.Core.Delivery.outbound_loop_spec",
+  "Writfold.Core.Delivery.outbound_spec",
+  "Writfold.Core.Delivery.default_unchanged",
+  "Writfold.Core.Delivery.log_never_decides",
+  "Writfold.Core.Delivery.opaque_is_unclassified",
+  "Writfold.Core.Delivery.local_never_refuses",
+  "Writfold.Core.Delivery.unclassified_pass_iff",
+  "Writfold.Core.Conform.outbound_implements",
+]
+total = "Writfold.Core.Delivery.outbound_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "outbound-skips-last",
+]

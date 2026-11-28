@@ -6,6 +6,11 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.31
+
+- **The claims register** ([#190](https://github.com/writfold-dev/writfold/issues/190)): [assurance](assurance.md#claims-register) lists each universal word with its referent, universe, remainder and theorem. `writfold-xtask` refuses the literals `origin`, `refs/remotes/origin`, `"Bash"` and `.claude` in product code outside the modules it names. A store whose clone has no remote at the declared URL is named in the mismatch note by its first remote's URL, no longer by `origin`'s.
+- **The outbound remainder** ([#187](https://github.com/writfold-dev/writfold/issues/187)): `guard.toml` gains `local`, `local_tools` and `unclassified`. Without them nothing changes. With a policy, every simple command and tool call is classified and an unclassified or opaque one gets the policy; a line takes its strictest member. A route reads a positional body file (`file=@1`, `@last`, with `flags=`). The `kb init --example delivery` guard starts with `unclassified = "log"`.
+
 ## v0.6.0-dev.30
 
 - **`kb guard check`** ([#183](https://github.com/writfold-dev/writfold/issues/183)): the guard site's decision for any harness, from flags or a harness's own event through a binding (`.writfold/harness/<id>.toml`). Its exit code is the decision (0, 2 ask, 3 deny, 1 usage). The guard log gains `via: check`; the hook's output is unchanged. **Behaviour change:** a `commands` rule now also applies to a shell call reported under a binding's other shell tool names; with only Claude Code nothing changes.

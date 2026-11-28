@@ -17,3 +17,14 @@ routes = [
   "gh release create: mode=release-note body=--notes,-n file=--notes-file,-F",
   "mcp__slack__post_message: mode=slack-summary field=text",
 ]
+# Every other command and tool call (#187): `local` names what a team says
+# stays here; it is a list you keep, not a detector of external writes.
+# With `unclassified = "log"` anything else passes and is kept in the
+# guard log: read `writfold kb guard log`, add what is local here or route
+# what posts, then turn on "ask".
+local = [
+  "ls", "cat", "grep", "rg", "find", "git status", "git diff", "git log", "git add",
+  "cargo build", "cargo test", "cargo fmt", "cargo clippy", "writfold kb",
+]
+local_tools = ["Edit", "Write", "MultiEdit", "NotebookEdit", "Read"]
+unclassified = "log"
