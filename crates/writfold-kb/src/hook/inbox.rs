@@ -61,6 +61,16 @@ pub fn block(root: &Path, state: &Path, resume: &str) -> String {
         }
         text.push_str("  review: writfold kb proposals show ID (accept only when the user asks)\n");
     }
+    let spent = crate::guard::stop::inbox(&all);
+    if !spent.is_empty() {
+        for line in spent.iter().take(SHOWN) {
+            text.push_str(line);
+        }
+        more(&mut text, spent.len(), "blocked turns");
+        text.push_str(
+            "  next: meet the rule's requirement (writfold kb guard status), or change the rule\n",
+        );
+    }
     let runs = unevaluated(root, &all);
     if !runs.is_empty() {
         for line in runs.iter().take(SHOWN) {

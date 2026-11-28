@@ -3712,3 +3712,56 @@ total = "Writfold.Core.Recorded.usable_spec"
 mutants = [
   "usable-unverifiable",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/site.rs"
+function = "decide"
+lean = "writfold_core.site.decide"
+theorems = [
+  "Writfold.Core.Site.closed_pass_iff",
+  "Writfold.Core.Site.decide_spec",
+  "Writfold.Core.Site.judged_unchanged",
+  "Writfold.Core.Site.open_is_today",
+  "Writfold.Core.Site.posture_only_narrows",
+  "Writfold.Core.Conform.site_decide_implements",
+]
+total = "Writfold.Core.Site.decide_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "undecided-passes-closed",
+  "posture-overrides-judged",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/site.rs"
+function = "stricter"
+lean = "writfold_core.site.stricter"
+theorems = [
+  "Writfold.Core.Site.stricter_assoc",
+  "Writfold.Core.Site.stricter_comm",
+  "Writfold.Core.Site.stricter_open_left",
+  "Writfold.Core.Site.stricter_spec",
+  "Writfold.Core.Conform.site_stricter_implements",
+]
+total = "Writfold.Core.Site.stricter_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "stricter-takes-first",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/site.rs"
+function = "block_again"
+lean = "writfold_core.site.block_again"
+theorems = [
+  "Writfold.Core.Site.block_again_spec",
+  "Writfold.Core.Site.block_bounded",
+]
+total = "Writfold.Core.Site.block_again_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "block-ignores-limit",
+]

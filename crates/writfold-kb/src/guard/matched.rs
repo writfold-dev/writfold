@@ -79,6 +79,11 @@ impl Loaded {
             .filter(|r| r.event == Event::PreToolUse)
     }
 
+    /// Whether a rule with this ID loaded (of any event).
+    pub fn has(&self, id: &str) -> bool {
+        self.any(|r| r.id == id)
+    }
+
     fn any(&self, f: impl Fn(&Rule) -> bool) -> bool {
         self.root
             .iter()
@@ -103,7 +108,7 @@ impl<'a> Call<'a> {
             .and_then(|t| t.get("command"))
             .and_then(Value::as_str)
             .unwrap_or("");
-        let invocations = match tool == "Bash" {
+        let invocations = match super::event::is_shell(input) {
             true => {
                 let home = home.map(|h| h.to_string_lossy().into_owned());
                 shell::invocations(line, &cwd.to_string_lossy(), home.as_deref())

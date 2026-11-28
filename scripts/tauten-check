@@ -1,22 +1,35 @@
 #!/usr/bin/env bash
-# Non-gating tauten strictness check (docs/writfold/tauten-adoption.md).
-# Not part of scripts/gate and not a required receipt. Findings recorded in
-# tauten-baseline.json are accepted; a new error-level finding, or a stale
-# baseline slot (TAU-R001), exits non-zero. Extra arguments go to
-# `cargo tauten check` (for example `--format json` or `--warnings`).
+# The tauten strictness check (docs/writfold/tauten-adoption.md), the same
+# `cargo tauten check` the quality gate runs as its `tauten-check` step
+# (#173, scripts/tauten_step.py). Findings recorded in tauten-baseline.json
+# are accepted; a new error-level finding, or a stale baseline slot
+# (TAU-R001), exits non-zero. Extra arguments go to `cargo tauten check`
+# (for example `--format json` or `--warnings`).
 #
-# Needs cargo-tauten built from tauten main at eb1b594 or later (#62: 0.0.5
-# plus the TAU-X001 fix for shared test modules, due in 0.0.6; the release
-# profile sets overflow-checks for TAU-H001). Refreshing
-# proofs/claims.json is a different job (`cargo tauten proofs`, a build with
-# the proofs subcommand); see "Which tauten does what" in
-# docs/writfold/tauten-adoption.md. Set CARGO_TAUTEN to its path if it is
-# not on PATH.
+# The binary must be the cargo-tauten version toolchains.lock.json pins
+# (#174); another version exits 2 naming both. `--any-version` runs it anyway,
+# for trying a newer tauten; no gate step passes it. Recording
+# proofs/claims.json is `scripts/release claims`. Set CARGO_TAUTEN to the
+# binary's path if it is not on PATH.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 tauten=${CARGO_TAUTEN:-cargo-tauten}
 if ! command -v "$tauten" >/dev/null 2>&1; then
-    echo "tauten-check: $tauten not found; build it from tauten main or set CARGO_TAUTEN" >&2
+    echo "tauten-check: $tauten not found; install the pinned cargo-tauten or set CARGO_TAUTEN" >&2
     exit 2
 fi
-exec "$tauten" tauten check --manifest-path "$root/Cargo.toml" "$@"
+any=false
+args=()
+for arg in "$@"; do
+    if [ "$arg" = "--any-version" ]; then any=true; else args+=("$arg"); fi
+done
+want=$(python3 -c 'import json,sys
+lock = json.load(open(sys.argv[1]))
+print(next((t["version"] for t in lock["artifacts"] if t.get("name") == "cargo-tauten"), ""))' \
+    "$root/toolchains.lock.json")
+found=$("$tauten" tauten --version 2>/dev/null || true)
+if [ "$found" != "cargo-tauten $want" ] && [ "$any" = false ]; then
+    echo "tauten-check: $tauten is '$found'; toolchains.lock.json pins cargo-tauten $want (--any-version runs it anyway)" >&2
+    exit 2
+fi
+exec "$tauten" tauten check --manifest-path "$root/Cargo.toml" "${args[@]+"${args[@]}"}"

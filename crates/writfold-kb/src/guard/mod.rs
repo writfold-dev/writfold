@@ -15,19 +15,25 @@
 //! - A `stop` rule adds context ([`stop`]) once per session, or with
 //!   `repeat = "turn"` once per user turn, and never while
 //!   `stop_hook_active` is set; the session flag is its local draft.
+pub mod binding;
+pub mod check;
 pub mod delivery;
 mod delivery_body;
 mod empty;
+pub mod event;
 pub mod log;
 pub mod matched;
 pub mod paths;
+pub mod posture;
 pub(crate) mod pre;
 mod report;
 pub mod require;
 pub mod rule_check;
 mod rule_lists;
 pub mod rules;
+pub mod site;
 pub mod status;
+pub mod stop;
 pub mod waived;
 
 /// One read-only guard verb.
@@ -85,34 +91,27 @@ fn problems_note(problems: &[crate::defs::Problem]) -> String {
     problems.iter().map(crate::hook::broken::skipped).collect()
 }
 
-/// Decide one PreToolUse event: the delivery guard, then the rules,
-/// each judged where the command it matched acts ([`matched`]).
+/// Decide one PreToolUse event ([`site::decide`]) under the
+/// registration's posture and render it as Claude Code expects.
 pub fn pre_tool_use(
     ws: &Workspace,
     input: &Map<String, Value>,
-    (cwd, home): (&Path, Option<&Path>),
+    places: (&Path, Option<&Path>),
     now: i64,
-) -> Result<HookOutput, String> {
-    let mut stderr = match delivery::pre_tool_use(ws, input, cwd, now) {
-        Ok(out) if !out.stdout.is_empty() => return Ok(out),
-        Ok(out) => out.stderr,
-        Err(why) => format!("writfold kb hook: {why}\n"),
-    };
-    let call = matched::Call::read(input, cwd, home);
-    let Some(loaded) = matched::Loaded::find(&ws.root, &call.places()) else {
-        return Ok(quiet_with(stderr));
-    };
-    stderr.push_str(&problems_note(&loaded.problems));
-    let groups = matched::groups(&loaded, &call);
-    if groups.is_empty() {
-        return Ok(quiet_with(stderr));
+    posture: writfold_core::site::Posture,
+) -> HookOutput {
+    render(site::decide(ws, input, places, now, posture))
+}
+
+/// A site's decision as Claude Code's PreToolUse output: nothing on a
+/// pass, its JSON on a denial or a question.
+pub fn render(sited: site::Sited) -> HookOutput {
+    if sited.delivery {
+        let reason = sited.reasons.first().map(String::as_str).unwrap_or("");
+        return delivery::deny_output(reason);
     }
-    let decided = pre::judge(ws, input, &groups, now);
-    stderr.push_str(&decided.stderr);
-    let reasons = decided.reasons;
-    let decision = decided.decision;
-    let verdict = match decision {
-        Decision::Pass => return Ok(quiet_with(stderr)),
+    let verdict = match sited.decision {
+        Decision::Pass => return quiet_with(sited.stderr),
         Decision::Deny => "deny",
         Decision::Ask => "ask",
     };
@@ -120,13 +119,13 @@ pub fn pre_tool_use(
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": verdict,
-            "permissionDecisionReason": reasons.join("\n"),
+            "permissionDecisionReason": sited.reasons.join("\n"),
         }
     });
-    Ok(HookOutput {
+    HookOutput {
         stdout: format!("{value}\n"),
-        stderr,
-    })
+        stderr: sited.stderr,
+    }
 }
 
 /// The Stop nudge: when a `stop` rule exists and its requirements are not
@@ -153,6 +152,13 @@ pub fn stop(
         .get("session_id")
         .and_then(Value::as_str)
         .unwrap_or("");
+    if let Some(reason) = stop::blocks(ws, input, (cwd, &local, session), now, &found)? {
+        let value = json!({"decision": "block", "reason": reason});
+        return Ok(HookOutput {
+            stdout: format!("{value}\n"),
+            stderr,
+        });
+    }
     let mut texts = nudges(ws, input, (cwd, &local, session), now, &found)?;
     if let Some(block) = broken_once(&local, session, &problems, now)? {
         texts.insert(0, block);
@@ -212,7 +218,10 @@ fn nudges(
     now: i64,
     found: &[Rule],
 ) -> Result<Vec<String>, String> {
-    let stops: Vec<&Rule> = found.iter().filter(|r| r.event == Event::Stop).collect();
+    let stops: Vec<&Rule> = found
+        .iter()
+        .filter(|r| r.event == Event::Stop && r.block.is_none())
+        .collect();
     if stops.is_empty() {
         return Ok(Vec::new());
     }

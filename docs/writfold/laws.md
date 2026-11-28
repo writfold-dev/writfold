@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=107 declared_out=156 remainder=0 of 263`
+`LAW_COVERAGE judged=109 declared_out=157 remainder=0 of 266`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: functions in neither, which
@@ -634,7 +634,7 @@ A posture never changes a judged decision.
 judged_unchanged (d : Decision) (p q : Posture) : Site.decide (.judged d) p = Site.decide (.judged d) q
 ```
 
-- Implemented by: `guard.effect`
+- Implemented by: `guard.effect`, `site.decide`
 - Caught by: `posture-overrides-judged`
 
 ### `Calculus.closed_pass_iff`
@@ -645,6 +645,7 @@ Under a closed posture an undecided event never passes.
 closed_pass_iff (b : Basis) (p : Posture) (h : p ≠ .open) : Site.decide b p = .pass ↔ b = .noRules ∨ b = .noMatch ∨ b = .judged .pass
 ```
 
+- Implemented by: `site.decide`
 - Caught by: `undecided-passes-closed`, `posture-overrides-judged`
 
 ### `Calculus.posture_only_narrows`
@@ -655,7 +656,7 @@ A posture only narrows: what passes under any posture passes under `open`.
 posture_only_narrows (b : Basis) (p : Posture) (h : Site.decide b p = .pass) : Site.decide b .open = .pass
 ```
 
-- Implemented by: `guard.effect`
+- Implemented by: `guard.effect`, `site.decide`
 - Derived: decided over the bases and postures
 
 ### `Calculus.stricter_never_loosens`
@@ -666,6 +667,7 @@ The posture is the decision's upper bound in `join`: a stricter posture never lo
 stricter_never_loosens (b : Basis) (p q : Posture) : Decision.join (Site.decide b p) (Site.decide b (p.stricter q)) = Site.decide b (p.stricter q)
 ```
 
+- Implemented by: `site.stricter`
 - Caught by: `posture-overrides-judged`
 
 ### `Calculus.stricter_comm`
@@ -676,6 +678,7 @@ Combining postures does not depend on order.
 stricter_comm (a b : Posture) : a.stricter b = b.stricter a
 ```
 
+- Implemented by: `site.stricter`
 - Caught by: `stricter-takes-first`
 
 ### `Calculus.stricter_assoc`
@@ -686,6 +689,7 @@ Postures combine freely.
 stricter_assoc (a b c : Posture) : (a.stricter b).stricter c = a.stricter (b.stricter c)
 ```
 
+- Implemented by: `site.stricter`
 - Derived: decided over the postures
 
 ### `Calculus.stricter_open_left`
@@ -696,6 +700,7 @@ stricter_assoc (a b c : Posture) : (a.stricter b).stricter c = a.stricter (b.str
 stricter_open_left (a : Posture) : Posture.open.stricter a = a
 ```
 
+- Implemented by: `site.stricter`
 - Caught by: `stricter-takes-first`
 
 ### `Calculus.open_is_declared`
@@ -706,6 +711,7 @@ Under `open`, the only pass without a decision is the undecided row: the exempti
 open_is_declared (b : Basis) (h : Site.decide b .open = .pass) (hn : b ≠ .noRules) (hm : b ≠ .noMatch) (hj : b ≠ .judged .pass) : b = .undecided
 ```
 
+- Implemented by: `site.decide`
 - Caught by: `posture-overrides-judged`
 
 ## Referents and the asset boundary (laws R and A)
@@ -1030,6 +1036,8 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 | `referent.judge` | `Calculus.judge` | `Writfold.Core.Conform.judge_implements` |
 | `referent.settle` | `Calculus.settle` | `Writfold.Core.Conform.settle_implements` |
 | `runs.complete` | `Calculus.whole` | `Writfold.Core.Conform.runs_complete_implements` |
+| `site.decide` | `Calculus.Site.decide` | `Writfold.Core.Conform.site_decide_implements` |
+| `site.stricter` | `Calculus.Posture.stricter` | `Writfold.Core.Conform.site_stricter_implements` |
 | `store.artifact` | `Calculus.Tri.all` | `Writfold.Core.Conform.store_artifact_implements` |
 | `store.claim` | `Calculus.resolve` | `Writfold.Core.Conform.claim_implements` |
 | `store.pin_recordable` | `Calculus.Words.told` | `Writfold.Core.Conform.store_pin_recordable_implements` |
@@ -1068,6 +1076,8 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 | `guard.Decision` | `Calculus.Decision` | `decisionOf` (onto: `decisionOf_onto`) |
 | `guard.Fact` | `Calculus.Tri` | `factTri` (onto: `factTri_onto`) |
 | `policy.How` | `Calculus.Class` | `howClass` (onto: `howClass_onto`) |
+| `site.Basis` | `Calculus.Basis` | `basisOf` (onto: `basisOf_onto`) |
+| `site.Posture` | `Calculus.Posture` | `postureOf` (onto: `postureOf_onto`) |
 | `verdict.Said` | `Calculus.Tri` | `saidTri` (onto: `saidTri_onto`) |
 | `verdict.Verdict` | `Calculus.Tri` | `verdictTri` (onto: `verdictTri_onto`) |
 
@@ -1202,6 +1212,7 @@ settle_monotone (r f r' f' : Bool) {v w : W} (hr : r = true → r' = true) (hf :
 | `scope.segment` | glob matching of one segment (segment_iff) |
 | `scope.segments` | glob matching of a path (segments_iff) |
 | `scope.start` | the glob matcher's start cursor (start_spec) |
+| `site.block_again` | a bounded schedule for a blocking stop rule, not a judgment (block_again_spec, block_bounded) |
 | `store.basis` | which rule (head or pin) judges a store citation, from declaration flags (basis_pin_iff); the verdict it selects is linked through pinned |
 | `store.recorded` | whether a store's declaration lets a receipt stand in (code_recorded_iff); where one may is linked through use_recorded |
 | `target.agree_at` | inside choose_in; linked through it (agree_at_spec) |

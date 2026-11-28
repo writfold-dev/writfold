@@ -103,6 +103,42 @@ def weakened() -> list[str]:
     return lost
 
 
+def spent() -> list[str]:
+    """`[[amend]]` entries that excuse nothing against the committed record
+    (#99): retired in the claims commit that follows the one they excused."""
+    import tomllib
+    plan = tomllib.loads((ROOT / "proofs/claims.toml").read_text())
+    try:
+        recorded = json.loads((ROOT / "proofs/claims.json").read_text()).get("claims", [])
+    except (OSError, json.JSONDecodeError):
+        return []
+    old = {(c["file"], c["function"]): c for c in recorded}
+    now = {(c["file"], c["function"]): c for c in plan.get("claim", [])}
+    left = []
+    for a in plan.get("amend", []):
+        key, field = (a["file"], a["function"]), a["kind"] + "s"
+        if not (a["name"] in old.get(key, {}).get(field, []) and a["name"] not in now.get(key, {}).get(field, [])):
+            left.append(f"{key[0]}: `{key[1]}` {a['kind']} `{a['name']}`")
+    return left
+
+
+def tauten_binary() -> str:
+    """The cargo-tauten to record with: the version `toolchains.lock.json`
+    pins (#174), or exit 2 naming both."""
+    import os
+    tauten = os.environ.get("CARGO_TAUTEN") or shutil.which("cargo-tauten") or "cargo-tauten"
+    lock = json.loads((ROOT / "toolchains.lock.json").read_text())
+    want = next((t["version"] for t in lock.get("artifacts", []) if t.get("name") == "cargo-tauten"), None)
+    try:
+        found = subprocess.run([tauten, "tauten", "--version"], capture_output=True, text=True, check=False).stdout.strip()
+    except OSError as error:
+        found = f"unavailable ({error})"
+    if found != f"cargo-tauten {want}":
+        print(f"release: {tauten} is {found!r}; toolchains.lock.json pins cargo-tauten {want}", file=sys.stderr)
+        raise SystemExit(2)
+    return tauten
+
+
 def claims(level: str) -> None:
     if sh("git", "status", "--porcelain", "--untracked-files=no"):
         raise SystemExit("release: commit first; tauten proves a snapshot of HEAD")
@@ -110,10 +146,13 @@ def claims(level: str) -> None:
     if lost:
         raise SystemExit("release: add an [[amend]] with a reason to proofs/claims.toml for:\n  "
                          + "\n  ".join(lost))
+    left = spent()
+    if left:
+        raise SystemExit("release: remove the spent [[amend]] entries from proofs/claims.toml "
+                         "(they excuse nothing against proofs/claims.json):\n  " + "\n  ".join(left))
+    tauten = tauten_binary()
     sh("python3", "proofs/mutants.py", "--check-sites", capture=False)
-    say("no recorded claim is weakened; every mutant site matches once")
-    import os
-    tauten = os.environ.get("CARGO_TAUTEN") or shutil.which("cargo-tauten") or "cargo-tauten"
+    say("no recorded claim is weakened, no amend is spent; every mutant site matches once")
     args = [tauten, "tauten", "proofs"] + (["--level", "ship"] if level == "ship" else [])
     started = time.monotonic()
     sh(*args, capture=False)

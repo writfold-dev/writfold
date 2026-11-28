@@ -6,7 +6,7 @@ implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
-updated: 2026-11-27
+updated: 2026-11-28
 issue: https://github.com/writfold-dev/writfold/issues/171
 milestone: "v0.6.0-dev.26"
 supersedes: []
@@ -293,3 +293,14 @@ None blocks acceptance. Owner questions, each with the default taken:
   and tauten's issue tracker. Accepted under the standing rule (owner, 21
   November 2026). Defaults taken: a fresh record is a gate condition; the
   shared runner is not adopted; warnings and tiers stay a pilot.
+- 2026-11-28 (v0.6.0-dev.30, steps 3 to 5 as built): the step lives in
+  `scripts/tauten_step.py`, called from `scripts/writfold_quality.py`. The
+  stale-record comparison diffs the record's commit against the working
+  tree rather than `HEAD`, so the calibration can run it on a copy of the
+  tree (`git --work-tree`); in the gate the tree is `HEAD`. The quality
+  gate's staleness scope gains `proofs/**` and `tauten-baseline.json`. The
+  pin lives in `toolchains.lock.json`'s `artifacts`, and both
+  `scripts/tauten-check` and `scripts/release claims` check it.
+  `AGENTS.tauten.md` is the 0.2.0 profile unchanged; the two places where
+  `AGENTS.md` wins are listed in the adoption record. No `[[amend]]` was
+  left to retire: the claims file had none when the pre-flight landed.

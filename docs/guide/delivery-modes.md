@@ -363,6 +363,8 @@ With the delivery guard configured, the plugin's `PostToolUse` hook (built in v0
 
 ## Outside the hook: `deliver match`
 
+This is one of the checks that take no harness ([hooks: without a harness](hooks.md#without-a-harness)); since v0.6.0-dev.30 `writfold kb guard check` asks the delivery guard and the guard rules together for any harness.
+
 `deliver match --from FILE|- [--mode M] [--run ID]` asks the guard's question of some bytes: are they the payload of a postable candidate of mode `M` (any mode without `--mode`)? It is read-only and runs no check. It exits 0 exactly when the guard would pass these bytes under a route for `M`, except that a candidate recorded as posted still matches (the text has been posted; that is what is being confirmed) and shows its `posted:` line. Otherwise it exits 2 with the guard's reason as a note.
 
 ```text

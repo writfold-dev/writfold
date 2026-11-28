@@ -31,12 +31,18 @@ use crate::workspace::{GitTool, Workspace};
 use serde_json::{Map, Value, json};
 use std::path::Path;
 
-fn deny(reason: String) -> HookOutput {
+/// The full reason of a delivery denial.
+fn reason(why: String) -> String {
+    format!("writfold delivery guard (a guard, not enforcement): {why}")
+}
+
+/// A delivery denial as Claude Code's PreToolUse output.
+pub fn deny_output(reason: &str) -> HookOutput {
     let value = json!({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
-            "permissionDecisionReason": format!("writfold delivery guard (a guard, not enforcement): {reason}"),
+            "permissionDecisionReason": reason,
         }
     });
     HookOutput {
@@ -45,35 +51,47 @@ fn deny(reason: String) -> HookOutput {
     }
 }
 
-/// Decide one PreToolUse event.
+/// Decide one PreToolUse event: the denial's full reason, or `None`.
+pub fn judge(
+    ws: &Workspace,
+    input: &Map<String, Value>,
+    cwd: &Path,
+    now: i64,
+) -> Result<Option<String>, String> {
+    let Some(guard) = config::guard(&ws.root).map_err(|e| e.to_string())? else {
+        return Ok(None);
+    };
+    let Some(matched) = body::matched(&guard, input, cwd) else {
+        return Ok(None);
+    };
+    Ok(decide(ws, &matched, now).map(reason))
+}
+
+/// Decide one PreToolUse event as Claude Code's output.
 pub fn pre_tool_use(
     ws: &Workspace,
     input: &Map<String, Value>,
     cwd: &Path,
     now: i64,
 ) -> Result<HookOutput, String> {
-    let Some(guard) = config::guard(&ws.root).map_err(|e| e.to_string())? else {
-        return Ok(HookOutput::default());
-    };
-    let Some(matched) = body::matched(&guard, input, cwd) else {
-        return Ok(HookOutput::default());
-    };
-    Ok(decide(ws, &matched, now))
+    Ok(judge(ws, input, cwd, now)?
+        .map(|r| deny_output(&r))
+        .unwrap_or_default())
 }
 
-fn decide(ws: &Workspace, m: &Matched, now: i64) -> HookOutput {
+fn decide(ws: &Workspace, m: &Matched, now: i64) -> Option<String> {
     let tool = match GitTool::locate() {
         Ok(tool) => tool,
-        Err(e) => return deny(format!("cannot read the KB ({e})")),
+        Err(e) => return Some(format!("cannot read the KB ({e})")),
     };
     let session = match Session::open(ws, Some(&tool), false, now) {
         Ok(session) => session,
-        Err(e) => return deny(format!("cannot read the KB ({e})")),
+        Err(e) => return Some(format!("cannot read the KB ({e})")),
     };
     let rec = crate::runs::current_of(&session)
         .and_then(|id| query::record(&session.conn, &id).ok().flatten());
     let Some(rec) = rec else {
-        return deny(
+        return Some(
             "no current KB run: start one, then writfold kb deliver prepare --mode M --from FILE"
                 .into(),
         );
@@ -86,10 +104,7 @@ fn decide(ws: &Workspace, m: &Matched, now: i64) -> HookOutput {
         unread: m.unread(),
         spent_matches: false,
     };
-    match guarded::decide(&ws.root, &rec.id, &found, &call, &m.read) {
-        None => HookOutput::default(),
-        Some(reason) => deny(reason),
-    }
+    guarded::decide(&ws.root, &rec.id, &found, &call, &m.read)
 }
 
 /// D19: after a routed call returns, remind the agent to record the post

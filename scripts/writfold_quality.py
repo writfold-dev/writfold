@@ -14,6 +14,8 @@ import tempfile
 import time
 import tomllib
 
+import tauten_step
+
 
 class Producer:
     def __init__(self, root: Path, evidence: Path, timeout: int) -> None:
@@ -320,6 +322,8 @@ class Producer:
         # Every required theorem is claimed or in a backlog that only
         # shrinks (#124).
         self.simple("claims-coverage", [sys.executable, "proofs/claims_coverage.py"])
+        # The tauten lint and a fresh proof record (#173), with calibrations.
+        tauten_step.run(self)
         self.simple("law-coverage", [sys.executable, "proofs/law_coverage.py"])
         self.simple("laws-page", [sys.executable, "proofs/laws_page.py"])
         self.simple("law-coverage-tests", [sys.executable, "proofs/test_law_coverage.py"])

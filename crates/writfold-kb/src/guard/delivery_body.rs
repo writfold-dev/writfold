@@ -77,7 +77,7 @@ pub fn matched(guard: &Guard, input: &Map<String, Value>, cwd: &Path) -> Option<
             read: Read::Unread(format!("tool {tool} is guarded as a whole")),
         });
     }
-    if tool != "Bash" {
+    if !super::event::is_shell(input) {
         return None;
     }
     let line = input

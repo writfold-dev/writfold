@@ -1842,6 +1842,26 @@ MUTANTS = (
            "            Pin::Held => {}\n            Pin::Moved | Pin::Aged | Pin::Unreadable => return false,",
            "            Pin::Held | Pin::Unreadable => {}\n            Pin::Moved | Pin::Aged => return false,",
            ("Writfold.Core.Pin.holds_from_loop_spec",)),
+    # site (#184): an undecided event under deny is denied
+    Mutant("undecided-passes-closed", "site.rs",
+           "            Posture::Deny => Decision::Deny,",
+           "            Posture::Deny => Decision::Pass,",
+           ("Writfold.Core.Site.decide_spec",)),
+    # site: a posture never overrides a judged decision
+    Mutant("posture-overrides-judged", "site.rs",
+           "        Basis::Judged(decided) => decided,",
+           "        Basis::Judged(_) => Decision::Pass,",
+           ("Writfold.Core.Site.decide_spec",)),
+    # site: the stricter posture reads both sides
+    Mutant("stricter-takes-first", "site.rs",
+           "    if matches!(a, Posture::Deny) || matches!(b, Posture::Deny) {",
+           "    if matches!(a, Posture::Deny) {",
+           ("Writfold.Core.Site.stricter_spec",)),
+    # site: a blocking stop rule stops at its limit
+    Mutant("block-ignores-limit", "site.rs",
+           "    unmet && blocked < limit",
+           "    unmet",
+           ("Writfold.Core.Site.block_again_spec",)),
     # pin: every pin is looked at, the first included
     Mutant("holds-skips-first", "pin.rs",
            "    holds_from(pins, 0)",

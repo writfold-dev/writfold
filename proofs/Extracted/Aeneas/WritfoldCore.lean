@@ -2582,7 +2582,7 @@ def delivery.guard
     | delivery.Unread.Deny => ok false
 
 /-- [writfold_core::diag::blocks]:
-    Source: 'crates/writfold-core/src/diag/mod.rs', lines 252:0-254:1
+    Source: 'crates/writfold-core/src/diag/mod.rs', lines 253:0-255:1
     Visibility: public -/
 def diag.blocks
   (errors : Std.Usize) (warnings : Std.Usize) (deny : Bool) : Result Bool := do
@@ -7117,6 +7117,87 @@ def scope.covers
   Result Bool
   := do
   scope.covers_loop patterns path false 0#usize
+
+/-- [writfold_core::site::Basis]
+    Source: 'crates/writfold-core/src/site.rs', lines 14:0-19:1
+    Visibility: public -/
+@[discriminant isize]
+inductive site.Basis where
+| NoRules : site.Basis
+| NoMatch : site.Basis
+| Judged : guard.Decision → site.Basis
+| Undecided : site.Basis
+
+/-- [writfold_core::site::Posture]
+    Source: 'crates/writfold-core/src/site.rs', lines 23:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive site.Posture where
+| Open : site.Posture
+| Ask : site.Posture
+| Deny : site.Posture
+
+/-- [writfold_core::site::decide]:
+    Source: 'crates/writfold-core/src/site.rs', lines 50:0-61:1
+    Visibility: public -/
+def site.decide
+  (basis : site.Basis) (posture : site.Posture) : Result guard.Decision := do
+  match basis with
+  | site.Basis.NoRules => ok guard.Decision.Pass
+  | site.Basis.NoMatch => ok guard.Decision.Pass
+  | site.Basis.Judged decided => ok decided
+  | site.Basis.Undecided =>
+    match posture with
+    | site.Posture.Open => ok guard.Decision.Pass
+    | site.Posture.Ask => ok guard.Decision.Ask
+    | site.Posture.Deny => ok guard.Decision.Deny
+
+/-- [writfold_core::site::stricter]:
+    Source: 'crates/writfold-core/src/site.rs', lines 64:0-72:1
+    Visibility: public -/
+def site.stricter
+  (a : site.Posture) (b : site.Posture) : Result site.Posture := do
+  let b1 ←
+    match a with
+    | site.Posture.Open => ok false
+    | site.Posture.Ask => ok false
+    | site.Posture.Deny => ok true
+  if b1
+  then ok site.Posture.Deny
+  else
+    let b2 ←
+      match b with
+      | site.Posture.Open => ok false
+      | site.Posture.Ask => ok false
+      | site.Posture.Deny => ok true
+    if b2
+    then ok site.Posture.Deny
+    else
+      let b3 ←
+        match a with
+        | site.Posture.Open => ok false
+        | site.Posture.Ask => ok true
+        | site.Posture.Deny => ok false
+      if b3
+      then ok site.Posture.Ask
+      else
+        let b4 ←
+          match b with
+          | site.Posture.Open => ok false
+          | site.Posture.Ask => ok true
+          | site.Posture.Deny => ok false
+        if b4
+        then ok site.Posture.Ask
+        else ok site.Posture.Open
+
+/-- [writfold_core::site::block_again]:
+    Source: 'crates/writfold-core/src/site.rs', lines 76:0-78:1
+    Visibility: public -/
+def site.block_again
+  (unmet : Bool) (blocked : Std.Usize) (limit : Std.Usize) : Result Bool := do
+  if unmet
+  then ok (blocked < limit)
+  else ok false
 
 /-- [writfold_core::store::Basis]
     Source: 'crates/writfold-core/src/store.rs', lines 16:0-22:1

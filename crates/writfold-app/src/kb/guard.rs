@@ -3,7 +3,7 @@ use super::args::Common;
 use writfold_kb::Verb;
 use writfold_kb::guard::GuardVerb;
 
-pub const USAGE: &str = "usage: guard status | guard log [--rule ID] [--since AGE]";
+pub const USAGE: &str = "usage: guard status | guard log [--rule ID] [--since AGE] | guard check ... (see guard check --help)";
 
 /// `status`, or `log` with its two flags; common flags are parsed
 /// separately.

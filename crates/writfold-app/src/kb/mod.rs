@@ -1,6 +1,7 @@
 //! `writfold kb`: Git-native project continuity reads (KB v1). Argument
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
+mod check;
 mod checkpoint;
 mod cite;
 pub mod cli;
@@ -54,6 +55,12 @@ pub fn main_styled(args: &[String], cwd: std::path::PathBuf, styles: &Styles) ->
         && first == "hook"
     {
         return hook::main(rest, cwd);
+    }
+    if let [first, second, rest @ ..] = args
+        && first == "guard"
+        && second == "check"
+    {
+        return check::main(rest, cwd);
     }
     let styles = coloured(args, styles);
     if let Some(outcome) = overview(args) {

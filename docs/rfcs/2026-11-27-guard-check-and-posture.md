@@ -2,13 +2,13 @@
 rfc: "2026-11-27-guard-check-and-posture"
 title: "The guard site without a harness: `guard check`, a neutral event, harness bindings and a declared posture"
 status: accepted
-implementation: not-started
+implementation: done
 authors:
   - fable
 created: 2026-11-27
-updated: 2026-11-27
+updated: 2026-11-28
 issue: https://github.com/writfold-dev/writfold/issues/183
-milestone: null
+milestone: "v0.6.0-dev.30"
 supersedes: []
 superseded_by: []
 blocked_on: []
@@ -314,3 +314,33 @@ default. A binding file is read only by `guard check --harness` and
 - 2026-11-27: drafted after reproducing the fail-open cases and the
   hard-coded shell tool on `9afa5942`. Accepted under the owner's
   standing acceptance; not yet reviewed by the owner.
+- 2026-11-28 (slice 1 as built, #183): the site's judges keep reading
+  Claude Code's PreToolUse shape, which is the canonical form of an event.
+  A `writfold-event/1` from `guard check` or a binding becomes that shape
+  plus two keys Claude Code never sends (`writfold_kind`, `writfold_via`).
+  A map without `writfold_kind` is Claude Code's own and its shell tool is
+  `Bash`, so the built-in binding is the identity on the hook's path and the
+  hook's output is unchanged by construction (all existing guard and hook
+  tests pass unmodified). `guard/site.rs` is the one function the hook and
+  `guard check` call. A binding file also names where the event keeps its
+  tool name, tool input and working directory (`tool`, `input`, `cwd`;
+  defaults `tool_name`, `tool_input`, `cwd`), which the drafted example
+  left implicit. The guard log keeps `via: hook` for the hook and writes
+  `via: check` for `guard check` and bindings. `guard check --event stop`
+  is slice 2.
+- 2026-11-28 (slice 2 as built, #184): `writfold_core::site` (decide,
+  stricter, block_again) with the theorems listed above, linked to
+  `Calculus.Site.decide` and `Calculus.Posture.stricter`; `block_again`
+  is declared out (a schedule, not a judgment). The site's decision for
+  an event with any undecided cause is the judged decision joined with
+  `site::decide(Undecided, posture)` by the proved `guard::combine`, so a
+  broken rule file beside a matched deny rule still denies under `open`,
+  as before. `file.twice` problems are not causes. A delivery guard
+  configuration that does not parse still passes with a note under every
+  posture (left out of the list, documented). The deadline shares
+  `WRITFOLD_HOOK_DEADLINE_MS` with session start (8 s here, 20 s there).
+  The plugin's registration branches on `CLAUDE_PLUGIN_OPTION_POSTURE`,
+  since its JSON is static. `guard check --event stop` takes
+  `--stop-active` (another harness's turn boundary) and `--message`, and
+  goes through `kb hook stop` itself. A blocking rule counts with the
+  nudges in `guard status`'s trailer.

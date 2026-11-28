@@ -240,6 +240,10 @@ When a plan is set or a template spliced, the run's pin records each delivery mo
 
 A receiver's `handoff check` reads neither modes nor profiles: it judges the gates it requires at its own policy revision, each met only by a mechanical receipt. An edited mode or profile in the candidate cannot change its verdict.
 
+## Inherited obligations and an independent review
+
+A team that asks for "workers inherit obligations" and "an independent review" gets, from v0.6.0-dev.22 to dev.25: a profile's `needs`, which a prepared invocation carries to the worker; `invocation.bound`, which says a report belongs to the invocation it answers; a bound reviewer report a gate can require; and the [receiver](receiver.md), which re-judges what arrives. What these do not cover: a worker the harness spawns by itself, without `kb agent prepare`. Writfold sees that worker only through the calls a hook is shown (a `spawn` event when the harness reports one), and inherits nothing to it.
+
 ## What is proved and what is tested
 
 The decisions are kernels in `writfold-core`, proved in Lean ([assurance](assurance.md)):
@@ -252,3 +256,5 @@ The decisions are kernels in `writfold-core`, proved in Lean ([assurance](assura
 The protocol (prepare, deliver, check, advance, merge, with crashes and a retry) is the TLA+ model `spec/Invocation.tla`. Its `CheckIsStable` says a passing check still passes after `plan advance`. TLC runs are manual ([assurance](assurance.md#model-checked)). Reading the files, resolving references, the digests, the record's codec, the package bytes and rendering are tested, not proved.
 
 Limits: on a re-check the definitions are read from the KB root and the run's repository. A worker that edits the KB can write a record, but every record is in Git, where you can see it. Writfold cannot see whether a harness actually gave the package to a model.
+
+What Writfold cannot enforce here, and what it offers instead, is listed in [assurance: limits](assurance.md#limits).

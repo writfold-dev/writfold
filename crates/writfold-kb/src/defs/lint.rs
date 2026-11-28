@@ -28,6 +28,8 @@ pub enum Kind {
     Queries,
     Record,
     Catalog,
+    Harness,
+    Site,
     Tool,
     Skill,
     Agent,
@@ -46,7 +48,7 @@ pub struct File {
     pub report: Report,
 }
 
-const DIRS: [(&str, Kind); 11] = [
+const DIRS: [(&str, Kind); 12] = [
     (crate::gate::def::DIR, Kind::Gate),
     (crate::guard::rules::DIR, Kind::Guard),
     (crate::plan::template::DIR, Kind::Template),
@@ -55,6 +57,7 @@ const DIRS: [(&str, Kind); 11] = [
     (crate::store::DIR, Kind::Store),
     (crate::declared::DIR, Kind::Repo),
     (crate::catalog::DIR, Kind::Catalog),
+    (crate::guard::binding::DIR, Kind::Harness),
     (crate::agents::TOOLS, Kind::Tool),
     (crate::agents::SKILLS, Kind::Skill),
     (crate::agents::AGENTS, Kind::Agent),
@@ -75,6 +78,8 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
         Kind::Queries => crate::verbs::eval::lint(text, shown),
         Kind::Record => None,
         Kind::Catalog => crate::catalog::decl::check(text, stem, shown).err(),
+        Kind::Harness => crate::guard::binding::check(text, stem, shown).err(),
+        Kind::Site => crate::guard::posture::check(text, shown).err(),
         Kind::Tool | Kind::Skill | Kind::Agent => {
             let top = crate::agents::inspect::top_of(dir);
             (crate::agents::refs::def_kind(kind))
@@ -235,6 +240,7 @@ pub fn execute(
     };
     if !records {
         all.extend(queries(kb));
+        all.extend(super::lint_site::file(kb));
     }
     if let Some(top) = &repo {
         let name = top

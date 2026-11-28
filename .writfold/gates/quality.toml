@@ -8,11 +8,14 @@
 # tracked or untracked file that changes during the run fails it, and
 # writfold kb gate records such a run as unknown. The scope below is only for
 # staleness afterwards, and it is deliberately narrower: the inputs these
-# checks read. A change to docs/, README.md, AGENTS.md, the plugin, the
-# proofs or the TLA+ models leaves a quality receipt satisfied; a change to a
+# checks read. A change to docs/, README.md, AGENTS.md, the plugin or
+# the TLA+ models leaves a quality receipt satisfied; a change to a
 # crate, a Cargo file, a toolchain pin, the
 # gate scripts, the Docker inputs or the qualification files the gate
-# reads makes it stale. If quality starts reading another path, add it here.
+# reads makes it stale. Since #173 the quality gate also runs `cargo tauten
+# check` and refuses a proof record older than the kernel, so a change to
+# proofs/ or to tauten-baseline.json makes it stale too. If quality starts
+# reading another path, add it here.
 schema = "writfold-gate/1"
 id = "quality"
 version = 1
@@ -31,5 +34,7 @@ scope = [
   "docker/**",
   "scripts/**",
   "qualification/**",
+  "proofs/**",
+  "tauten-baseline.json",
 ]
 description = "rustfmt, clippy and the xtask quality checks through scripts/gate"

@@ -1664,3 +1664,31 @@ why = "which rule (head or pin) judges a store citation, from declaration flags 
 [[out]]
 function = "store.recorded"
 why = "whether a store's declaration lets a receipt stand in (code_recorded_iff); where one may is linked through use_recorded"
+
+[[word]]
+type = "site.Basis"
+core = "Calculus.Basis"
+abstraction = "basisOf"
+onto = "basisOf_onto"
+
+[[word]]
+type = "site.Posture"
+core = "Calculus.Posture"
+abstraction = "postureOf"
+onto = "postureOf_onto"
+
+[[link]]
+function = "site.decide"
+implements = "Calculus.Site.decide"
+theorem = "Writfold.Core.Conform.site_decide_implements"
+laws = ["Calculus.judged_unchanged", "Calculus.closed_pass_iff", "Calculus.posture_only_narrows", "Calculus.open_is_declared"]
+
+[[link]]
+function = "site.stricter"
+implements = "Calculus.Posture.stricter"
+theorem = "Writfold.Core.Conform.site_stricter_implements"
+laws = ["Calculus.stricter_comm", "Calculus.stricter_assoc", "Calculus.stricter_open_left", "Calculus.stricter_never_loosens"]
+
+[[out]]
+function = "site.block_again"
+why = "a bounded schedule for a blocking stop rule, not a judgment (block_again_spec, block_bounded)"

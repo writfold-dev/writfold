@@ -74,6 +74,7 @@ pub mod publish;
 pub mod referent;
 pub mod runs;
 pub mod scope;
+pub mod site;
 pub mod store;
 pub mod subject;
 pub mod target;

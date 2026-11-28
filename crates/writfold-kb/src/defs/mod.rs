@@ -19,6 +19,7 @@ pub mod lint_looks;
 pub mod lint_out;
 pub mod lint_policy;
 pub mod lint_refs;
+pub mod lint_site;
 pub mod records;
 pub mod toml;
 

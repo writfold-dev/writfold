@@ -80,6 +80,9 @@ pub struct Rule {
     pub action: Action,
     /// How often a stop rule nudges; `Session` for a pre-tool-use rule.
     pub repeat: Repeat,
+    /// A blocking stop rule's limit per turn (`action = "block"`, #184);
+    /// `None` for a stop rule that nudges and for a pre-tool-use rule.
+    pub block: Option<usize>,
     /// `audit`: judged and logged, never decides the call.
     pub mode: Mode,
     pub description: String,

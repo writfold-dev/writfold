@@ -679,6 +679,25 @@ inductive runs.Shown where
 | Listed : runs.Shown
 | Flagged : runs.Shown
 
+/-- [writfold_core::site::Basis]
+    Source: 'crates/writfold-core/src/site.rs', lines 14:0-19:1
+    Visibility: public -/
+@[discriminant isize]
+inductive site.Basis where
+| NoRules : site.Basis
+| NoMatch : site.Basis
+| Judged : guard.Decision → site.Basis
+| Undecided : site.Basis
+
+/-- [writfold_core::site::Posture]
+    Source: 'crates/writfold-core/src/site.rs', lines 23:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive site.Posture where
+| Open : site.Posture
+| Ask : site.Posture
+| Deny : site.Posture
+
 /-- [writfold_core::store::Basis]
     Source: 'crates/writfold-core/src/store.rs', lines 16:0-22:1
     Visibility: public -/

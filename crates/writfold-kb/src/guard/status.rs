@@ -195,6 +195,10 @@ fn standing(rule: &Rule, owed: Option<&[Owed]>) -> (&'static str, Option<&'stati
             Decision::Deny => ("would-deny", Some("deny")),
             Decision::Ask => ("would-ask", Some("ask")),
         },
+        // A blocking stop rule counts with the nudges in the trailer.
+        Event::Stop if rule.block.is_some() && nudge(false, false, &facts) => {
+            ("would-block", Some("nudge"))
+        }
         Event::Stop if nudge(false, false, &facts) => ("would-nudge", Some("nudge")),
         Event::Stop => ("quiet", None),
     }
