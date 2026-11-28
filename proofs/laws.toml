@@ -176,3 +176,189 @@ why = "a tip's commit, inside choose_in (tip_commit_spec)"
 [[out]]
 function = "target.tip_is"
 why = "a tip compared with a commit, inside choose_in (tip_is_spec)"
+
+# --- #211 universal ---
+
+[[word]]
+type = "catalog.Verdict"
+core = "Calculus.Tri"
+abstraction = "catalogTri"
+onto = "catalogTri_onto"
+
+[[link]]
+function = "catalog.verdict"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.catalog_verdict_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.universal_no_of_witness"]
+
+[[link]]
+function = "catalog.plan"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.catalog_plan_implements"
+laws = ["Calculus.remainder_never_whole", "Calculus.universal_no_of_witness"]
+
+[[link]]
+function = "checklist.rollup_under"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.rollup_under_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole"]
+
+[[link]]
+function = "units.generated"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.generated_implements"
+laws = ["Calculus.remainder_never_whole", "Calculus.empty_never_yes", "Calculus.universal_yes_iff"]
+
+[[link]]
+function = "units.universe"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.universe_implements"
+laws = ["Calculus.whole_iff_no_remainder"]
+
+[[link]]
+function = "inventory.unreadable"
+implements = "Calculus.whole"
+theorem = "Writfold.Core.Conform.unreadable_implements"
+laws = ["Calculus.whole_iff_no_remainder", "Calculus.whole_append"]
+
+[[link]]
+function = "inventory.all_true"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.all_true_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.universal_no_of_witness"]
+
+[[link]]
+function = "packet.required_omitted"
+implements = "Calculus.remainder"
+theorem = "Writfold.Core.Conform.required_omitted_implements"
+laws = ["Calculus.remainder_counts", "Calculus.remainder_append"]
+
+[[link]]
+function = "graph.plan"
+implements = "Calculus.search"
+theorem = "Writfold.Core.Conform.graph_plan_implements"
+laws = ["Calculus.search_yes_iff", "Calculus.absence_needs_whole"]
+
+[[out]]
+function = "catalog.action"
+why = "one slot's write action (create, replace, remove, keep, conflict): a table of writes, not a word of the calculus"
+
+[[out]]
+function = "catalog.conflicts"
+why = "the per-slot conflict test inside catalog::plan, linked through it (conflicts_spec)"
+
+[[out]]
+function = "catalog.changes"
+why = "the per-slot change test inside catalog::plan, linked through it (changes_spec)"
+
+[[out]]
+function = "catalog.any_conflict"
+why = "the conflict fold inside catalog::plan, linked through it (any_conflict_spec)"
+
+[[out]]
+function = "catalog.any_change"
+why = "the change fold inside catalog::plan, linked through it (any_change_spec)"
+
+[[out]]
+function = "catalog.patches"
+why = "whether a verdict may write: any verdict but invalid; the verdict itself is linked (partial_never_patches)"
+
+[[out]]
+function = "inventory.readable"
+why = "the per-root test inside inventory::complete and unreadable, linked through them (readable_spec)"
+
+[[out]]
+function = "packet.cut"
+why = "how many rows fit a byte budget: prefix-sum arithmetic (cut_spec), no law of the calculus"
+
+[[out]]
+function = "graph.affected"
+why = "whether one file's edges may have changed: a disjunction of three change facts (affected_iff), inside graph::plan's input"
+
+[[out]]
+function = "graph.any"
+why = "the fold inside graph::plan, linked through it (any_spec)"
+
+[[out]]
+function = "runs.shown"
+why = "which runs a listing shows under a filter: presentation (shown_spec), no law of the calculus"
+
+[[out]]
+function = "units.pairs"
+why = "enumerates the member pairs of a generated checklist under a cap (pairs_spec): enumeration, no law of the calculus"
+
+[[out]]
+function = "units.unit_moved"
+why = "names the first input of a unit that moved (unit_first_moved): a byte comparison's report, no law of the calculus"
+
+[[out]]
+function = "publish.repair"
+why = "index publication's repair choice (replace, keep, retry) against concurrent writers: protocol, modelled in TLA+, not a word of the calculus"
+
+[[out]]
+function = "publish.derived"
+why = "index publication of a derived file: protocol (derived_replace_iff), not a word of the calculus"
+
+[[out]]
+function = "pointer.is_set"
+why = "whether one pointer level is set, inside pointer::level, linked through it (is_set_spec)"
+
+[[out]]
+function = "pointer.writes"
+why = "which pointer files a run writes (writes_spec): file protocol, not a word of the calculus"
+
+[[out]]
+function = "referent.claims_change"
+why = "which said verdicts claim change, inside referent::settle, linked through it (Calculus.settle's refutable test)"
+
+[[local]]
+type = "catalog.Action"
+why = "a slot's write action: a table of writes, not a word"
+
+[[local]]
+type = "catalog.Owner"
+why = "who owns a slot: an input fact, not a word"
+
+[[local]]
+type = "graph.Plan"
+why = "skip or delta: a refresh strategy; graph::plan is linked through Calculus.search"
+
+[[local]]
+type = "inventory.Root"
+why = "how a root was read; read as a member by rootMember (never declared out, so not onto Calculus.Member)"
+
+[[local]]
+type = "pointer.Pointer"
+why = "the state of one pointer file; pointer::level and open are linked through Calculus.resolve"
+
+[[local]]
+type = "pointer.Level"
+why = "which pointer file decided: a referent of Calculus.resolve, not a word"
+
+[[local]]
+type = "publish.Publish"
+why = "an index publication step (replace, keep, retry): protocol, not a word"
+
+[[local]]
+type = "referent.Relation"
+why = "Git's ancestry relation of two commits: a fact handed to Calculus.settle, not a word"
+
+[[local]]
+type = "runs.Shown"
+why = "how a listing shows a run: presentation, not a word"
+
+[[local]]
+type = "runs.State"
+why = "a run's recorded state as a listing reads it: an input fact, not a word"
+
+[[local]]
+type = "subject.Pick"
+why = "which subject was chosen: a referent of Calculus.resolve (subject::pick is linked), not a word"
+
+[[local]]
+type = "units.Absent"
+why = "the first reason a scope gives no universe: a refusal's name; units::universe is linked through Calculus.whole"
+
+[[local]]
+type = "units.Moved"
+why = "which input of a unit moved: a report, not a word"

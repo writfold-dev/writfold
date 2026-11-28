@@ -8,13 +8,8 @@ Writfold.Core.Catalog.owned_delta_exact
 Writfold.Core.Catalog.absent_unwanted_kept
 Writfold.Core.Catalog.conflicts_spec
 Writfold.Core.Catalog.changes_spec
-Writfold.Core.Catalog.verdict_spec
-Writfold.Core.Catalog.plan_spec
-Writfold.Core.Catalog.clean_iff
-Writfold.Core.Catalog.invalid_iff
 Writfold.Core.Catalog.patches_spec
 Writfold.Core.Catalog.partial_never_patches
-Writfold.Core.Catalog.plan_total
 Writfold.Core.Handoff.complete_evidence_unchanged
 Writfold.Core.Handoff.incomplete_evidence_never_accepted
 Writfold.Core.Handoff.accepted_implies_evidence_complete
@@ -62,9 +57,6 @@ Writfold.Core.Publish.equal_keeps
 Writfold.Core.Publish.derived_replace_iff
 Writfold.Core.Graph.affected_iff
 Writfold.Core.Graph.delta_eq_full_keyed
-Writfold.Core.Graph.plan_skip_iff
-Writfold.Core.Graph.plan_delta_iff
-Writfold.Core.Graph.plan_total
 Writfold.Core.Graph.frame
 Writfold.Core.Graph.delta_eq_full
 Writfold.Core.Handoff.item_spec
@@ -85,9 +77,6 @@ Writfold.Core.Gate.standing_met_iff
 Writfold.Core.Gate.satisfied_only_by_current_pass
 Writfold.Core.Gate.met_only_when_current
 Writfold.Core.Checklist.item_covered_iff
-Writfold.Core.Checklist.rollup_under_spec
-Writfold.Core.Checklist.rollup_covered_iff
-Writfold.Core.Checklist.rollup_optional_irrelevant
 Writfold.Core.Checklist.state_spec
 Writfold.Core.Checklist.standing_met_iff
 Writfold.Core.Checklist.checklist_met_iff

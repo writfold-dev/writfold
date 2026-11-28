@@ -69,6 +69,11 @@ MUTANTS = (
            '    if changed {\n        return Verdict::Drift;',
            '    if false {\n        return Verdict::Drift;',
            ("Writfold.Core.Catalog.verdict_spec",)),
+    # catalog (#211): a plan judges its slots' conflicts, so catalog::plan can be a claim
+    Mutant("catalog-plan-ignores-conflict", "catalog.rs",
+           '    verdict(complete, conflict, changed)',
+           '    verdict(complete, false, changed)',
+           ("Writfold.Core.Catalog.plan_spec",)),
     # catalog: the folds see every slot; an invalid plan emits no patch
     Mutant("catalog-conflict-skips-last", "catalog.rs",
            '    while index < slots.len() {\n        if conflicts(',
@@ -815,6 +820,11 @@ MUTANTS = (
            ("Writfold.Core.Checklist.item_spec", "Writfold.Core.Checklist.item_none_found_iff")),
     # checklist: only required items are owed
     # (`rollup_under` reads `required` through `owes`)
+    # checklist (#211): covered only when nothing required is owed
+    Mutant("rollup-covered-always", "checklist.rs",
+           "        covered: first.is_none(),",
+           "        covered: true,",
+           ("Writfold.Core.Checklist.rollup_under_spec",)),
     Mutant("rollup-ignores-required", "checklist.rs",
            "    entry.required && !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)",
            "    !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)",
