@@ -160,8 +160,12 @@ fn eval(common: &Common, positional: &[String], cwd: &Path) -> Result<Verb, Stri
 
 fn repos(common: &Common, positional: &[String]) -> Result<Verb, String> {
     match positional {
+        [] if common.missing && common.need_blobs => {
+            Err("repos takes --missing or --need-blobs, not both".into())
+        }
         [] => Ok(Verb::Repos {
             missing: common.missing,
+            need_blobs: common.need_blobs,
         }),
         _ => Err("repos takes no arguments".into()),
     }

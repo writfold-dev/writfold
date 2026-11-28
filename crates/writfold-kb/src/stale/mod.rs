@@ -14,7 +14,7 @@ pub mod kind_check;
 pub mod kinds;
 mod pin_receipt;
 pub(crate) use pin_receipt::plan as pin_plan;
-mod partial;
+pub(crate) mod partial;
 mod pinned;
 mod rename;
 pub mod repos;
