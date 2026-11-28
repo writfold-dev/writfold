@@ -192,3 +192,66 @@ fn the_effective_posture_is_the_stricter_of_file_and_registration() -> TestResul
     );
     Ok(())
 }
+
+#[test]
+fn lint_names_a_missing_required_rule_and_warns_on_an_audit_one() -> TestResult {
+    let w = world(&[])?;
+    let audit = COMMIT.replace(
+        "action = \"deny\"\n",
+        "action = \"deny\"\nmode = \"audit\"\n",
+    );
+    put(&w.kb.join(".writfold/guards/commit.toml"), &audit)?;
+    put(
+        &w.kb.join(".writfold/guards.toml"),
+        &format!("{SITE}posture = \"deny\"\nrequired = [\"commit\", \"push\"]\n"),
+    )?;
+    let mut request = w.request(writfold_kb::Verb::Lint {
+        paths: Vec::new(),
+        repo: None,
+        deny_warnings: false,
+        records: false,
+    });
+    request.json = true;
+    let (text, exit) = w.run(&request)?;
+    assert_ne!(exit, 0, "{text}");
+    let body: Value = serde_json::from_str(&text)?;
+    let found = body["diagnostics"].as_array().ok_or("diagnostics")?;
+    let code = |c: &str| {
+        found
+            .iter()
+            .find(|d| d["code"] == c && d["file"] == ".writfold/guards.toml")
+    };
+    let missing = code("ref.undefined").ok_or("ref.undefined")?;
+    assert!(
+        missing["message"].as_str().unwrap_or("").contains("push"),
+        "{text}"
+    );
+    let audit = code("policy.required-audit").ok_or("policy.required-audit")?;
+    assert_eq!(audit["severity"], "warning", "{text}");
+    Ok(())
+}
+
+#[test]
+fn kb_policy_lists_the_site_file_and_counts_it_in_the_identity() -> TestResult {
+    let w = world(&[])?;
+    put(&w.kb.join(".writfold/guards/commit.toml"), COMMIT)?;
+    let identity = |w: &World| -> TestResult<(String, String)> {
+        let (text, _) = w.run(&w.request(writfold_kb::Verb::Policy))?;
+        let id = text
+            .split_whitespace()
+            .find_map(|word| word.strip_prefix("identity="))
+            .ok_or_else(|| format!("no identity: {text}"))?
+            .to_owned();
+        Ok((id, text))
+    };
+    let (before, text) = identity(&w)?;
+    assert!(!text.contains("guard-site"), "{text}");
+    put(
+        &w.kb.join(".writfold/guards.toml"),
+        &format!("{SITE}posture = \"deny\"\nrequired = [\"commit\"]\n"),
+    )?;
+    let (after, text) = identity(&w)?;
+    assert_ne!(before, after);
+    assert!(text.contains("posture=deny required=commit"), "{text}");
+    Ok(())
+}

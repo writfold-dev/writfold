@@ -201,6 +201,7 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
         .extend(modes.iter().map(|m| crate::deliver::modes::row(root, m)));
     answer.rows.extend(route_rows(root));
     let stores = store_lines(root, &mut lines)?;
+    site_line(root, &mut lines, &mut answer.rows);
     lines.sort();
     let mut material = lines.join("\n");
     material.push('\n');
@@ -285,6 +286,30 @@ fn store_lines(root: &Path, lines: &mut Vec<String>) -> Result<usize> {
         ));
     }
     Ok(stores.iter().count())
+}
+
+/// The guard site file (#184) decides what an undecided event gets: it
+/// joins the identity as one line and is listed; a KB without it keeps the
+/// identity it had. One that does not parse is `kb lint`'s to report.
+fn site_line(root: &Path, lines: &mut Vec<String>, rows: &mut Vec<Row>) {
+    let Ok(Some(site)) = crate::guard::posture::read(root) else {
+        return;
+    };
+    let required = site.required.join(",");
+    lines.push(format!("site:\t{}\t{required}", site.posture.name()));
+    rows.push(Row {
+        kind: "guard-site",
+        id: "guards".into(),
+        text: format!(
+            "posture={} required={} (what an undecided event gets; a guard, not enforcement)",
+            site.posture.name(),
+            if required.is_empty() { "-" } else { &required }
+        ),
+        path: Some(crate::guard::posture::FILE.into()),
+        line: Some(1),
+        section: Some("policy"),
+        ..Row::default()
+    });
 }
 
 /// An unreadable gate directory leaves the inventory partial (#56), and a

@@ -29,6 +29,7 @@ pub enum Kind {
     Record,
     Catalog,
     Harness,
+    Site,
     Tool,
     Skill,
     Agent,
@@ -78,6 +79,7 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
         Kind::Record => None,
         Kind::Catalog => crate::catalog::decl::check(text, stem, shown).err(),
         Kind::Harness => crate::guard::binding::check(text, stem, shown).err(),
+        Kind::Site => crate::guard::posture::check(text, shown).err(),
         Kind::Tool | Kind::Skill | Kind::Agent => {
             let top = crate::agents::inspect::top_of(dir);
             (crate::agents::refs::def_kind(kind))
@@ -238,6 +240,7 @@ pub fn execute(
     };
     if !records {
         all.extend(queries(kb));
+        all.extend(super::lint_site::file(kb));
     }
     if let Some(top) = &repo {
         let name = top
