@@ -334,6 +334,7 @@ Two things changed for listed calls in v0.6.0-dev.4: a withdrawn candidate no lo
 Built in v0.6.0-dev.31 ([#187](https://github.com/writfold-dev/writfold/issues/187)). Without the keys below the guard judges only what its lists name: a `gh gist create` beside a routed `gh pr comment` passes in silence, as before. With them, **every** simple command of a Bash line and every tool call gets a class:
 
 ```toml
+schema = "writfold-guard/1"
 local = ["ls", "cargo test", "git status"]     # what the team says stays here
 local_tools = ["Edit", "Write", "Read"]
 unclassified = "log"                            # pass | log | ask | deny
