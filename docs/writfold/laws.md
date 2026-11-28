@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=64 declared_out=76 remainder=123 of 263`
+`LAW_COVERAGE judged=85 declared_out=124 remainder=54 of 263`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: the backlog in
@@ -169,7 +169,7 @@ All hold exactly when each one holds.
 all_eq_yes (ts : List Tri) : all ts = yes ↔ ∀ t ∈ ts, t = yes
 ```
 
-- Implemented by: `compose.covers`, `delivery.postable`, `guard.all_met`, `guard.gates_fact`, `guard.nudge_with`, `guard.nudge`, `guard.require.gate_fact`, `guard.require.gates_read`, `guard.require.run_current`, `guard.require.settled_fact`, `guard.require.step_fact`, `plan.first_owed`, `plan.round.all_met`, `plan.round.exit`
+- Implemented by: `compose.covers`, `delivery.postable`, `guard.all_met`, `guard.gates_fact`, `guard.nudge_with`, `guard.nudge`, `guard.require.gate_fact`, `guard.require.gates_read`, `guard.require.run_current`, `guard.require.settled_fact`, `guard.require.step_fact`, `pin.current_under`, `pin.holds`, `plan.first_owed`, `plan.round.all_met`, `plan.round.exit`
 - Caught by: `all-empty-unknown`
 
 ### `Calculus.Tri.all_eq_no`
@@ -212,7 +212,7 @@ Unknown never admits, in any company.
 unknown_mem_never_admits {ts : List Tri} (h : unknown ∈ ts) : (all ts).admits = false
 ```
 
-- Implemented by: `guard.all_met`, `guard.require.gate_fact`, `guard.require.gates_read`, `guard.require.settled_fact`, `guard.require.step_fact`
+- Implemented by: `guard.all_met`, `guard.require.gate_fact`, `guard.require.gates_read`, `guard.require.settled_fact`, `guard.require.step_fact`, `pin.holds`
 - Caught by: `admits-unknown`
 
 ### `Calculus.Tri.more_never_admits`
@@ -223,7 +223,7 @@ Adding an obligation never makes an unmet set met (3.4).
 more_never_admits (xs ys : List Tri) : (all (xs ++ ys)).admits = true → (all xs).admits = true
 ```
 
-- Implemented by: `guard.all_met`
+- Implemented by: `guard.all_met`, `pin.current_under`, `pin.holds`
 - Derived: all_append, admits_iff
 
 ### `Calculus.Decision.join_comm`
@@ -389,7 +389,7 @@ Law U: a universal word holds exactly when the universe is whole, every judged m
 universal_yes_iff (e : Bool) (ms : List (Member × Tri)) : universal e ms = .yes ↔ whole (ms.map (·.1)) = true ∧ (∀ t ∈ judgedOf ms, t = .yes) ∧ (e = true ∨ judgedOf ms ≠ [])
 ```
 
-- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`
+- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`, `policy.summary`
 - Caught by: `universal-skips-whole`, `universal-empty-yes`
 
 ### `Calculus.remainder_never_whole`
@@ -400,7 +400,7 @@ Law U: the word holds only when the remainder is zero.
 remainder_never_whole (e : Bool) (ms : List (Member × Tri)) (h : Member.remainder ∈ ms.map (·.1)) : universal e ms ≠ .yes
 ```
 
-- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`
+- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`, `policy.summary`
 - Derived: universal_yes_iff, whole_iff_no_remainder
 
 ### `Calculus.empty_never_yes`
@@ -411,7 +411,7 @@ remainder_never_whole (e : Bool) (ms : List (Member × Tri)) (h : Member.remaind
 empty_never_yes (ms : List (Member × Tri)) (h : judgedOf ms = []) : universal false ms ≠ .yes
 ```
 
-- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.unplanned_clean`
+- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.unplanned_clean`, `policy.summary`
 - Derived: universal_yes_iff
 
 ### `Calculus.universal_sound`
@@ -442,7 +442,7 @@ An existential word holds exactly when a witness was found.
 search_yes_iff (w f : Bool) : search w f = .yes ↔ f = true
 ```
 
-- Implemented by: `delivery.guard_any`
+- Implemented by: `delivery.guard_any`, `pin.nothing_found`
 - Derived: the first branch of search
 
 ### `Calculus.absence_needs_whole`
@@ -453,7 +453,7 @@ A partial universe never proves that something is absent.
 absence_needs_whole (w f : Bool) (h : search w f = .no) : w = true
 ```
 
-- Implemented by: `delivery.guard_any`
+- Implemented by: `delivery.guard_any`, `pin.nothing_found`
 - Caught by: `search-partial-says-no`
 
 ## Evidence: classes, policy, one record decides
@@ -468,6 +468,7 @@ A class is never promoted.
 class_never_promoted (c : Class) (p : Bool) (o : Tri) (c' : Class) (h : (stand c p o).cls = some c') : c' = c
 ```
 
+- Implemented by: `checklist.standing`, `delivery.posted`, `gate.standing`, `ground.of_delivery`, `ground.of_gate`, `ground.of_observation`, `ground.of_receipt`, `ground.of_statement`, `ground.of_token`
 - Caught by: `attested-reads-satisfied`
 
 ### `Calculus.satisfied_only_by_current_pass`
@@ -478,6 +479,7 @@ Only a current mechanical pass is satisfied.
 satisfied_only_by_current_pass (c : Class) (p : Bool) (o : Tri) (h : stand c p o = .satisfied) : c = .checked ∧ p = true ∧ o = .yes
 ```
 
+- Implemented by: `checklist.standing`, `checklist.state`, `delivery.posted`, `delivery.rechecked`, `gate.standing`, `ground.of_delivery`, `ground.of_observation`, `ground.of_receipt`, `ground.of_token`
 - Caught by: `attested-reads-satisfied`
 
 ### `Calculus.met_inf`
@@ -488,7 +490,7 @@ satisfied_only_by_current_pass (c : Class) (p : Bool) (o : Tri) (h : stand c p o
 met_inf (s : Standing) (a b : Accept) : met s (a.inf b) = (met s a && met s b)
 ```
 
-- Implemented by: `delivery.unmet`, `plan.fact_met`, `policy.met`
+- Implemented by: `delivery.standing`, `delivery.unmet`, `plan.fact_met`, `policy.met`
 - Caught by: `inf-is-or`
 
 ### `Calculus.met_narrows`
@@ -499,7 +501,7 @@ A narrower policy meets no more than a wider one.
 met_narrows (s : Standing) {a b : Accept} (h : a.le b) : met s a = true → met s b = true
 ```
 
-- Implemented by: `delivery.unmet`, `plan.fact_met`, `policy.met`
+- Implemented by: `delivery.standing`, `delivery.unmet`, `gate.Standing.met`, `plan.fact_met`, `policy.met`
 - Derived: decided over the standings and the policy's three fields
 
 ### `Calculus.reported_never_met`
@@ -510,7 +512,7 @@ Law S: a reported fact meets no policy.
 reported_never_met (a : Accept) : met .reported a = false
 ```
 
-- Implemented by: `plan.fact_met`, `policy.met`
+- Implemented by: `delivery.standing`, `gate.Standing.met`, `plan.fact_met`, `policy.met`
 - Caught by: `reported-accepted`
 
 ### `Calculus.unknown_never_met`
@@ -521,7 +523,7 @@ Unknown meets no policy.
 unknown_never_met (a : Accept) : met .unknown a = false
 ```
 
-- Implemented by: `delivery.unmet`, `plan.fact_met`, `policy.met`
+- Implemented by: `delivery.standing`, `delivery.unmet`, `gate.Standing.met`, `plan.fact_met`, `policy.met`
 - Derived: the definition of met
 
 ### `Calculus.inf_comm`
@@ -572,6 +574,7 @@ No record decides exactly when none counts.
 deciding_none_iff {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) : deciding seq counts rs = none ↔ ∀ r ∈ rs, counts r = false
 ```
 
+- Implemented by: `gate.newest_bound`, `gate.state`
 - Caught by: `deciding-takes-oldest`, `deciding-counts-unbound`
 
 ### `Calculus.uncounted_never_decides`
@@ -582,6 +585,7 @@ A record that does not count never changes which record decides.
 uncounted_never_decides {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (r : α) (h : counts r = false) : deciding seq counts (r :: rs) = deciding seq counts rs
 ```
 
+- Implemented by: `delivery.deciding`, `gate.judge`, `gate.state`
 - Caught by: `deciding-counts-unbound`
 
 ### `Calculus.deciding_mem`
@@ -602,6 +606,7 @@ deciding_mem {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α
 deciding_is_newest {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (r : α) (h : deciding seq counts rs = some r) : ∀ r' ∈ rs, counts r' = true → seq r' ≤ seq r
 ```
 
+- Implemented by: `delivery.deciding`, `gate.judge`, `gate.newest_bound`, `gate.state`
 - Caught by: `deciding-takes-oldest`, `deciding-counts-unbound`
 
 ### `Calculus.older_never_outvotes`
@@ -612,6 +617,7 @@ deciding_is_newest {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : L
 older_never_outvotes {α : Type} (seq : α → Nat) (counts : α → Bool) (rs : List α) (newer older : α) (hn : newer ∈ rs) (hc : counts newer = true) (hlt : seq older < seq newer) : deciding seq counts rs ≠ some older
 ```
 
+- Implemented by: `delivery.deciding`, `gate.judge`, `gate.state`
 - Derived: deciding_is_newest
 
 ## Sites and postures (law S)
@@ -839,16 +845,33 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 |---|---|---|
 | `account.remainder` | `Calculus.remainder` | `Writfold.Core.Conform.remainder_implements` |
 | `account.whole` | `Calculus.whole` | `Writfold.Core.Conform.whole_implements` |
+| `checklist.standing` | `Calculus.stand` | `Writfold.Core.Conform.checklist_standing_implements` |
+| `checklist.state` | `Calculus.stand` | `Writfold.Core.Conform.checklist_state_implements` |
 | `compose.closure` | `Calculus.admit` | `Writfold.Core.Conform.compose_closure_implements` |
 | `compose.covers` | `Calculus.Tri.all` | `Writfold.Core.Conform.compose_covers_implements` |
+| `delivery.deciding` | `Calculus.deciding` | `Writfold.Core.Conform.delivery_deciding_implements` |
 | `delivery.guard` | `Calculus.universal` | `Writfold.Core.Conform.delivery_guard_implements` |
 | `delivery.guard_all` | `Calculus.universal` | `Writfold.Core.Conform.delivery_guard_all_implements` |
 | `delivery.guard_any` | `Calculus.search` | `Writfold.Core.Conform.delivery_guard_any_implements` |
 | `delivery.postable` | `Calculus.Tri.all` | `Writfold.Core.Conform.delivery_postable_implements` |
+| `delivery.posted` | `Calculus.stand` | `Writfold.Core.Conform.delivery_posted_implements` |
 | `delivery.ready` | `Calculus.universal` | `Writfold.Core.Conform.delivery_ready_implements` |
+| `delivery.rechecked` | `Calculus.stand` | `Writfold.Core.Conform.delivery_rechecked_implements` |
+| `delivery.standing` | `Calculus.met` | `Writfold.Core.Conform.delivery_standing_implements` |
 | `delivery.unmet` | `Calculus.met` | `Writfold.Core.Conform.delivery_unmet_implements` |
+| `gate.Standing.met` | `Calculus.met` | `Writfold.Core.Conform.gate_met_implements` |
+| `gate.judge` | `Calculus.deciding` | `Writfold.Core.Conform.gate_judge_implements` |
+| `gate.newest_bound` | `Calculus.deciding` | `Writfold.Core.Conform.gate_newest_bound_implements` |
 | `gate.outcome` | `Calculus.settle` | `Writfold.Core.Conform.gate_outcome_implements` |
 | `gate.outcome_kept` | `Calculus.Tri.and` | `Writfold.Core.Conform.gate_outcome_kept_implements` |
+| `gate.standing` | `Calculus.stand` | `Writfold.Core.Conform.gate_standing_implements` |
+| `gate.state` | `Calculus.deciding` | `Writfold.Core.Conform.gate_state_implements` |
+| `ground.of_delivery` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_delivery_implements` |
+| `ground.of_gate` | `Calculus.Standing.cls` | `Writfold.Core.Conform.ground_of_gate_implements` |
+| `ground.of_observation` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_observation_implements` |
+| `ground.of_receipt` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_receipt_implements` |
+| `ground.of_statement` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_statement_implements` |
+| `ground.of_token` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_token_implements` |
 | `guard.all_met` | `Calculus.Tri.all` | `Writfold.Core.Conform.guard_all_met_implements` |
 | `guard.call.decide_all` | `Calculus.Decision.join` | `Writfold.Core.Conform.guard_decide_all_implements` |
 | `guard.call.ruled` | `Calculus.admit` | `Writfold.Core.Conform.guard_ruled_implements` |
@@ -874,6 +897,9 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `invoke.prepare` | `Calculus.admit` | `Writfold.Core.Conform.prepare_implements` |
 | `invoke.prepare_check` | `Calculus.admit` | `Writfold.Core.Conform.prepare_check_implements` |
 | `packet.complete` | `Calculus.whole` | `Writfold.Core.Conform.packet_complete_implements` |
+| `pin.current_under` | `Calculus.Tri.all` | `Writfold.Core.Conform.pin_current_under_implements` |
+| `pin.holds` | `Calculus.Tri.all` | `Writfold.Core.Conform.pin_holds_implements` |
+| `pin.nothing_found` | `Calculus.search` | `Writfold.Core.Conform.pin_nothing_found_implements` |
 | `plan.advance` | `Calculus.admit` | `Writfold.Core.Conform.plan_advance_implements` |
 | `plan.advance_check` | `Calculus.admit` | `Writfold.Core.Conform.plan_advance_check_implements` |
 | `plan.fact_met` | `Calculus.met` | `Writfold.Core.Conform.plan_fact_met_implements` |
@@ -890,6 +916,7 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `policy.lines.owed_met` | `Calculus.universal` | `Writfold.Core.Conform.owed_met_implements` |
 | `policy.met` | `Calculus.met` | `Writfold.Core.Conform.policy_met_implements` |
 | `policy.repin.repin_check` | `Calculus.admit` | `Writfold.Core.Conform.repin_check_implements` |
+| `policy.summary` | `Calculus.universal` | `Writfold.Core.Conform.policy_summary_implements` |
 | `prose.verdict` | `Calculus.settle` | `Writfold.Core.Conform.prose_verdict_implements` |
 | `referent.judge` | `Calculus.judge` | `Writfold.Core.Conform.judge_implements` |
 | `referent.settle` | `Calculus.settle` | `Writfold.Core.Conform.settle_implements` |
@@ -910,16 +937,29 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `gate.Ending` | `Calculus.Tri` | `endingTri` (onto: `endingTri_onto`) |
 | `gate.Outcome` | `Calculus.Tri` | `outcomeTri` (onto: `outcomeTri_onto`) |
 | `gate.Standing` | `Calculus.Standing` | `standingOf` (onto: `standingOf_onto`) |
+| `gate.State` | `Calculus.Tri` | `stateTri` (onto: `stateTri_onto`) |
+| `grounding.Grounding` | `Calculus.Standing` | `groundingOf` (onto: `groundingOf_onto`) |
 | `guard.Action` | `Calculus.Action` | `actionOf` (onto: `actionOf_onto`) |
 | `guard.Decision` | `Calculus.Decision` | `decisionOf` (onto: `decisionOf_onto`) |
 | `guard.Fact` | `Calculus.Tri` | `factTri` (onto: `factTri_onto`) |
+| `policy.How` | `Calculus.Class` | `howClass` (onto: `howClass_onto`) |
 
 ## Declared out
 
 | Function | Why |
 |---|---|
 | `account.left` | the per-member test inside account::remainder, linked through it (left_spec) |
+| `bind.answered` | whether some grounded reference answers a need (answered_iff); a witness search with no account of a universe |
+| `bind.answered_from` | the loop inside bind.answered (answered_from_loop_spec) |
+| `bind.answers` | whether a reference's binding answers a need (answers_spec); a matching table, about no law of the core |
+| `bind.item_under` | a row's item under a binding answer (item_under_spec); returns the local checklist.Item |
 | `bytes.same` | byte equality, the plumbing under every key and path comparison (same_spec) |
+| `checklist.any_stale` | whether any required row is stale (any_stale_spec); inside rollup_under |
+| `checklist.covered_under` | a row's coverage under the checklist's policy (covered_under_spec); the per-member test of rollup_under (#211) |
+| `checklist.first_owed` | the first owed entry, a witness for the report (first_owed_spec); inside rollup_under |
+| `checklist.item` | a row's six-word state from a parsed row (item_spec); its coverage is decided per policy by covered_under |
+| `checklist.owes` | a required entry not covered (owes_spec): the remainder test inside rollup_under |
+| `checklist.stale` | whether an entry's row is stale (stale_spec); inside rollup_under |
 | `command.is_help` | reads one command word; a parser, not a judgment (is_help_spec) |
 | `command.named` | matches a command name against a prefix; a parser, not a judgment (named_spec) |
 | `decision.facts` | collects the facts a decision write is checked on; the decision-state table (#213) |
@@ -928,7 +968,12 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `decision.needs` | what a decision-state transition needs; the decision-state table |
 | `decision.step` | the decision-state transition table (step_spec) |
 | `decision.writes` | whether a decision write has what its transition needs; the decision-state table (writes_spec) |
+| `delivery.fact` | packages delivery.standing and delivery.ready as a plan gate fact (fact_met_iff_ready); linked through delivery.standing |
 | `delivery.first_unmet` | names the lowest unmet line, the refusal's index; ready decides (first_unmet_spec) |
+| `delivery.is_attested` | a constructor test on a standing, inside delivery.standing (is_attested_spec) |
+| `delivery.is_bound` | a constructor test on a candidate's place (is_bound_spec) |
+| `delivery.is_open` | a constructor test on a candidate's place (is_open_spec) |
+| `delivery.is_waived` | a constructor test on a standing, inside delivery.standing (is_waived_spec) |
 | `delivery.refused` | whether the first unmet line is a met standing the policy refused; a message choice (refused_iff) |
 | `diag.blocks` | whether diagnostics block under a deny setting; a severity rule, no law above it (blocks_iff) |
 | `find.admit` | find's result limit: whether one more hit is shown (admit_iff) |
@@ -940,6 +985,14 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `find.query_ok` | whether a query is well formed (query_ok_spec) |
 | `find.show` | which hits find shows, in order (show_spec) |
 | `find.starts` | whether a word starts with a prefix (starts_spec) |
+| `gate.about` | byte equality of a record's definition and content with the present ones (about_spec); an input of the deciding record's counts predicate |
+| `gate.attests` | whether one statement is a bound attestation (attests_spec); inside gate.statements |
+| `gate.bound` | a conjunction of three facts (bound_spec); an input of the counts predicate |
+| `gate.current` | the counts predicate of the deciding receipt (current_spec); linked through gate.state |
+| `gate.evidence` | assembles a receipt's facts from bytes (evidence_spec); linked through gate.judge |
+| `gate.stands` | whether one statement is about the present (stands_spec); inside gate.statements, whose flags gate.standing reads |
+| `gate.statements` | folds statements into three flags (statements_spec); the flags are gate.standing's inputs, linked there |
+| `ground.moved` | compares a recorded grounding with today's (moved_iff): change detection, about no law of the core |
 | `guard.call.logged` | whether a decision is written to the guard log; a record of the decision, not a decision (logged_iff) |
 | `handoff.first_failing` | names the lowest failing item, the refusal's index; strict decides (first_failing_spec) |
 | `handoff.item` | one item's refusal reason; strict decides acceptance through itemOf (item_spec) |
@@ -950,6 +1003,13 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `investigation.Missing.none` | whether an investigation conclusion lacks nothing; the investigation-state table (none_spec) |
 | `investigation.conclude` | what an investigation conclusion still lacks; the investigation-state table (conclude_spec) |
 | `invoke.first_unmet` | names the lowest unmet need, the refusal's index; prepare decides (first_unmet_spec) |
+| `observe.embeds` | whether a look's status carries citations to embed (embeds_iff); a rendering choice |
+| `observe.grounds` | an ok look with fresh citations (grounds_iff); inside ground.of_observation, linked there |
+| `order.less` | byte-lexicographic order (less_spec); a total order, about no law of the core |
+| `order.newest` | the newest by (seq, name): Calculus.deciding orders by a Nat seq alone and cannot express the name tiebreak (newest_spec) |
+| `order.precedes` | the (seq, name) order (precedes_spec); a total order, about no law of the core |
+| `pin.holds_from` | the loop inside pin.holds, linked through it (holds_from_loop_spec) |
+| `pin.timed` | a pin's age from a lifetime and a clock (timed_spec); arithmetic on time, about no law of the core |
 | `plan.close_check` | names the first owed line when the last step closes; the refusal's index (close_check_spec) |
 | `plan.closed` | whether a plan node is done or skipped; the plan's order (closed_spec) |
 | `plan.contains` | whether a splice key is already in the plan; the plan's order (contains_spec) |
@@ -969,9 +1029,24 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `plan.splice` | inserts nodes into the plan; the plan's order (splice_spec) |
 | `plan.splice_check` | where a splice inserts, or that it already did; the plan's order (splice_check_spec) |
 | `plan.stale` | whether a done step's gates no longer hold; the plan's order (stale_spec, stale_never_current) |
+| `policy.all_passed` | whether every step passed (all_passed_spec); inside summary, linked there |
+| `policy.any_attested` | whether any gate was met by attestation (any_attested_spec); inside policy.close |
+| `policy.any_moved` | whether any pin moved (any_moved_spec); inside pin_all |
+| `policy.any_open` | whether any step is open (any_open_spec); inside summary, linked there |
+| `policy.any_unpinned` | whether any pin is unpinned (any_unpinned_spec); inside pin_all |
+| `policy.any_waived` | whether any gate was met by waiver (any_waived_spec); inside policy.close |
+| `policy.close` | a step's close: done (with its weakest class), skipped or open (close_spec); the core has no weakest-class operation, and summary reads the close as a member (closeMember) |
+| `policy.how_attested` | a constructor test on how a gate was met (how_attested_spec); inside policy.close |
+| `policy.how_waived` | a constructor test on how a gate was met (how_waived_spec); inside policy.close |
+| `policy.is_moved` | a constructor test on a policy pin (is_moved_spec) |
+| `policy.is_open` | a constructor test on a close (is_open_spec); inside summary |
+| `policy.is_passed` | a constructor test on a close (is_passed_spec); inside summary |
+| `policy.is_unpinned` | a constructor test on a policy pin (is_unpinned_spec) |
 | `policy.lines.all_skipped` | whether every closing line was skipped; a summary label (all_skipped_spec) |
 | `policy.lines.closes` | whether a summary closes the run; a label read, used inside lines_clean (closes_spec) |
 | `policy.lines.is_skipped` | whether one closing line was skipped (is_skipped_spec) |
+| `policy.pin_all` | combines pins: moved if any moved, else unpinned if any is (pin_all_spec); a fact policy.summary reads |
+| `policy.pin_one` | a policy pin from recorded and present bytes (pin_one_spec); a fact, about no law of the core |
 | `policy.repin.in_force` | the newest pin in force; an index (in_force_spec) |
 | `prose.agrees` | cross-checks a recorded outcome with its blocking count (agrees_spec) |
 | `prose.blocking` | counts blocking alerts; plumbing inside prose::verdict (blocking_spec) |
@@ -994,3 +1069,6 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `vale.rules` | how many rules a Vale run enabled; the resolved input of vale::settle (rules_spec) |
 | `vale.usable` | whether a Vale run can be read; the resolved input of vale::settle (usable_spec) |
 | `vale.weigh` | an alert's weight under the blocking level (weigh_spec) |
+| `verdict.recorded.best_recorded` | the best recorded statement under Before (recorded time, then severity); Calculus.deciding's Nat seq cannot express that order (best_recorded_spec) |
+| `verdict.recorded.better` | one step of best_recorded under Before (better_spec) |
+| `verdict.recorded.newest` | picks the local or the best recorded statement by age and Before (newest_spec); the same order, inexpressible as a Nat seq |
