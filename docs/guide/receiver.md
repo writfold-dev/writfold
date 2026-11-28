@@ -53,3 +53,5 @@ Each prevents landing a commit on the protected branch whose required gates, as 
 - **Other workers' evidence:** the receiver trusts only runs it made. Evidence produced on another machine needs signing, which is not built ([#64](https://github.com/writfold-dev/writfold/issues/64)).
 
 The receiver's KB is ordinary Git text: commit it to keep what each push was judged on.
+
+What Writfold cannot enforce here, and what it offers instead, is listed in [assurance: limits](assurance.md#limits).

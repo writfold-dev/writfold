@@ -2,7 +2,7 @@
 rfc: "2026-11-27-guard-check-and-posture"
 title: "The guard site without a harness: `guard check`, a neutral event, harness bindings and a declared posture"
 status: accepted
-implementation: in-progress
+implementation: done
 authors:
   - fable
 created: 2026-11-27
@@ -328,3 +328,19 @@ default. A binding file is read only by `guard check --harness` and
   left implicit. The guard log keeps `via: hook` for the hook and writes
   `via: check` for `guard check` and bindings. `guard check --event stop`
   is slice 2.
+- 2026-11-28 (slice 2 as built, #184): `writfold_core::site` (decide,
+  stricter, block_again) with the theorems listed above, linked to
+  `Calculus.Site.decide` and `Calculus.Posture.stricter`; `block_again`
+  is declared out (a schedule, not a judgment). The site's decision for
+  an event with any undecided cause is the judged decision joined with
+  `site::decide(Undecided, posture)` by the proved `guard::combine`, so a
+  broken rule file beside a matched deny rule still denies under `open`,
+  as before. `file.twice` problems are not causes. A delivery guard
+  configuration that does not parse still passes with a note under every
+  posture (left out of the list, documented). The deadline shares
+  `WRITFOLD_HOOK_DEADLINE_MS` with session start (8 s here, 20 s there).
+  The plugin's registration branches on `CLAUDE_PLUGIN_OPTION_POSTURE`,
+  since its JSON is static. `guard check --event stop` takes
+  `--stop-active` (another harness's turn boundary) and `--message`, and
+  goes through `kb hook stop` itself. A blocking rule counts with the
+  nudges in `guard status`'s trailer.

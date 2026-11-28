@@ -104,6 +104,38 @@ command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook session-sta
 
 The consequence: hooks are best effort. They may not fire (an interrupt, a crash, another harness), they time out open, and Claude Code can change them. Nothing in Writfold depends on a hook having run.
 
+**Two places, two rules.** For guards, what happens *before* a rule matches is separate from what happens *after*:
+
+- **Before a rule matches** (no KB, input that is not an event, a rule file that does not parse, the binary missing), the call passes by default: the guard site's **posture** is `open`. This is a declared exemption, never an implied one (law S, `Calculus.open_is_declared`).
+- **After a rule matched**, a requirement that cannot be judged never lets the call through: an unknown fact takes the rule's action (`Calculus.unknown_never_passes`, linked to `guard::decide`).
+
+**Choosing another posture** (built in v0.6.0-dev.30, [#184](https://github.com/writfold-dev/writfold/issues/184)). `.writfold/guards.toml` declares what an event the site cannot decide gets, and which rules must load:
+
+```toml
+# .writfold/guards.toml
+schema = "writfold-guard-site/1"
+posture = "deny"                     # open (default) | ask | deny
+required = ["commit-needs-gates"]    # rule ids that must load
+```
+
+An event is **undecided** when the input is not an event, there is no KB, the site file does not parse, a rule file or the rule directory cannot be read or parsed, a required rule did not load, or (under `ask` or `deny`) the hook has not decided by its deadline (8 s, `WRITFOLD_HOOK_DEADLINE_MS`, below the plugin's 10 s timeout; session start shares the variable with its own 20 s default). Under `open` it passes as before. Under `ask` or `deny` it gets that decision, and the reason names the cause and the way out:
+
+```text
+writfold guard (posture deny; a guard, not enforcement): could not decide: .writfold/guards/commit.toml:5:12: unknown requirement "gates.mett"; fix it (writfold kb lint), or a person sets posture = "open" in .writfold/guards.toml
+```
+
+A judged decision is the same under every posture: the posture only reads what the rules could not decide (`judged_unchanged`, `posture_only_narrows`, proved in `proofs/Writfold/Site.lean`). With `ask`, a person approves each call while a rule is broken; with `deny`, the session is wedged until the file is fixed outside it. That is the choice the key makes.
+
+The registration has a posture too, because a KB that cannot be found cannot say what its own is: `kb hook pre-tool-use --posture deny`, `guard check --posture deny`, or the plugin's **posture** option. The effective posture is the stricter of the two (`site::stricter`). With the plugin option set to `ask` or `deny`, the PreToolUse command exits 2 when `writfold` is not on `PATH`, and Claude Code blocks the call:
+
+```sh
+command -v writfold >/dev/null 2>&1 || { [ "${CLAUDE_PLUGIN_OPTION_POSTURE:-open}" = open ] && exit 0; echo "writfold is not on PATH and this plugin is set to posture=…" >&2; exit 2; }; exec writfold kb hook pre-tool-use
+```
+
+`kb lint` checks the site file, reports a required rule that is not defined (`ref.undefined`) and warns about one in audit mode (`policy.required-audit`: it never decides a call). `kb policy` lists the file and counts it in the policy identity. A delivery guard configuration (`.writfold/deliveries/guard.toml`) that does not parse still passes with a note under every posture; it is not in the undecided list.
+
+What the binary cannot close: a hook that is killed or never scheduled, a harness that does not run hooks, and a call the harness does not show a hook. See the [limits](assurance.md#limits).
+
 ## Checkpoint drafts
 
 The compaction, stop and session-end hooks keep one draft per session: the compaction summary, else the last assistant message, plus where the work was. A draft is a JSON file in the KB's Git directory under `writfold/drafts/`. It is local, never committed, and gone with the clone.
@@ -154,7 +186,8 @@ description = "commit only when the run's gates are met"
 | `paths` | optional globs over the file a tool call edits, with `!` exclusions (built in v0.5.0-dev.3, [below](#paths)); only with `tools`, refused with `commands` |
 | `repos` | optional repository names ([how a repository is named](#how-repos-names-a-repository)), with `*` and `!` exclusions; default every repository. The repository is the one the matched command acts on ([below](#how-a-command-is-read)). A rule with `repos` is skipped outside a repository |
 | `require` | one or more of the fixed requirements below; anything else is refused |
-| `action` | `deny` or `ask` (`pre-tool-use` only; Claude Code then asks the user) |
+| `action` | `deny` or `ask` for a `pre-tool-use` rule (with `ask` Claude Code asks the user); `block` for a `stop` rule that ends the turn ([below](#a-stop-rule-that-blocks)) |
+| `limit` | a blocking `stop` rule only: how many times a turn it may block, 1 (the default) to 8 |
 | `description` | shown first in the reason |
 | `repeat` | `stop` rules only: `session` (the default) or `turn` ([below](#the-stop-nudge)) |
 | `mode` | `pre-tool-use` rules only: `enforce` (the default) or `audit`, which judges and logs the rule without deciding the call ([below](#trying-a-rule-audit-mode); built in v0.6.0-dev.1). Any other value, and `mode` on a `stop` rule, is refused |
@@ -167,7 +200,17 @@ description = "commit only when the run's gates are met"
 | `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed). Its deliveries are judged with its gates (built in v0.6.0-dev.1): `step deliver owes deliver:pr-comment [open]; next: writfold kb deliver prepare --mode pr-comment --from FILE` |
 | `step.settled` | `step.met`, or the current step is a **spent loop** (built in v0.6.0-dev.15, [#79](https://github.com/writfold-dev/writfold/issues/79)): every round used without meeting its gates, so the session has nothing left there but to report. A Stop rule on it keeps a session going round a loop (its text names `writfold kb plan again`) and goes quiet when the loop is spent, where `step.met` would keep nudging. An unread plan is never settled |
 
-`step.met` is a statement about a plan step, so a run without a plan meets it: a Stop rule built on it stays quiet when there is nothing to finish. When a missing plan, or a missing run, should not pass, put `run.current` or `gates.met` beside it in `require`.
+What a session with no run, and a run with no plan, get from each requirement:
+
+| Requirement | No current run | A run with no plan |
+|---|---|---|
+| `run.current` | unmet | met |
+| `gates.met` | unknown (a refusal) | every gate defined for the repository is owed |
+| `gate:<id>` | unknown (a refusal) | judged |
+| `step.met` | unmet | met |
+| `step.settled` | unmet | met |
+
+So "no plan" never means "no obligation" by itself: `step.met` is a statement about a plan step, and a run without a plan meets it, so a Stop rule built on it alone stays quiet when there is nothing to finish. When a missing plan, or a missing run, should not pass, put `run.current` or `gates.met` beside it in `require`.
 
 A refusal names each unmet requirement and the command that would meet it, taken from `gate status`'s `next:` lines:
 
@@ -367,6 +410,14 @@ separate delivery guard is not evaluated, and an existing delivery configuration
 is noted. The [watch Guards view](watch.md) shows this same answer even when a
 different run is selected.
 
+### Without a harness
+
+These already take no harness: `writfold kb deliver match` (would the delivery guard pass this?), `kb handoff check`, `kb gate lines`, `kb guard status` (what each rule would decide for the current run) and the receiver's pre-receive hook ([receiver](receiver.md)). Since v0.6.0-dev.30 the guard rules do too, through `guard check` below.
+
+### What the matcher decides
+
+The plugin registers the PreToolUse hook for `Bash`, the edit tools and `mcp__*` tools. That matcher is the plugin's registration, not a limit of the binary: a rule that names any tool is judged for any event the harness sends, and a wider matcher in a team's own `.claude/settings.json` (for example `Read`, `Skill` or `Agent`) reaches those calls too. The cost is one `writfold` process per matched call.
+
 ### Any harness: `guard check`
 
 The rules above are judged by the hook only for the events Claude Code sends
@@ -494,7 +545,7 @@ A pattern with `/` is refused, so two clones with the same last segment (`acme/a
 
 ### The Stop nudge
 
-A rule with `event = "stop"` takes no `commands`, `tools` or `action`. At the end of a turn, after the Stop hook keeps its draft, the hook evaluates the stop rules and, when a requirement is not met, adds context for Claude once:
+A rule with `event = "stop"` takes no `commands` or `tools`, and without `action` it nudges. At the end of a turn, after the Stop hook keeps its draft, the hook evaluates the stop rules and, when a requirement is not met, adds context for Claude once:
 
 ```toml
 # .writfold/guards/finish-step.toml
@@ -511,6 +562,22 @@ It prints `hookSpecificOutput.additionalContext` for `Stop`, which Claude Code s
 - `repeat = "turn"` (built in v0.5.0-dev.3): at most once per user turn. Every Stop that is not itself a stop hook's continuation is the end of a turn the user started, so the rule is raised there while its requirement is unmet, whatever the flag says. **The loop bound:** the turn Claude continues because of the nudge ends in a Stop with `stop_hook_active` set, and the rule is silent there, so Writfold adds at most one continuation to a turn; the next user message starts the next turn. Claude Code's own cap of 8 consecutive continuations is never what stops it.
 
 The text says which applies (`once this session` or `once a turn`). A session rule and a turn rule can sit side by side: after the first nudge only the turn rule is raised again. With no stop rule, the Stop hook opens nothing and spawns nothing, as before.
+
+### A stop rule that blocks
+
+Built in v0.6.0-dev.30 ([#184](https://github.com/writfold-dev/writfold/issues/184)). With `action = "block"` a stop rule does not nudge: while its requirement is unmet it prints `{"decision": "block", "reason": …}`, so Claude Code does not end the turn, at most `limit` times a turn (default 1, at most 8; `site::block_again`, proved bounded by `block_bounded`):
+
+```toml
+# .writfold/guards/finish-with-gates.toml
+schema = "writfold-guard-rule/1"
+id = "finish-with-gates"
+event = "stop"
+require = ["run.current", "gates.met"]
+action = "block"
+limit = 2
+```
+
+The count is kept in the session's local draft and starts again at a Stop without `stop_hook_active` (a turn the user started). When the limit is spent the turn ends, and the next session's inbox says which rule was still unmet. `require = ["run.current", …]` makes a session with no run unmet, so "no run is not a pass" needs no new requirement. `guard status` shows such a rule as `would-block`. For another harness, `writfold kb guard check --event stop --session ID [--stop-active]` runs the same stop rules and exits 3 when one blocks.
 
 ## The current run: per session and per work tree
 
