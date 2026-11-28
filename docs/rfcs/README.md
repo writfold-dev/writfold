@@ -115,6 +115,10 @@ An RFC that changes decision logic lists, before its design:
 4. The calculus operation each kernel function implements and the laws of
    [`laws.md`](../writfold/laws.md) it is subject to, or why none applies
    (#206): its link theorem, or its `[[out]]` reason in `proofs/laws.toml`.
+5. The referent of each word it prints and the resolver that chooses it,
+   the universe and where its remainder is printed, and the site and its
+   posture (#190): a row in the
+   [claims register](../guide/assurance.md#claims-register).
 
 The proofs gate (drift, `lake build`, axiom audit, mutants) must pass before
 the kernel is wired into a verb ([aeneas.md](../writfold/aeneas.md)).

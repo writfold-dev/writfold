@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+mod conventions;
 mod graph;
 mod macros;
 mod rust_attributes;

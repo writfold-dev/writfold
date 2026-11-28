@@ -4,6 +4,7 @@
 //! never leave a packet saying `complete`.
 mod support;
 
+use support::foreign::assert_foreign_counted;
 use support::{NOW, TestResult, World, world};
 use writfold_kb::Verb;
 
@@ -72,10 +73,10 @@ fn another_tools_files_are_counted_and_never_complete() -> TestResult {
 }
 
 /// For each directory Writfold reads, a file of an unknown kind there is
-/// counted, never silent.
+/// counted, never silent (the #190 helper).
 #[test]
 fn a_foreign_file_in_a_known_directory_is_counted() -> TestResult {
-    for dir in [
+    let dirs = [
         "gates",
         "statements",
         "covers",
@@ -87,14 +88,14 @@ fn a_foreign_file_in_a_known_directory_is_counted() -> TestResult {
         "evidence",
         "deliveries",
         "deliveries/c1/checks",
-    ] {
-        let w = world(&[])?;
-        put(&w, &format!("{dir}/foreign.bin"), "x")?;
-        let (text, code) = resume(&w)?;
-        assert_eq!(code, 2, "{dir}: {text}");
-        assert!(text.contains("unread=1"), "{dir}: {text}");
-    }
-    Ok(())
+    ];
+    assert_foreign_counted(
+        &dirs,
+        || world(&[]),
+        |w, dir| put(w, &format!("{dir}/foreign.bin"), "x"),
+        resume,
+        |text, code| code == 2 && text.contains("unread=1"),
+    )
 }
 
 #[test]

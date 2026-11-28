@@ -45,6 +45,12 @@ Only for decision logic; otherwise write "None: no decision logic changes".
 - **Mutants:** each mutant, with the theorems it must break.
 - **Tested and unproved:** the parsers, IO and rendering involved, and how
   each is tested.
+- **Referent:** what each word the change prints is about, and the resolver
+  that chooses it (never a convention such as `origin` or a tool name).
+- **Universe:** what is looked at, and where the remainder is printed (a
+  row in the [claims register](../guide/assurance.md#claims-register)).
+- **Site:** where the decision is made, and what it gives an event it
+  cannot decide (its posture).
 
 ## Design
 

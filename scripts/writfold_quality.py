@@ -199,6 +199,18 @@ class Producer:
                 rule = "opaque-module" if escaped else "production-panic" if panic else None
                 self.inspect(f"calibration-{name}", root, metadata, rule)
 
+    def convention_calibrations(self) -> None:
+        # A convention literal outside the register fails (#190); a
+        # neighbouring literal that names no convention passes.
+        for name, literal, rule in [
+            ("convention-literal", "refs/remotes/origin/main", "convention-literal"),
+            ("convention-clean", "refs/heads/main", None),
+        ]:
+            root = self.fixture(name, f'pub fn upstream() -> &\'static str {{ "{literal}" }}\n')
+            metadata = self.metadata(f"calibration-{name}-metadata", root, False)
+            if metadata:
+                self.inspect(f"calibration-{name}", root, metadata, rule)
+
     def graph_calibrations(self) -> None:
         for kind, table, optional in [
             ("renamed", "dependencies", ""),
@@ -312,6 +324,7 @@ class Producer:
         if built:
             self.syntax_calibrations()
             self.module_calibrations()
+            self.convention_calibrations()
             self.graph_calibrations()
         else:
             self.record("checker-calibration", False, reason="xtask build failed; no calibration executed")
