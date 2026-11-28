@@ -1,4 +1,4 @@
-# entries: 322
+# entries: 268
 # Translated functions and enums not yet linked to the calculus (#206).
 # This list only shrinks: law_coverage.py refuses a registered or vanished entry,
 # and the ceiling above must equal the number of entries.
@@ -201,14 +201,6 @@ scope.same_char
 scope.segment
 scope.segments
 scope.start
-store.artifact
-store.basis
-store.pin_recordable
-store.pinned
-store.recorded
-store.resolve
-store.snapshot
-store.use_recorded
 units.generated
 units.pairs
 units.unit_moved
@@ -217,28 +209,9 @@ vale.rules
 vale.settle
 vale.usable
 vale.weigh
-verdict.aged
-verdict.decide
-verdict.exchange
-verdict.expired
-verdict.handshake
-verdict.lifetime
-verdict.locate.place
-verdict.locate.window
-verdict.missing
-verdict.observed
-verdict.other_blob
-verdict.recorded.CLOCK_SKEW
-verdict.recorded.before
 verdict.recorded.best_recorded
 verdict.recorded.better
 verdict.recorded.newest
-verdict.recorded.recordable
-verdict.recorded.recorded_age
-verdict.recorded.usable
-verdict.recorded.worst
-verdict.reply
-verdict.with_mark
 type:bind.Bound
 type:bind.Need
 type:catalog.Action
@@ -291,36 +264,9 @@ type:publish.Publish
 type:referent.Relation
 type:runs.Shown
 type:runs.State
-type:store.Artifact
-type:store.AtPin
-type:store.Basis
-type:store.Candidate
-type:store.Claim
-type:store.Commit
-type:store.Refusal
-type:store.Resolved
-type:store.Snapshot
-type:store.Via
-type:store.Withheld
 type:subject.Pick
-type:target.Choice
-type:target.Names
-type:target.Pinned
-type:target.Tip
-type:target.Why
 type:units.Absent
 type:units.Moved
 type:vale.BlockFrom
 type:vale.Level
 type:vale.Tool
-type:verdict.Absence
-type:verdict.Checker
-type:verdict.Handshake
-type:verdict.Located
-type:verdict.Observed
-type:verdict.Said
-type:verdict.Target
-type:verdict.Verdict
-type:verdict.locate.Place
-type:verdict.locate.Window
-type:verdict.recorded.Pick

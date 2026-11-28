@@ -760,3 +760,21 @@ None blocks step 1. Owner questions, each with the default taken, are in
   clone with no fetched remote) and its pin row map onto `resolve` only
   with an extra candidate per row; the link lands with #212 and
   `choose_in` (#197).
+- 2026-11-28 (as built, #212): the knowledge order of a vocabulary is a
+  new core file, `Calculus/Knowledge.lean`: `Words.refines` (the same
+  word, or the unknown word) and `Words.told`, with `refines_disagree`
+  (two fuller facts that disagree leave the lesser one unknown) and
+  `settle_monotone`. The order on facts is `Core.Verdict.Knows` (history,
+  a span search, fetched bytes, a completed follow); `observed_monotone`
+  is the link of `verdict::observed`, and `history_only_refines`,
+  `fetch_only_refines`, `unfetched_never_decides`,
+  `absence_never_evidence` and the `k = false` half of
+  `unsearched_never_fresh` are proved through it. `judge_refines` is
+  `Calculus.settle_refines` through `settleOf_settle`, and
+  `judge_monotone` composes both. A mark is the unknown word of a marked
+  citation (`markWords`), so `with_mark` and `decide` are monotone too.
+  Not monotone, and so not in `Knows`: a known cited blob with an
+  unsearched span reads `changed`, where a search could read `fresh`
+  (`unsearched_never_fresh`, k = true). `store::resolve` is `resolve`
+  once a clone with another origin is not a candidate;
+  `store::{artifact, snapshot}` admit as `Tri.all` of their facts.

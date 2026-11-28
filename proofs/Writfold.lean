@@ -44,3 +44,4 @@ import Writfold.Conform.Words
 import Writfold.Conform.Links
 import Writfold.Conform.Referents
 import Writfold.Conform.Target
+import Writfold.Conform.Verdict

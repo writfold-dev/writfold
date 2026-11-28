@@ -1,6 +1,7 @@
 import Extracted.WritfoldCore.Referent
 import Extracted.WritfoldCore.Types
 import Writfold.Verdict
+import Calculus.Knowledge
 
 /-!
 # The asset boundary (#196, RFC 2026-11-27-asset-boundary)
@@ -20,7 +21,10 @@ Theorems over the Aeneas translation of `writfold_core::referent`.
 - `judge_refines`: a resolved referent that is not behind, with the same
   fact, changes the verdict only where it was `Unverifiable`. With
   `history_only_refines` this is the general form: a provider that knows
-  less never contradicts one that knows more.
+  less never contradicts one that knows more. It is `Calculus.settle_refines`
+  through `settleOf_settle` (#212). `judge_monotone`: knowing more about
+  the fact (`Core.Verdict.Knows`) and about the referent together refine
+  the verdict (`observedOf_mono` composed with `Calculus.settle_monotone`).
 -/
 
 open Aeneas Aeneas.Std Result
@@ -95,14 +99,39 @@ theorem settleOf_refines (r : Bool) (rel rel' : referent.Relation) (v : verdict.
     settleOf r rel v = .Unverifiable := by
   cases r <;> cases rel <;> cases rel' <;> cases v <;> simp_all [settleOf, claimsB]
 
+/-- A referent that could refute a claim of change: one not behind. -/
+def refutableB : referent.Relation → Bool
+  | .Behind => false
+  | _ => true
+
+/-- `settleOf` is the calculus's `settle` over the verdict vocabulary. -/
+theorem settleOf_settle (r : Bool) (rel : referent.Relation) (v : verdict.Verdict) :
+    settleOf r rel v = Calculus.settle Core.Verdict.words r (refutableB rel) v := by
+  cases r <;> cases rel <;> cases v <;>
+    simp [settleOf, Calculus.settle, Core.Verdict.words, Core.Verdict.claimsChange, refutableB, claimsB]
+
 theorem judge_refines (r : Bool) (rel rel' : referent.Relation) (f : verdict.Observed)
     (h : rel' ≠ .Behind) :
     referent.judge r rel f ⦃ x =>
       x = settleOf true rel' (observedOf f) ∨ x = .Unverifiable ⦄ := by
   apply WP.spec_mono (judge_spec r rel f)
   intro x hx; subst hx
-  by_cases hd : settleOf r rel (observedOf f) = settleOf true rel' (observedOf f)
-  · exact Or.inl hd
-  · exact Or.inr (settleOf_refines r rel rel' _ h hd)
+  rw [settleOf_settle, settleOf_settle]
+  have hf : refutableB rel = true → refutableB rel' = true := by cases rel' <;> simp_all [refutableB]
+  exact Calculus.settle_refines _ r _ true _ _ (fun _ => rfl) hf
+
+/-- Knowing more about the fact and about the referent refines the
+verdict: a resolved, refutable referent and a fuller observation never
+contradict a verdict that was told. -/
+theorem judge_monotone {f g : verdict.Observed} (r r' : Bool) (rel rel' : referent.Relation)
+    (hk : Core.Verdict.Knows f g) (hr : r = true → r' = true)
+    (hrel : refutableB rel = true → refutableB rel' = true) :
+    referent.judge r rel f ⦃ x =>
+      referent.judge r' rel' g ⦃ y => Calculus.Words.refines Core.Verdict.words x y ⦄ ⦄ := by
+  apply WP.spec_mono (judge_spec r rel f); intro x hx
+  apply WP.spec_mono (judge_spec r' rel' g); intro y hy
+  subst hx hy
+  rw [settleOf_settle, settleOf_settle]
+  exact Calculus.settle_monotone _ _ _ _ _ hr hrel (Core.Verdict.observedOf_mono hk)
 
 end Writfold.Core.Referent

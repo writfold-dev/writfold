@@ -1225,6 +1225,11 @@ MUTANTS = (
            "        Verdict::Changed | Verdict::Gone | Verdict::Expired => reached,",
            "        Verdict::Gone | Verdict::Expired => reached,",
            ("Writfold.Core.Verdict.with_mark_spec",)),
+    # verdict: decide applies the authored mark (#212)
+    Mutant("decide-drops-mark", "verdict.rs",
+           "    with_mark(observed(fact), marked)",
+           "    with_mark(observed(fact), false)",
+           ("Writfold.Core.Verdict.decide_spec",)),
     # verdict: the protocol first, then the kind, then the operation
     Mutant("handshake-kind-as-op", "verdict.rs",
            "            } else if !d.lists_kind {\n                Handshake::Kind",
@@ -1270,6 +1275,11 @@ MUTANTS = (
            "        Checker::Said(said) => !matches!(said, Said::Unverifiable),",
            "        Checker::Said(_) => true,",
            ("Writfold.Core.Recorded.recordable_iff",)),
+    # check receipts: only a told statement may decide (#212)
+    Mutant("usable-unverifiable", "verdict/recorded.rs",
+           "    !matches!(s.said, Said::Unverifiable)",
+           "    !matches!(s.said, Said::Gone)",
+           ("Writfold.Core.Recorded.usable_spec",)),
     # check receipts: a date more than an hour ahead is unusable
     Mutant("recorded-age-no-skew", "verdict/recorded.rs",
            "    if now <= i64::MAX - CLOCK_SKEW && checked_at > now + CLOCK_SKEW {",
@@ -2014,6 +2024,17 @@ CORE_MUTANTS = (
                "  else if ws.claimsChange w && !refutable then ws.unknown\n  else w",
                "  else if ws.claimsChange w && !refutable then ws.unknown\n  else ws.unknown",
                ("Calculus.settle_identity", "Calculus.unclaimed_survives")),
+    CoreMutant("refines-up-to-unknown", "Knowledge.lean",
+               "def Words.refines (v w : W) : Prop := v = w ∨ v = ws.unknown",
+               "def Words.refines (v w : W) : Prop := v = w ∨ w = ws.unknown",
+               ("Calculus.Words.refines_trans", "Calculus.Words.unknown_refines",
+                "Calculus.Words.refines_unknown_iff", "Calculus.Words.told_refines",
+                "Calculus.Words.refines_disagree", "Calculus.Tri.words_refines_iff",
+                "Calculus.settle_monotone")),
+    CoreMutant("unknown-told", "Knowledge.lean",
+               "def Words.told (w : W) : Prop := w ≠ ws.unknown",
+               "def Words.told (w : W) : Prop := True",
+               ("Calculus.Words.told_refines", "Calculus.Words.unknown_never_told")),
     CoreMutant("search-partial-says-no", "Account.lean",
                "  if found then .yes else if isWhole then .no else .unknown",
                "  if found then .yes else .no",
@@ -2210,6 +2231,7 @@ DERIVED = {
     "Calculus.settle_only_withholds": "decided over the definition of settle",
     "Calculus.settle_refines": "decided over the definition of settle",
     "Calculus.unresolved_unknown": "the definition of about",
+    "Calculus.Words.refines_refl": "the first disjunct of refines",
 }
 
 
