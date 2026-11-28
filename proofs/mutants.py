@@ -1842,6 +1842,46 @@ MUTANTS = (
            "            Pin::Held => {}\n            Pin::Moved | Pin::Aged | Pin::Unreadable => return false,",
            "            Pin::Held | Pin::Unreadable => {}\n            Pin::Moved | Pin::Aged => return false,",
            ("Writfold.Core.Pin.holds_from_loop_spec",)),
+    # claims (#189): a bare block fails by itself
+    Mutant("bare-passes", "claims.rs",
+           "        Block::Bare => true,",
+           "        Block::Bare => false,",
+           ("Writfold.Core.Claims.fails_spec",)),
+    # claims: an unverifiable citation cannot be told
+    Mutant("unverifiable-passes", "claims.rs",
+           "        Block::Cited(standing) => matches!(standing, Standing::Unverifiable),",
+           "        Block::Cited(_) => false,",
+           ("Writfold.Core.Claims.unsure_spec",)),
+    # claims: nothing to account for is never a pass
+    Mutant("empty-passes", "claims.rs",
+           "        return Outcome::Unknown;",
+           "        return Outcome::Pass;",
+           ("Writfold.Core.Claims.accounted_spec",)),
+    # claims: below the minimum, never a pass
+    Mutant("min-ignored", "claims.rs",
+           "    if tokens < min {",
+           "    if false {",
+           ("Writfold.Core.Claims.cited_spec",)),
+    # outbound (#187): an opaque program is unclassified
+    Mutant("opaque-passes", "delivery/outbound.rs",
+           "        Class::Opaque => left_over(policy),",
+           "        Class::Opaque => Decision::Pass,",
+           ("Writfold.Core.Delivery.contribution_spec",)),
+    # outbound: a local command never refuses
+    Mutant("local-refuses", "delivery/outbound.rs",
+           "        Class::Local => Decision::Pass,",
+           "        Class::Local => Decision::Deny,",
+           ("Writfold.Core.Delivery.contribution_spec",)),
+    # outbound: the policy decides what an unclassified call gets
+    Mutant("unclassified-ignores-policy", "delivery/outbound.rs",
+           "        Unclassified::Deny => Decision::Deny,",
+           "        Unclassified::Deny => Decision::Pass,",
+           ("Writfold.Core.Delivery.left_over_spec",)),
+    # outbound: every member is looked at, the last included
+    Mutant("outbound-skips-last", "delivery/outbound.rs",
+           "    while index < classes.len() {",
+           "    while index + 1 < classes.len() {",
+           ("Writfold.Core.Delivery.outbound_loop_spec",)),
     # site (#184): an undecided event under deny is denied
     Mutant("site-undecided-passes-closed", "site.rs",
            "            Posture::Deny => Decision::Deny,",

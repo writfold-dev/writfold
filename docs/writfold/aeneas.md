@@ -1058,6 +1058,14 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `verdict-deny-asks` | `guard.rs` | guard: a deny rule denies | `Guard.verdict_spec` |
 | `combine-ask-over-deny` | `guard.rs` | guard: a denial wins over a question | `Guard.combine_spec` |
 | `effect-enforces-audit` | `guard.rs` | guard: an audit rule never decides the call | `Guard.effect_spec` |
+| `bare-passes` | `claims.rs` | claims (#189): a bare block fails by itself | `Claims.fails_spec` |
+| `unverifiable-passes` | `claims.rs` | claims: an unverifiable citation cannot be told | `Claims.unsure_spec` |
+| `empty-passes` | `claims.rs` | claims: nothing to account for is never a pass | `Claims.accounted_spec` |
+| `min-ignored` | `claims.rs` | claims: below the minimum, never a pass | `Claims.cited_spec` |
+| `opaque-passes` | `delivery/outbound.rs` | outbound (#187): an opaque program is unclassified | `Delivery.contribution_spec` |
+| `local-refuses` | `delivery/outbound.rs` | outbound: a local command never refuses | `Delivery.contribution_spec` |
+| `unclassified-ignores-policy` | `delivery/outbound.rs` | outbound: the policy decides what an unclassified call gets | `Delivery.left_over_spec` |
+| `outbound-skips-last` | `delivery/outbound.rs` | outbound: every member is looked at, the last included | `Delivery.outbound_loop_spec` |
 | `site-undecided-passes-closed` | `site.rs` | site (#184): an undecided event under deny is denied | `Site.decide_spec` |
 | `site-posture-overrides-judged` | `site.rs` | site: a posture never overrides a judged decision | `Site.decide_spec` |
 | `site-stricter-takes-first` | `site.rs` | site: the stricter posture reads both sides | `Site.stricter_spec` |

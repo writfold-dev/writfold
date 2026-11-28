@@ -23,7 +23,9 @@ mod empty;
 pub mod event;
 pub mod log;
 pub mod matched;
+pub mod outbound;
 pub mod paths;
+pub mod positional;
 pub mod posture;
 pub(crate) mod pre;
 mod report;
@@ -107,8 +109,7 @@ pub fn pre_tool_use(
 /// pass, its JSON on a denial or a question.
 pub fn render(sited: site::Sited) -> HookOutput {
     if sited.delivery {
-        let reason = sited.reasons.first().map(String::as_str).unwrap_or("");
-        return delivery::deny_output(reason);
+        return delivery::deny_output(&sited.reasons.join("\n"));
     }
     let verdict = match sited.decision {
         Decision::Pass => return quiet_with(sited.stderr),

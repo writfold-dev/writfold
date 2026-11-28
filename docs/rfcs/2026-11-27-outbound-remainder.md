@@ -2,7 +2,7 @@
 rfc: "2026-11-27-outbound-remainder"
 title: "Outbound completeness: a call the delivery guard cannot classify is counted, a positional file is a body, and a deliverable may have parts"
 status: accepted
-implementation: not-started
+implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
@@ -260,3 +260,16 @@ candidate is not ready there.
 - 2026-11-27: drafted from report 2's third ask, after reproducing both
   silent passes on `9afa5942`. Accepted under the owner's standing
   acceptance; not yet reviewed by the owner.
+- 2026-11-28 (slice 1 as built, #187): the kernel is
+  `writfold_core::delivery::outbound` in three functions, `left_over`,
+  `contribution` and `outbound` (a loop with `guard::combine`), so each
+  mutant breaks the spec of the function it mutates (`left_over_spec`,
+  `contribution_spec`) rather than `outbound_spec`; a fourth mutant,
+  `outbound-skips-last`, breaks `outbound_loop_spec`. `contribution` and
+  `left_over` are linked to `Calculus.Site.decide` (a member is a site's
+  basis, the policy its posture: `log` is `open`), `outbound` to
+  `Calculus.Decision.join` folded. Without `unclassified` only the first
+  covered member is judged, exactly as before; with it every member is.
+  A delivery question (`ask`) is joined with the guard rules' decision; a
+  denial still decides alone. The opaque set also counts `$(…)`. Slice 2
+  (`Part`, `parts_match`) is not built.

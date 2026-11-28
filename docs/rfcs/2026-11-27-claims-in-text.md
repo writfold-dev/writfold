@@ -2,7 +2,7 @@
 rfc: "2026-11-27-claims-in-text"
 title: "Claims inside text: a minimum number of citations, and every block of a draft accounted for"
 status: accepted
-implementation: not-started
+implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
@@ -216,3 +216,15 @@ One issue (#189): `min_citations` first (small, with `cited`), then
 
 - 2026-11-27: drafted from report 2's fourth ask. Accepted under the
   owner's standing acceptance; not yet reviewed by the owner.
+- 2026-11-28 (as built, #189): `writfold_core::claims` with `accounted`,
+  `cited` and two helpers (`fails`, `unsure`), because Aeneas does not
+  expand the nested enum match the draft wrote. The mutants `bare-passes`
+  and `unverifiable-passes` therefore break `fails_spec` and `unsure_spec`;
+  `empty-passes` breaks `accounted_spec`. `accounted` is linked to
+  `Calculus.Universal` with the empty universe allowed (an all-excused
+  draft passes; the kernel keeps an empty one unknown), `cited` to
+  `Calculus.Tri.and`. `min_citations` and `claims.accounted` with citations
+  and status tags are built; the reviewer's excuse checklist is split to
+  #221. A grammar finding (a near-miss tag, two tags, a tag on a cited
+  block) leaves the block bare, so the fail is the kernel's. Blocks are read
+  by a new `markdown::blocks`; `paragraphs` is unchanged.

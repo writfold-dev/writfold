@@ -128,6 +128,7 @@ pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Res
         let limit = if orchestration { 250 } else { 400 };
         audit.budget(unit.file.span(), limit, 250, "module-budget");
         audit.visit_file(&unit.file);
+        crate::conventions::check(&relative, &unit.file, dev, diagnostics);
     }
     Ok(())
 }

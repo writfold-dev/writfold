@@ -21,42 +21,6 @@ set_option maxRecDepth 2048
 
 namespace writfold_core
 
-/-- [writfold_core::guard::call::Ruled]
-    Source: 'crates/writfold-core/src/guard/call.rs', lines 7:0-11:1
-    Visibility: public -/
-structure guard.call.Ruled where
-  mode : guard.Mode
-  action : guard.Action
-  met : Bool
-
-/-- [writfold_core::guard::effect]:
-    Source: 'crates/writfold-core/src/guard.rs', lines 143:0-148:1
-    Visibility: public -/
-def guard.effect
-  (mode : guard.Mode) (decided : guard.Decision) : Result guard.Decision := do
-  match mode with
-  | guard.Mode.Enforce => ok decided
-  | guard.Mode.Audit => ok guard.Decision.Pass
-
-/-- [writfold_core::guard::verdict]:
-    Source: 'crates/writfold-core/src/guard.rs', lines 85:0-93:1
-    Visibility: public -/
-def guard.verdict
-  (met : Bool) (action : guard.Action) : Result guard.Decision := do
-  if met
-  then ok guard.Decision.Pass
-  else
-    match action with
-    | guard.Action.Deny => ok guard.Decision.Deny
-    | guard.Action.Ask => ok guard.Decision.Ask
-
-/-- [writfold_core::guard::call::ruled]:
-    Source: 'crates/writfold-core/src/guard/call.rs', lines 14:0-16:1
-    Visibility: public -/
-def guard.call.ruled (rule : guard.call.Ruled) : Result guard.Decision := do
-  let d ← guard.verdict rule.met rule.action
-  guard.effect rule.mode d
-
 /-- [writfold_core::guard::combine]:
     Source: 'crates/writfold-core/src/guard.rs', lines 106:0-114:1
     Visibility: public -/
@@ -94,6 +58,42 @@ def guard.combine
         if b4
         then ok guard.Decision.Ask
         else ok guard.Decision.Pass
+
+/-- [writfold_core::guard::call::Ruled]
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 7:0-11:1
+    Visibility: public -/
+structure guard.call.Ruled where
+  mode : guard.Mode
+  action : guard.Action
+  met : Bool
+
+/-- [writfold_core::guard::effect]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 143:0-148:1
+    Visibility: public -/
+def guard.effect
+  (mode : guard.Mode) (decided : guard.Decision) : Result guard.Decision := do
+  match mode with
+  | guard.Mode.Enforce => ok decided
+  | guard.Mode.Audit => ok guard.Decision.Pass
+
+/-- [writfold_core::guard::verdict]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 85:0-93:1
+    Visibility: public -/
+def guard.verdict
+  (met : Bool) (action : guard.Action) : Result guard.Decision := do
+  if met
+  then ok guard.Decision.Pass
+  else
+    match action with
+    | guard.Action.Deny => ok guard.Decision.Deny
+    | guard.Action.Ask => ok guard.Decision.Ask
+
+/-- [writfold_core::guard::call::ruled]:
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 14:0-16:1
+    Visibility: public -/
+def guard.call.ruled (rule : guard.call.Ruled) : Result guard.Decision := do
+  let d ← guard.verdict rule.met rule.action
+  guard.effect rule.mode d
 
 /-- [writfold_core::guard::call::decide_all]: loop body 0:
     Source: 'crates/writfold-core/src/guard/call.rs', lines 23:4-26:5

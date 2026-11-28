@@ -58,6 +58,11 @@ pub struct Mode {
     /// `agent`: the profile whose invocations `invocation.bound` accepts;
     /// required with that check, refused without it (#149).
     pub agent: Option<String>,
+    /// `min_citations`: the fewest citation tokens `claims.cited-fresh`
+    /// passes (#189); 0 when absent.
+    pub min_citations: usize,
+    /// `status_tags`: the words `claims.accounted` takes as a block's tag.
+    pub status_tags: Vec<String>,
 }
 
 impl Mode {
@@ -124,6 +129,8 @@ pub(super) fn default(name: &str) -> Mode {
         prose: None,
         vale: None,
         agent: None,
+        min_citations: 0,
+        status_tags: Vec::new(),
     }
 }
 

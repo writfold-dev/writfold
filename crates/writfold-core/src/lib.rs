@@ -46,6 +46,7 @@ pub mod bind;
 pub mod bytes;
 pub mod catalog;
 pub mod checklist;
+pub mod claims;
 pub mod command;
 pub mod compose;
 pub mod decision;

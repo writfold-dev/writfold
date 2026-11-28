@@ -51,32 +51,49 @@ pub fn deny_output(reason: &str) -> HookOutput {
     }
 }
 
-/// Decide one PreToolUse event: the denial's full reason, or `None`.
+/// What the delivery guard decided for one event.
+pub struct Verdict {
+    pub decision: writfold_core::guard::Decision,
+    pub reasons: Vec<String>,
+    /// Unclassified commands to keep in the guard log (`unclassified = "log"`).
+    pub logged: Vec<String>,
+}
+
+/// Decide one PreToolUse event; `None` when the guard has nothing to say.
+/// Without an `unclassified` policy only the first covered member is
+/// judged, as before; with one, every member is ([`super::outbound`]).
 pub fn judge(
     ws: &Workspace,
     input: &Map<String, Value>,
     cwd: &Path,
     now: i64,
-) -> Result<Option<String>, String> {
+) -> Result<Option<Verdict>, String> {
+    use writfold_core::delivery::outbound::Unclassified;
+    use writfold_core::guard::Decision;
     let Some(guard) = config::guard(&ws.root).map_err(|e| e.to_string())? else {
         return Ok(None);
     };
-    let Some(matched) = body::matched(&guard, input, cwd) else {
-        return Ok(None);
+    let Some(policy) = guard.unclassified else {
+        let Some(matched) = body::matched(&guard, input, cwd) else {
+            return Ok(None);
+        };
+        return Ok(decide(ws, &matched, now).map(|why| Verdict {
+            decision: Decision::Deny,
+            reasons: vec![reason(why)],
+            logged: Vec::new(),
+        }));
     };
-    Ok(decide(ws, &matched, now).map(reason))
-}
-
-/// Decide one PreToolUse event as Claude Code's output.
-pub fn pre_tool_use(
-    ws: &Workspace,
-    input: &Map<String, Value>,
-    cwd: &Path,
-    now: i64,
-) -> Result<HookOutput, String> {
-    Ok(judge(ws, input, cwd, now)?
-        .map(|r| deny_output(&r))
-        .unwrap_or_default())
+    let decided = |ws: &Workspace, m: &Matched| decide(ws, m, now).map(reason);
+    let out = super::outbound::judge(ws, &guard, policy, (input, cwd), &decided);
+    let logged = match policy {
+        Unclassified::Log => out.unclassified,
+        _ => Vec::new(),
+    };
+    Ok(Some(Verdict {
+        decision: out.decision,
+        reasons: out.reasons,
+        logged,
+    }))
 }
 
 fn decide(ws: &Workspace, m: &Matched, now: i64) -> Option<String> {

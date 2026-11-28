@@ -804,6 +804,121 @@ def checklist.standing
       waived_current
     }
 
+/-- [writfold_core::claims::Standing]
+    Source: 'crates/writfold-core/src/claims.rs', lines 10:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive claims.Standing where
+| Fresh : claims.Standing
+| Stale : claims.Standing
+| Unverifiable : claims.Standing
+
+/-- [writfold_core::claims::Block]
+    Source: 'crates/writfold-core/src/claims.rs', lines 18:0-27:1
+    Visibility: public -/
+@[discriminant isize]
+inductive claims.Block where
+| Cited : claims.Standing → claims.Block
+| Tagged : claims.Block
+| Excused : claims.Block
+| Bare : claims.Block
+
+/-- [writfold_core::claims::fails]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 30:0-37:1
+    Visibility: public -/
+def claims.fails (block : claims.Block) : Result Bool := do
+  match block with
+  | claims.Block.Cited standing =>
+    match standing with
+    | claims.Standing.Fresh => ok false
+    | claims.Standing.Stale => ok true
+    | claims.Standing.Unverifiable => ok false
+  | claims.Block.Tagged => ok false
+  | claims.Block.Excused => ok false
+  | claims.Block.Bare => ok true
+
+/-- [writfold_core::claims::unsure]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 40:0-47:1
+    Visibility: public -/
+def claims.unsure (block : claims.Block) : Result Bool := do
+  match block with
+  | claims.Block.Cited standing =>
+    match standing with
+    | claims.Standing.Fresh => ok false
+    | claims.Standing.Stale => ok false
+    | claims.Standing.Unverifiable => ok true
+  | claims.Block.Tagged => ok false
+  | claims.Block.Excused => ok false
+  | claims.Block.Bare => ok false
+
+/-- [writfold_core::gate::Outcome]
+    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Outcome where
+| Pass : gate.Outcome
+| Fail : gate.Outcome
+| Unknown : gate.Outcome
+
+/-- [writfold_core::claims::accounted]: loop body 0:
+    Source: 'crates/writfold-core/src/claims.rs', lines 59:4-71:1
+    Visibility: public -/
+@[rust_loop_body]
+def claims.accounted_loop.body
+  (blocks : Slice claims.Block) (unknown : Bool) (index : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) gate.Outcome)
+  := do
+  let i := Slice.len blocks
+  if index < i
+  then
+    let b ← Slice.index_usize blocks index
+    let b1 ← claims.fails b
+    if b1
+    then ok (done gate.Outcome.Fail)
+    else
+      let unknown1 ← if unknown
+                       then ok true
+                       else claims.unsure b
+      let index1 ← index + 1#usize
+      ok (cont (unknown1, index1))
+  else
+    if unknown
+    then ok (done gate.Outcome.Unknown)
+    else ok (done gate.Outcome.Pass)
+
+/-- [writfold_core::claims::accounted]: loop 0:
+    Source: 'crates/writfold-core/src/claims.rs', lines 59:4-71:1
+    Visibility: public -/
+@[rust_loop]
+def claims.accounted_loop
+  (blocks : Slice claims.Block) (unknown : Bool) (index : Std.Usize) :
+  Result gate.Outcome
+  := do
+  loop
+    (fun (unknown1, index1) => claims.accounted_loop.body blocks unknown1
+      index1)
+    (unknown, index)
+
+/-- [writfold_core::claims::accounted]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 53:0-71:1
+    Visibility: public -/
+def claims.accounted (blocks : Slice claims.Block) : Result gate.Outcome := do
+  let b ← core.slice.Slice.is_empty blocks
+  if b
+  then ok gate.Outcome.Unknown
+  else claims.accounted_loop blocks false 0#usize
+
+/-- [writfold_core::claims::cited]:
+    Source: 'crates/writfold-core/src/claims.rs', lines 75:0-80:1
+    Visibility: public -/
+def claims.cited
+  (tokens : Std.Usize) (min : Std.Usize) (shipped : gate.Outcome) :
+  Result gate.Outcome
+  := do
+  if tokens < min
+  then ok gate.Outcome.Fail
+  else ok shipped
+
 /-- [writfold_core::command::is_help]:
     Source: 'crates/writfold-core/src/command/mod.rs', lines 118:0-126:1
     Visibility: public -/
@@ -2129,6 +2244,146 @@ def decision.writes
            then ok facts.successor
            else ok true
 
+/-- [writfold_core::guard::Decision]
+    Source: 'crates/writfold-core/src/guard.rs', lines 60:0-64:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Decision where
+| Pass : guard.Decision
+| Deny : guard.Decision
+| Ask : guard.Decision
+
+/-- [writfold_core::delivery::outbound::Class]
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 13:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive delivery.outbound.Class where
+| Local : delivery.outbound.Class
+| Routed : guard.Decision → delivery.outbound.Class
+| Listed : guard.Decision → delivery.outbound.Class
+| Opaque : delivery.outbound.Class
+| Unclassified : delivery.outbound.Class
+
+/-- [writfold_core::delivery::outbound::Unclassified]
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 28:0-34:1
+    Visibility: public -/
+@[discriminant isize]
+inductive delivery.outbound.Unclassified where
+| Pass : delivery.outbound.Unclassified
+| Log : delivery.outbound.Unclassified
+| Ask : delivery.outbound.Unclassified
+| Deny : delivery.outbound.Unclassified
+
+/-- [writfold_core::delivery::outbound::left_over]:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 58:0-65:1
+    Visibility: public -/
+def delivery.outbound.left_over
+  (policy : delivery.outbound.Unclassified) : Result guard.Decision := do
+  match policy with
+  | delivery.outbound.Unclassified.Pass => ok guard.Decision.Pass
+  | delivery.outbound.Unclassified.Log => ok guard.Decision.Pass
+  | delivery.outbound.Unclassified.Ask => ok guard.Decision.Ask
+  | delivery.outbound.Unclassified.Deny => ok guard.Decision.Deny
+
+/-- [writfold_core::delivery::outbound::contribution]:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 68:0-76:1
+    Visibility: public -/
+def delivery.outbound.contribution
+  («class» : delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) :
+  Result guard.Decision
+  := do
+  match «class» with
+  | delivery.outbound.Class.Local => ok guard.Decision.Pass
+  | delivery.outbound.Class.Routed decided => ok decided
+  | delivery.outbound.Class.Listed decided => ok decided
+  | delivery.outbound.Class.Opaque => delivery.outbound.left_over policy
+  | delivery.outbound.Class.Unclassified => delivery.outbound.left_over policy
+
+/-- [writfold_core::guard::combine]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 106:0-114:1
+    Visibility: public -/
+def guard.combine
+  (a : guard.Decision) (b : guard.Decision) : Result guard.Decision := do
+  let b1 ←
+    match a with
+    | guard.Decision.Pass => ok false
+    | guard.Decision.Deny => ok true
+    | guard.Decision.Ask => ok false
+  if b1
+  then ok guard.Decision.Deny
+  else
+    let b2 ←
+      match b with
+      | guard.Decision.Pass => ok false
+      | guard.Decision.Deny => ok true
+      | guard.Decision.Ask => ok false
+    if b2
+    then ok guard.Decision.Deny
+    else
+      let b3 ←
+        match a with
+        | guard.Decision.Pass => ok false
+        | guard.Decision.Deny => ok false
+        | guard.Decision.Ask => ok true
+      if b3
+      then ok guard.Decision.Ask
+      else
+        let b4 ←
+          match b with
+          | guard.Decision.Pass => ok false
+          | guard.Decision.Deny => ok false
+          | guard.Decision.Ask => ok true
+        if b4
+        then ok guard.Decision.Ask
+        else ok guard.Decision.Pass
+
+/-- [writfold_core::delivery::outbound::outbound]: loop body 0:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 83:4-86:5
+    Visibility: public -/
+@[rust_loop_body]
+def delivery.outbound.outbound_loop.body
+  (classes : Slice delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) (decided : guard.Decision)
+  (index : Std.Usize) :
+  Result (ControlFlow (guard.Decision × Std.Usize) guard.Decision)
+  := do
+  let i := Slice.len classes
+  if index < i
+  then
+    let c ← Slice.index_usize classes index
+    let d ← delivery.outbound.contribution c policy
+    let decided1 ← guard.combine decided d
+    let index1 ← index + 1#usize
+    ok (cont (decided1, index1))
+  else ok (done decided)
+
+/-- [writfold_core::delivery::outbound::outbound]: loop 0:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 83:4-86:5
+    Visibility: public -/
+@[rust_loop]
+def delivery.outbound.outbound_loop
+  (classes : Slice delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) (decided : guard.Decision)
+  (index : Std.Usize) :
+  Result guard.Decision
+  := do
+  loop
+    (fun (decided1, index1) => delivery.outbound.outbound_loop.body classes
+      policy decided1 index1)
+    (decided, index)
+
+/-- [writfold_core::delivery::outbound::outbound]:
+    Source: 'crates/writfold-core/src/delivery/outbound.rs', lines 80:0-88:1
+    Visibility: public -/
+@[reducible]
+def delivery.outbound.outbound
+  (classes : Slice delivery.outbound.Class)
+  (policy : delivery.outbound.Unclassified) :
+  Result guard.Decision
+  := do
+  delivery.outbound.outbound_loop classes policy guard.Decision.Pass 0#usize
+
 /-- [writfold_core::policy::Accept]
     Source: 'crates/writfold-core/src/policy.rs', lines 18:0-22:1
     Visibility: public -/
@@ -2887,15 +3142,6 @@ inductive gate.Ending where
 | TimedOut : gate.Ending
 | Error : gate.Ending
 
-/-- [writfold_core::gate::Outcome]
-    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
-    Visibility: public -/
-@[discriminant isize]
-inductive gate.Outcome where
-| Pass : gate.Outcome
-| Fail : gate.Outcome
-| Unknown : gate.Outcome
-
 /-- [writfold_core::gate::outcome]:
     Source: 'crates/writfold-core/src/gate.rs', lines 64:0-73:1
     Visibility: public -/
@@ -3498,15 +3744,6 @@ structure guard.call.Ruled where
   action : guard.Action
   met : Bool
 
-/-- [writfold_core::guard::Decision]
-    Source: 'crates/writfold-core/src/guard.rs', lines 60:0-64:1
-    Visibility: public -/
-@[discriminant isize]
-inductive guard.Decision where
-| Pass : guard.Decision
-| Deny : guard.Decision
-| Ask : guard.Decision
-
 /-- [writfold_core::guard::effect]:
     Source: 'crates/writfold-core/src/guard.rs', lines 143:0-148:1
     Visibility: public -/
@@ -3534,44 +3771,6 @@ def guard.verdict
 def guard.call.ruled (rule : guard.call.Ruled) : Result guard.Decision := do
   let d ← guard.verdict rule.met rule.action
   guard.effect rule.mode d
-
-/-- [writfold_core::guard::combine]:
-    Source: 'crates/writfold-core/src/guard.rs', lines 106:0-114:1
-    Visibility: public -/
-def guard.combine
-  (a : guard.Decision) (b : guard.Decision) : Result guard.Decision := do
-  let b1 ←
-    match a with
-    | guard.Decision.Pass => ok false
-    | guard.Decision.Deny => ok true
-    | guard.Decision.Ask => ok false
-  if b1
-  then ok guard.Decision.Deny
-  else
-    let b2 ←
-      match b with
-      | guard.Decision.Pass => ok false
-      | guard.Decision.Deny => ok true
-      | guard.Decision.Ask => ok false
-    if b2
-    then ok guard.Decision.Deny
-    else
-      let b3 ←
-        match a with
-        | guard.Decision.Pass => ok false
-        | guard.Decision.Deny => ok false
-        | guard.Decision.Ask => ok true
-      if b3
-      then ok guard.Decision.Ask
-      else
-        let b4 ←
-          match b with
-          | guard.Decision.Pass => ok false
-          | guard.Decision.Deny => ok false
-          | guard.Decision.Ask => ok true
-        if b4
-        then ok guard.Decision.Ask
-        else ok guard.Decision.Pass
 
 /-- [writfold_core::guard::call::decide_all]: loop body 0:
     Source: 'crates/writfold-core/src/guard/call.rs', lines 23:4-26:5

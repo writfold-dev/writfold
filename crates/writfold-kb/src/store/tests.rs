@@ -1,4 +1,4 @@
-use super::{Freshness, check::check, normalise, origin_in};
+use super::{Freshness, check::check, normalise};
 
 #[test]
 fn urls_compare_by_host_and_path() {
@@ -17,16 +17,6 @@ fn urls_compare_by_host_and_path() {
     );
     assert_eq!(normalise("/srv/git/scratch.git"), "/srv/git/scratch");
     assert_eq!(normalise("file:///srv/git/scratch"), "/srv/git/scratch");
-}
-
-#[test]
-fn the_origin_is_read_from_its_own_section_only() {
-    let config = "[core]\n\turl = nope\n[remote \"upstream\"]\n\turl = a\n[remote \"origin\"]\n\tfetch = x\n\turl = git@example.org:me/scratch.git\n";
-    assert_eq!(
-        origin_in(config).as_deref(),
-        Some("git@example.org:me/scratch.git")
-    );
-    assert_eq!(origin_in("[remote \"upstream\"]\nurl = a\n"), None);
 }
 
 const GOOD: &str = "schema = \"writfold-store/1\"\nname = \"scratch\"\nurl = \"git@example.org:me/scratch.git\"\nrole = \"attached\"\n";

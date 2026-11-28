@@ -523,7 +523,7 @@ A `commands` rule reads the Bash command line the way the shell would split it, 
 
 **A directory that cannot be told** is not a pass and not a guess. `run.current` is judged as usual; every requirement that needs a repository (`gates.met`, `gate:<id>`, `step.met`) cannot be evaluated, which takes the rule's action, with `cannot tell which repository this command acts on (git commit: a variable); name the directory literally`. A rule with `repos` applies, since the repository is not known. Only the KB root's rules apply to such an invocation. A fifth distinct directory in one call is treated the same way (`more directories than one call judges`). The way out costs one retry: repeat the command with the directory written literally.
 
-**Not followed.** The string given to `bash -c`, `sh -c` or `eval`; `xargs`, `find -exec`, `watch` and other programs that run their arguments; backquote substitution; aliases, functions, scripts and Makefile targets; the remote command of `ssh`, which acts on another machine. A rule is a guard: each of these is a miss, never a refusal.
+**Not followed.** The string given to `bash -c`, `sh -c` or `eval`; `xargs`, `find -exec`, `watch` and other programs that run their arguments; backquote substitution; aliases, functions, scripts and Makefile targets; the remote command of `ssh`, which acts on another machine. A rule is a guard: each of these is a miss, never a refusal. The delivery guard can count them instead: under an `unclassified` policy each is opaque and gets the policy ([delivery modes](delivery-modes.md#everything-else-local-and-unclassified)).
 
 A rule never matches by working directory alone: a `pre-tool-use` rule names `commands` or `tools`, so `cat`, `grep` or a lookup verb inside a guarded repository passes unless a rule lists the tool `Bash` itself.
 
@@ -532,10 +532,11 @@ A rule never matches by working directory alone: a `pre-tool-use` rule names `co
 A repository's name, for `repos`, is the first of:
 
 1. its name in the KB clone's repository map (the map `kb stale` resolves `repo=` with; see [validation](validation.md));
-2. the last segment of its `remote.origin.url`, without `.git` (`git@host:acme/ledger.git` is `ledger`);
-3. its main work tree's directory name, so a linked worktree answers to its clone's name (built in v0.6.0-dev.1).
+2. the name of the [declared repository](assets.md) one of its remotes is at;
+3. the last segment of its first remote's URL, without `.git` (`git@host:acme/ledger.git` is `ledger`; no remote is read by the name `origin`, since v0.6.0-dev.28, #198);
+4. its main work tree's directory name, so a linked worktree answers to its clone's name (built in v0.6.0-dev.1).
 
-A linked worktree is the same repository as its clone: a map entry for either names both (they share a Git directory), and so do the origin and the clone's directory name. Before v0.6.0-dev.1 a linked worktree without an origin or a map entry of its own was named by its own directory; receipts filed from one under that name are now about another repository name and read `open` until the gate is run again. Nothing is relabelled.
+A linked worktree is the same repository as its clone: a map entry for either names both (they share a Git directory), and so do its remotes and the clone's directory name. Before v0.6.0-dev.1 a linked worktree without an origin or a map entry of its own was named by its own directory; receipts filed from one under that name are now about another repository name and read `open` until the gate is run again. Nothing is relabelled.
 
 A pattern with `/` is refused, so two clones with the same last segment (`acme/api` and `beta/api`) both answer to `api`. To tell them apart, map each clone under a unique name, or put the rule in that repository's own `.writfold/guards/` instead of the KB root.
 

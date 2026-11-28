@@ -145,33 +145,6 @@ pub fn normalise(url: &str) -> String {
     }
 }
 
-/// The `url` of `[remote "origin"]` in a Git config file's text.
-pub fn origin_in(config: &str) -> Option<String> {
-    let mut inside = false;
-    for line in config.lines().map(str::trim) {
-        if line.starts_with('[') {
-            let header: String = line.chars().filter(|c| !c.is_whitespace()).collect();
-            inside = header == "[remote\"origin\"]";
-            continue;
-        }
-        if !inside {
-            continue;
-        }
-        if let Some((key, value)) = line.split_once('=')
-            && key.trim().eq_ignore_ascii_case("url")
-        {
-            return Some(value.trim().trim_matches('"').to_owned());
-        }
-    }
-    None
-}
-
-/// The origin URL of the clone whose Git directory is `git_dir`.
-pub fn origin(git_dir: &Path) -> Option<String> {
-    let config = repos::common_dir(git_dir).join("config");
-    origin_in(&std::fs::read_to_string(config).ok()?)
-}
-
 /// `~/x` against `$HOME`.
 fn expand(hint: &str) -> PathBuf {
     match (hint.strip_prefix("~/"), std::env::var_os("HOME")) {
@@ -202,9 +175,8 @@ fn candidate(dir: Option<PathBuf>, want: &str) -> (Candidate, Option<(PathBuf, S
     let same = at.is_some();
     let had = match at {
         Some(u) => u.clone(),
-        None => origin(&git_dir)
-            .or_else(|| urls.first().cloned())
-            .unwrap_or_default(),
+        // Shown in a mismatch note: the clone's first remote, by no name.
+        None => urls.first().cloned().unwrap_or_default(),
     };
     (Candidate::Clone(same), Some((git_dir, had)))
 }

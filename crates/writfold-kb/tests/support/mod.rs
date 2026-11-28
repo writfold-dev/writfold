@@ -6,6 +6,8 @@
     dead_code,
     reason = "shared by several test binaries; each one uses only part of it"
 )]
+pub mod foreign;
+
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;

@@ -29,6 +29,8 @@ Leave a rule in audit for as long as it takes to see real work pass through it (
 
 **Then choose a posture.** Once the rules hold, decide what a call the guard cannot decide should get. The default, `open`, lets it through, as Writfold always has. A team that would rather be asked (`ask`) or stopped (`deny`) when a rule file is broken, a required rule is missing or the KB cannot be read writes `.writfold/guards.toml` and sets the plugin's posture option to match ([hooks, failing open](hooks.md#failing-open)). Name the rules that must be present in `required`, so deleting one is not a quiet pass. Start with `ask`: `deny` wedges a session until the broken file is fixed outside it.
 
+**Outbound calls nobody listed.** The delivery guard judges only the posting commands it names. To see what else leaves the machine, set `unclassified = "log"` in `.writfold/deliveries/guard.toml` with a starter `local` list, read `writfold kb guard log` for a week, add what is local, route what posts, and only then set `ask` ([delivery modes](delivery-modes.md#everything-else-local-and-unclassified)).
+
 ## 2. Several sessions at once
 
 Each agent session has its own current run, and so does each work tree; the clone's single shared pointer is only the fallback. Two sessions in two repositories, or in two worktrees of one repository, are separated with no setup. Two sessions in the same work tree are separated once the session's ID reaches the shell, which the plugin's `SessionStart` hook does. A reviewer session or a second agent joins an existing run with `writfold kb resume <run> --here`. The rules, the files and the fallbacks are in [hooks, the current run](hooks.md#the-current-run-per-session-and-per-work-tree).

@@ -118,6 +118,25 @@ fn site_file(ws: &Workspace, registration: Posture) -> (Posture, Vec<String>, Op
     }
 }
 
+/// Keep the unclassified commands a `log` policy passed (#187); a log
+/// that cannot be written changes no decision.
+fn log_unclassified(
+    ws: &Workspace,
+    input: &Map<String, Value>,
+    commands: &[String],
+    now: i64,
+) -> String {
+    let text = |k: &str| input.get(k).and_then(Value::as_str).unwrap_or("");
+    let entries = super::outbound::entries(text("session_id"), text("tool_name"), commands, now);
+    match (super::log::path(ws), entries.is_empty()) {
+        (Some(path), false) => match super::log::append(&path, &entries) {
+            Ok(()) => String::new(),
+            Err(why) => format!("writfold kb hook: {why}; the decision is unchanged\n"),
+        },
+        _ => String::new(),
+    }
+}
+
 /// Decide one event, given as the canonical map ([`super::event`]), under
 /// the registration's posture.
 pub fn decide(
@@ -129,13 +148,20 @@ pub fn decide(
 ) -> Sited {
     let (posture, required, broken) = site_file(ws, registration);
     let mut stderr = String::new();
+    let mut asked = Vec::new();
     match delivery::judge(ws, input, cwd, now) {
-        Ok(Some(reason)) => {
+        Ok(Some(v)) if v.decision == Decision::Deny => {
             let mut out = Sited::passed(Basis::Judged(Decision::Deny), posture, stderr);
             out.decision = Decision::Deny;
-            out.reasons.push(reason);
+            out.reasons = v.reasons;
             out.delivery = true;
             return out;
+        }
+        Ok(Some(v)) => {
+            stderr.push_str(&log_unclassified(ws, input, &v.logged, now));
+            if v.decision == Decision::Ask {
+                asked = v.reasons;
+            }
         }
         Ok(None) => {}
         Err(why) => stderr = format!("writfold kb hook: {why}\n"),
@@ -146,6 +172,12 @@ pub fn decide(
         None => Sited::passed(Basis::NoRules, posture, stderr),
         Some(loaded) => judged(ws, input, (loaded, &call), now, (posture, stderr)),
     };
+    if !asked.is_empty() {
+        out.decision = combine(out.decision, Decision::Ask);
+        out.basis = Basis::Judged(out.decision);
+        asked.append(&mut out.reasons);
+        out.reasons = asked;
+    }
     out.causes = broken
         .into_iter()
         .chain(causes(loaded.as_ref(), &required))

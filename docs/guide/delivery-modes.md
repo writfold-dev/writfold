@@ -98,12 +98,27 @@ delivery 20261112T211045Z-ee94cc [ready] pr-comment audience=external destinatio
 |---|---|---|
 | `paragraphs.bounded` | mechanical | no prose paragraph has more words than the bound. Code blocks, tables and headings are skipped; each list item is its own paragraph |
 | `references.denied` | mechanical | no line matches a rule of the audience's deny list. With no deny list for the audience the outcome is `unknown`, never a pass |
-| `claims.cited-fresh` | observed | every citation token in the draft is fresh under `kb stale`. A draft with no tokens passes, and the note says `0 citation tokens` |
+| `claims.cited-fresh` | observed | every citation token in the draft is fresh under `kb stale`. A draft with no tokens passes, and the note says `0 citation tokens`, unless the mode sets `min_citations = N` (built in v0.6.0-dev.31): then fewer than N tokens fails, `failed[claims.cited-fresh]: too-few` |
+| `claims.accounted` | mechanical | (built in v0.6.0-dev.31; only in a mode that lists it, never a default) every prose block (a paragraph, a list item, a table row; not a heading, a code block or front matter) is cited with fresh tokens, or ends with exactly one of the mode's `status_tags` in square brackets (`[inferred]`). A bare block fails at its line with the ways to account for it; a stale citation fails; an unverifiable one is `unknown`; a draft with no block is `unknown`. A near-miss tag (`[infered]`), two tags, or a tag on a cited block is a finding. The note counts cited and tagged blocks apart; the check never says the text is true ([below](#claims-inside-text)) |
 | `length.bounded` | mechanical | (built in v0.6.0-dev.11; only in a mode that lists it, never a default) the whole payload has at most `max_chars` characters and `max_lines` lines. A finding names the line where the bound is crossed: `failed[length.bounded]: 3 lines; this mode takes at most 2 (max_lines)`. Listing it without either bound is refused |
 | `prose.rules` | mechanical | (built in v0.6.0-dev.20; only in a mode that lists it with `prose = "<set>"`, never a default) no prose line matches a **blocking** rule of the rule set. Matches of **advice** rules are shown and recorded and never hold the draft back. A rule set with no rules is `unknown`, never a pass ([below](#prose-rules)) |
 | `invocation.bound` | mechanical | (built in v0.6.0-dev.22; only in a mode that lists it with `agent = "<id>"`, never a default) the candidate names an agent invocation of this run (`deliver prepare --invocation`), prepared at the step that owes this mode, for the mode's `agent`, under the profile's closure as it is now, with no second report for it. It judges records, not the report. An unreadable record is `unknown` ([agents](agents.md#deliver-the-report-bound-to-its-invocation)) |
 
-The checks count words, match patterns and run `stale`. They do not judge tone or truth, and they miss a claim made in prose without a citation token.
+The checks count words, match patterns and run `stale`. They do not judge tone or truth. `claims.cited-fresh` alone misses a claim made in prose without a citation token; `claims.accounted` makes every block say how it stands.
+
+### Claims inside text
+
+Built in v0.6.0-dev.31 ([#189](https://github.com/writfold-dev/writfold/issues/189)). A research note or a brief usually mixes claims backed by a source with inference and open questions. `claims.accounted` asks each prose block to say which:
+
+```toml
+schema = "writfold-delivery-mode/1"
+mode = "brief"
+checks = ["claims.cited-fresh", "claims.accounted"]
+min_citations = 1
+status_tags = ["inferred", "open"]
+```
+
+A block is accounted for when its citation tokens are fresh, or when it ends with one tag (`… the retry budget is the likely cause. [inferred]`). A tag accounts for a block; it says nothing about its truth, and the note counts tags apart from citations. The decision is `writfold_core::claims::accounted`, proved in `proofs/Writfold/Claims.lean` and linked to law U (`Calculus.Universal`): a pass leaves no block over (`remainder_is_bare`), and an empty draft is never a pass (`empty_never_passes`). A reviewer excusing a block that makes no claim is planned ([#221](https://github.com/writfold-dev/writfold/issues/221)).
 
 ## A mode file
 
@@ -303,6 +318,8 @@ Under a route, the call passes exactly when a candidate of the run is **postable
 
 A body the guard **cannot read** is denied under a route. It is unread when: no listed flag is present; a listed flag appears more than once; a flag has no value; the value holds a shell expansion; a file value is `-` (standard input) or cannot be read; the tool input has no string at `field`; or the command acts in another directory and the file is relative. A command acts elsewhere when a `cd` or `pushd` before it in the line, `git -C`, `--work-tree`, `--git-dir` or a `GIT_DIR`/`GIT_WORK_TREE` assignment moves it ([how a command is read](hooks.md#how-a-command-is-read)). A relative body file is then never read from the hook's directory, which the shell would not have posted.
 
+**A positional body** (built in v0.6.0-dev.31, [#187](https://github.com/writfold-dev/writfold/issues/187)). `file=@1`, `@2` … `@9` or `@last` names the command's first, second or last positional argument as the body file, and `flags=` the flags that take a value, so their values are not counted as positionals: `gh gist create: mode=pr-comment file=@last flags=--desc,-d`. An unlisted flag followed by a word might take that word as its value, so the body is unread (and denied under the route): list the flag in `flags=`. A positional `file` stands alone: no `body=`, no second `file`.
+
 ### Listed commands and tools: the lenient rule
 
 A Bash call that begins with a `commands` entry is read by `--body`, `-b`, `--body-file` or `-F`; a `tools` entry is guarded as a whole, its body never read. A listed call keeps the rule it had:
@@ -311,6 +328,26 @@ A Bash call that begins with a `commands` entry is read by `--body`, `-b`, `--bo
 - bytes not read (a tool, a shell expansion, no body flag, or a relative file after `cd`): the call passes when the run has at least one live candidate and every live candidate is ready.
 
 Two things changed for listed calls in v0.6.0-dev.4: a withdrawn candidate no longer counts, and a candidate recorded as posted no longer passes a second time.
+
+### Everything else: `local` and `unclassified`
+
+Built in v0.6.0-dev.31 ([#187](https://github.com/writfold-dev/writfold/issues/187)). Without the keys below the guard judges only what its lists name: a `gh gist create` beside a routed `gh pr comment` passes in silence, as before. With them, **every** simple command of a Bash line and every tool call gets a class:
+
+```toml
+schema = "writfold-guard/1"
+local = ["ls", "cargo test", "git status"]     # what the team says stays here
+local_tools = ["Edit", "Write", "Read"]
+unclassified = "log"                            # pass | log | ask | deny
+```
+
+- **routed** or **listed**: judged as above;
+- **local**: named by `local` or `local_tools`; it never refuses;
+- **opaque**: a program that runs its arguments, which the guard cannot read: `bash -c`, `sh -c`, `zsh -c`, `eval`, `xargs`, `find -exec`, `watch`, `ssh` with a remote command, and backquote or `$(…)` substitution. It is never local, whatever the list says;
+- **unclassified**: anything else.
+
+An opaque or unclassified member gets the policy: `pass` and `log` let it through (`log` also writes it to the guard log), `ask` makes Claude Code ask, `deny` refuses, with a reason naming the two ways out: route the command, or add it to `local`. A line takes its strictest member (a denial wins over a question, which wins over a pass). The decision is `writfold_core::delivery::outbound::outbound`, proved in `proofs/Writfold/Outbound.lean`: under `pass` only routed and listed members decide (`default_unchanged`), a wrapper is never a way round the policy (`opaque_is_unclassified`), local calls never refuse (`local_never_refuses`).
+
+`local` is a list the team keeps, not a detector of external writes: a local command that posts is not caught. Build it with `unclassified = "log"`: `writfold kb guard log` lists each unclassified command with how often it was seen (`guard-log unclassified … seen=N`, trailer `unclassified=N`). Add what is local, route what posts, then turn on `ask`. The init example starts that way.
 
 ### Denials
 

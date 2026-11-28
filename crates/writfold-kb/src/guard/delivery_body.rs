@@ -39,7 +39,7 @@ impl Matched {
     }
 }
 
-fn routed(r: &Route, read: Read) -> Matched {
+pub fn routed(r: &Route, read: Read) -> Matched {
     Matched {
         name: r.name(),
         mode: r.mode.clone(),
@@ -89,46 +89,76 @@ pub fn matched(guard: &Guard, input: &Map<String, Value>, cwd: &Path) -> Option<
 }
 
 fn bash(guard: &Guard, line: &str, cwd: &Path) -> Option<Matched> {
+    segments(guard, line, cwd)
+        .into_iter()
+        .find_map(|s| s.matched)
+}
+
+/// One simple command of a Bash line, as the delivery guard reads it.
+pub struct Segment {
+    /// Its words once wrappers are set aside ([`shell::invocations`]).
+    pub words: Vec<String>,
+    /// Its text as written.
+    pub text: String,
+    /// A route or a listed command that covers it, with its body.
+    pub matched: Option<Matched>,
+}
+
+/// Every simple command of `line`, each with what covers it.
+pub fn segments(guard: &Guard, line: &str, cwd: &Path) -> Vec<Segment> {
     let home = std::env::var("HOME").ok();
     let cwd_text = cwd.to_string_lossy();
     let here = shell::invocations("true", &cwd_text, home.as_deref())
         .first()
         .map(|i| i.dir.clone());
     let invocations = shell::invocations(line, &cwd_text, home.as_deref());
+    let mut out = Vec::new();
     for (segment, inv) in shell::segments(line).iter().zip(&invocations) {
         let words = shell::command(segment);
         let elsewhere = Some(&inv.dir) != here.as_ref() || matches!(inv.dir, Dir::Unresolved(_));
-        if let Some(r) = guard
-            .routes
-            .iter()
-            .find(|r| !r.is_tool() && shell::matches(&r.words, &inv.words))
-        {
-            let flags: Vec<(&str, bool)> = (r.body.iter().map(|f| (f.as_str(), false)))
-                .chain(r.file.iter().map(|f| (f.as_str(), true)))
-                .collect();
-            return Some(routed(r, read(words, &flags, cwd, elsewhere)));
+        let matched = covered(guard, words, &inv.words, (cwd, elsewhere));
+        out.push(Segment {
+            words: inv.words.clone(),
+            text: (segment.iter().map(|w| w.text.as_str()))
+                .collect::<Vec<_>>()
+                .join(" "),
+            matched,
+        });
+    }
+    out
+}
+
+fn covered(
+    guard: &Guard,
+    words: &[Word],
+    acting: &[String],
+    (cwd, elsewhere): (&Path, bool),
+) -> Option<Matched> {
+    if let Some(r) =
+        (guard.routes.iter()).find(|r| !r.is_tool() && shell::matches(&r.words, acting))
+    {
+        if let Some(read) = super::positional::read(r, words, cwd, elsewhere) {
+            return Some(routed(r, read));
         }
-        if guard.commands.iter().any(|c| shell::matches(c, &inv.words)) {
-            return Some(Matched {
-                name: inv
-                    .words
-                    .iter()
-                    .take(3)
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join(" "),
-                mode: None,
-                file_flag: Some("--body-file".into()),
-                routed: false,
-                read: read(words, &BODY_FLAGS, cwd, elsewhere),
-            });
-        }
+        let flags: Vec<(&str, bool)> = (r.body.iter().map(|f| (f.as_str(), false)))
+            .chain(r.file.iter().map(|f| (f.as_str(), true)))
+            .collect();
+        return Some(routed(r, read(words, &flags, cwd, elsewhere)));
+    }
+    if guard.commands.iter().any(|c| shell::matches(c, acting)) {
+        return Some(Matched {
+            name: acting.iter().take(3).cloned().collect::<Vec<_>>().join(" "),
+            mode: None,
+            file_flag: Some("--body-file".into()),
+            routed: false,
+            read: read(words, &BODY_FLAGS, cwd, elsewhere),
+        });
     }
     None
 }
 
 /// The body named by exactly one of `flags` in `words`.
-fn read(words: &[Word], flags: &[(&str, bool)], cwd: &Path, elsewhere: bool) -> Read {
+pub fn read(words: &[Word], flags: &[(&str, bool)], cwd: &Path, elsewhere: bool) -> Read {
     let mut hits: Vec<(&str, bool, Option<Word>)> = Vec::new();
     for (i, word) in words.iter().enumerate() {
         for (flag, file) in flags {
@@ -158,6 +188,14 @@ fn read(words: &[Word], flags: &[(&str, bool)], cwd: &Path, elsewhere: bool) -> 
     }
     if !file {
         return Read::Bytes(value.text.as_bytes().to_vec());
+    }
+    file_bytes(value, cwd, elsewhere)
+}
+
+/// The bytes of the body file `value` names, or why they cannot be read.
+pub fn file_bytes(value: &Word, cwd: &Path, elsewhere: bool) -> Read {
+    if value.expands {
+        return Read::Unread("the body holds a shell expansion".into());
     }
     if value.text == "-" {
         return Read::Unread("the body is read from standard input".into());
