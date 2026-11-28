@@ -873,6 +873,8 @@ lean = "writfold_core.packet.required_omitted"
 theorems = [
   "Writfold.Core.Packet.omitted_counted",
   "Writfold.Core.Packet.required_omitted_spec",
+  "Writfold.Core.Conform.required_omitted_implements",
+  "Writfold.Core.Conform.packet_omitted_counted",
 ]
 total = "Writfold.Core.Packet.required_omitted_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2785,6 +2787,7 @@ theorems = [
   "Writfold.Core.Inventory.unreadable_loop_spec",
   "Writfold.Core.Inventory.unreadable_pos_iff",
   "Writfold.Core.Inventory.unreadable_total",
+  "Writfold.Core.Conform.unreadable_implements",
 ]
 total = "Writfold.Core.Inventory.unreadable_total"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2801,6 +2804,7 @@ theorems = [
   "Writfold.Core.Inventory.all_true_loop_spec",
   "Writfold.Core.Inventory.all_true_spec",
   "Writfold.Core.Inventory.all_true_total",
+  "Writfold.Core.Conform.all_true_implements",
 ]
 total = "Writfold.Core.Inventory.all_true_total"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2970,6 +2974,8 @@ lean = "writfold_core.runs.complete"
 theorems = [
   "Writfold.Core.Runs.complete_spec",
   "Writfold.Core.Conform.runs_complete_implements",
+  "Writfold.Core.Conform.runs_no_manifest_incomplete",
+  "Writfold.Core.Conform.runs_unreadable_incomplete",
 ]
 total = "Writfold.Core.Runs.complete_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -3196,6 +3202,9 @@ theorems = [
   "Writfold.Core.Units.generated_covered_iff",
   "Writfold.Core.Units.absent_universe_never_covered",
   "Writfold.Core.Units.empty_universe_needs_allow",
+  "Writfold.Core.Conform.generated_implements",
+  "Writfold.Core.Conform.generated_absent_never_covered",
+  "Writfold.Core.Conform.generated_empty_needs_allow",
 ]
 total = "Writfold.Core.Units.generated_covered_iff"
 mutants = [
@@ -3216,6 +3225,8 @@ theorems = [
   "Writfold.Core.Units.passing_iff",
   "Writfold.Core.Units.partial_manifest_never_present",
   "Writfold.Core.Units.member_outside_scope_never_present",
+  "Writfold.Core.Conform.universe_implements",
+  "Writfold.Core.Conform.universe_partial_never_present",
 ]
 total = "Writfold.Core.Units.universe_first"
 mutants = [
@@ -3397,6 +3408,7 @@ theorems = [
   "Writfold.Core.Walk.complete_within_iff",
   "Writfold.Core.Walk.truncated_never_complete",
   "Writfold.Core.Conform.walk_complete_within_implements",
+  "Writfold.Core.Conform.walk_truncated_never_complete",
 ]
 total = "Writfold.Core.Walk.complete_within_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -3567,4 +3579,74 @@ function = "holds"
 lean = "writfold_core.pin.holds"
 theorems = [
   "Writfold.Core.Conform.pin_holds_implements",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/catalog.rs"
+function = "verdict"
+lean = "writfold_core.catalog.verdict"
+theorems = [
+  "Writfold.Core.Catalog.verdict_spec",
+  "Writfold.Core.Conform.catalog_verdict_implements",
+]
+total = "Writfold.Core.Catalog.verdict_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "catalog-partial-as-empty",
+  "catalog-ignores-conflict",
+  "catalog-dirty-as-clean",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/catalog.rs"
+function = "plan"
+lean = "writfold_core.catalog.plan"
+theorems = [
+  "Writfold.Core.Catalog.plan_spec",
+  "Writfold.Core.Catalog.clean_iff",
+  "Writfold.Core.Catalog.invalid_iff",
+  "Writfold.Core.Catalog.plan_total",
+  "Writfold.Core.Conform.catalog_plan_implements",
+  "Writfold.Core.Conform.catalog_partial_never_clean",
+]
+total = "Writfold.Core.Catalog.plan_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "catalog-plan-ignores-conflict",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/checklist.rs"
+function = "rollup_under"
+lean = "writfold_core.checklist.rollup_under"
+theorems = [
+  "Writfold.Core.Checklist.rollup_under_spec",
+  "Writfold.Core.Checklist.rollup_covered_iff",
+  "Writfold.Core.Checklist.rollup_optional_irrelevant",
+  "Writfold.Core.Conform.rollup_under_implements",
+]
+total = "Writfold.Core.Checklist.rollup_under_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "rollup-covered-always",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/graph.rs"
+function = "plan"
+lean = "writfold_core.graph.plan"
+theorems = [
+  "Writfold.Core.Graph.plan_skip_iff",
+  "Writfold.Core.Graph.plan_delta_iff",
+  "Writfold.Core.Graph.plan_total",
+  "Writfold.Core.Conform.graph_plan_implements",
+]
+total = "Writfold.Core.Graph.plan_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "plan-skip-ignores-changes",
 ]

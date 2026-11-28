@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=85 declared_out=124 remainder=54 of 263`
+`LAW_COVERAGE judged=94 declared_out=142 remainder=27 of 263`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: the backlog in
@@ -313,7 +313,7 @@ The remainder of two parts is the sum of their remainders.
 remainder_append (xs ys : List Member) : remainder (xs ++ ys) = remainder xs + remainder ys
 ```
 
-- Implemented by: `account.remainder`
+- Implemented by: `account.remainder`, `packet.required_omitted`
 - Derived: List.countP_append
 
 ### `Calculus.whole_iff_no_remainder`
@@ -324,7 +324,7 @@ A universe is whole exactly when no member is left over.
 whole_iff_no_remainder (ms : List Member) : whole ms = true ↔ Member.remainder ∉ ms
 ```
 
-- Implemented by: `account.whole`, `inventory.complete`, `walk.complete`
+- Implemented by: `account.whole`, `inventory.complete`, `inventory.unreadable`, `units.universe`, `walk.complete`
 - Caught by: `remainder-counts-declared-out`, `whole-ignores-remainder`
 
 ### `Calculus.whole_append`
@@ -335,7 +335,7 @@ Two parts are whole together exactly when each is whole.
 whole_append (xs ys : List Member) : whole (xs ++ ys) = (whole xs && whole ys)
 ```
 
-- Implemented by: `account.whole`, `inventory.complete`
+- Implemented by: `account.whole`, `inventory.complete`, `inventory.unreadable`
 - Derived: remainder_append
 
 ### `Calculus.judged_never_counts`
@@ -368,6 +368,7 @@ An account by counts has exactly the remainder it was given.
 remainder_counts (j o r : Nat) : remainder (Member.counts j o r) = r
 ```
 
+- Implemented by: `packet.required_omitted`
 - Caught by: `remainder-counts-declared-out`
 
 ### `Calculus.whole_counts`
@@ -389,7 +390,7 @@ Law U: a universal word holds exactly when the universe is whole, every judged m
 universal_yes_iff (e : Bool) (ms : List (Member × Tri)) : universal e ms = .yes ↔ whole (ms.map (·.1)) = true ∧ (∀ t ∈ judgedOf ms, t = .yes) ∧ (e = true ∨ judgedOf ms ≠ [])
 ```
 
-- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`, `policy.summary`
+- Implemented by: `catalog.verdict`, `checklist.rollup_under`, `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.all_true`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`, `policy.summary`, `units.generated`
 - Caught by: `universal-skips-whole`, `universal-empty-yes`
 
 ### `Calculus.remainder_never_whole`
@@ -400,7 +401,7 @@ Law U: the word holds only when the remainder is zero.
 remainder_never_whole (e : Bool) (ms : List (Member × Tri)) (h : Member.remainder ∈ ms.map (·.1)) : universal e ms ≠ .yes
 ```
 
-- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`, `policy.summary`
+- Implemented by: `catalog.plan`, `catalog.verdict`, `checklist.rollup_under`, `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.lines_clean_over`, `inventory.unplanned_clean`, `policy.lines.lines_clean`, `policy.lines.owed_met`, `policy.summary`, `units.generated`
 - Derived: universal_yes_iff, whole_iff_no_remainder
 
 ### `Calculus.empty_never_yes`
@@ -411,7 +412,7 @@ remainder_never_whole (e : Bool) (ms : List (Member × Tri)) (h : Member.remaind
 empty_never_yes (ms : List (Member × Tri)) (h : judgedOf ms = []) : universal false ms ≠ .yes
 ```
 
-- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.unplanned_clean`, `policy.summary`
+- Implemented by: `delivery.guard_all`, `delivery.guard`, `delivery.ready`, `handoff.checked`, `handoff.strict`, `inventory.unplanned_clean`, `policy.summary`, `units.generated`
 - Derived: universal_yes_iff
 
 ### `Calculus.universal_sound`
@@ -432,6 +433,7 @@ A failing member is a witness in any universe, whole or not.
 universal_no_of_witness (e : Bool) (ms : List (Member × Tri)) (h : Tri.no ∈ judgedOf ms) : universal e ms = .no
 ```
 
+- Implemented by: `catalog.plan`, `catalog.verdict`, `inventory.all_true`
 - Derived: the first branch of universal
 
 ### `Calculus.search_yes_iff`
@@ -442,7 +444,7 @@ An existential word holds exactly when a witness was found.
 search_yes_iff (w f : Bool) : search w f = .yes ↔ f = true
 ```
 
-- Implemented by: `delivery.guard_any`, `pin.nothing_found`
+- Implemented by: `delivery.guard_any`, `graph.plan`, `pin.nothing_found`
 - Derived: the first branch of search
 
 ### `Calculus.absence_needs_whole`
@@ -453,7 +455,7 @@ A partial universe never proves that something is absent.
 absence_needs_whole (w f : Bool) (h : search w f = .no) : w = true
 ```
 
-- Implemented by: `delivery.guard_any`, `pin.nothing_found`
+- Implemented by: `delivery.guard_any`, `graph.plan`, `pin.nothing_found`
 - Caught by: `search-partial-says-no`
 
 ## Evidence: classes, policy, one record decides
@@ -845,6 +847,9 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 |---|---|---|
 | `account.remainder` | `Calculus.remainder` | `Writfold.Core.Conform.remainder_implements` |
 | `account.whole` | `Calculus.whole` | `Writfold.Core.Conform.whole_implements` |
+| `catalog.plan` | `Calculus.universal` | `Writfold.Core.Conform.catalog_plan_implements` |
+| `catalog.verdict` | `Calculus.universal` | `Writfold.Core.Conform.catalog_verdict_implements` |
+| `checklist.rollup_under` | `Calculus.universal` | `Writfold.Core.Conform.rollup_under_implements` |
 | `checklist.standing` | `Calculus.stand` | `Writfold.Core.Conform.checklist_standing_implements` |
 | `checklist.state` | `Calculus.stand` | `Writfold.Core.Conform.checklist_state_implements` |
 | `compose.closure` | `Calculus.admit` | `Writfold.Core.Conform.compose_closure_implements` |
@@ -866,6 +871,7 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `gate.outcome_kept` | `Calculus.Tri.and` | `Writfold.Core.Conform.gate_outcome_kept_implements` |
 | `gate.standing` | `Calculus.stand` | `Writfold.Core.Conform.gate_standing_implements` |
 | `gate.state` | `Calculus.deciding` | `Writfold.Core.Conform.gate_state_implements` |
+| `graph.plan` | `Calculus.search` | `Writfold.Core.Conform.graph_plan_implements` |
 | `ground.of_delivery` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_delivery_implements` |
 | `ground.of_gate` | `Calculus.Standing.cls` | `Writfold.Core.Conform.ground_of_gate_implements` |
 | `ground.of_observation` | `Calculus.stand` | `Writfold.Core.Conform.ground_of_observation_implements` |
@@ -890,13 +896,16 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `guard.verdict` | `Calculus.admit` | `Writfold.Core.Conform.guard_verdict_implements` |
 | `handoff.checked` | `Calculus.universal` | `Writfold.Core.Conform.handoff_checked_implements` |
 | `handoff.strict` | `Calculus.universal` | `Writfold.Core.Conform.handoff_strict_implements` |
+| `inventory.all_true` | `Calculus.universal` | `Writfold.Core.Conform.all_true_implements` |
 | `inventory.complete` | `Calculus.whole` | `Writfold.Core.Conform.inventory_complete_implements` |
 | `inventory.lines_clean_over` | `Calculus.universal` | `Writfold.Core.Conform.lines_clean_over_implements` |
 | `inventory.unplanned_clean` | `Calculus.universal` | `Writfold.Core.Conform.unplanned_clean_implements` |
+| `inventory.unreadable` | `Calculus.whole` | `Writfold.Core.Conform.unreadable_implements` |
 | `invoke.bound` | `Calculus.settle` | `Writfold.Core.Conform.invoke_bound_implements` |
 | `invoke.prepare` | `Calculus.admit` | `Writfold.Core.Conform.prepare_implements` |
 | `invoke.prepare_check` | `Calculus.admit` | `Writfold.Core.Conform.prepare_check_implements` |
 | `packet.complete` | `Calculus.whole` | `Writfold.Core.Conform.packet_complete_implements` |
+| `packet.required_omitted` | `Calculus.remainder` | `Writfold.Core.Conform.required_omitted_implements` |
 | `pin.current_under` | `Calculus.Tri.all` | `Writfold.Core.Conform.pin_current_under_implements` |
 | `pin.holds` | `Calculus.Tri.all` | `Writfold.Core.Conform.pin_holds_implements` |
 | `pin.nothing_found` | `Calculus.search` | `Writfold.Core.Conform.pin_nothing_found_implements` |
@@ -925,6 +934,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `subject.pick` | `Calculus.resolve` | `Writfold.Core.Conform.pick_implements` |
 | `target.choose` | `Calculus.resolve` | `Writfold.Core.Conform.choose_implements` |
 | `target.choose_in` | `Calculus.resolve` | `Writfold.Core.Conform.choose_in_implements` |
+| `units.generated` | `Calculus.universal` | `Writfold.Core.Conform.generated_implements` |
+| `units.universe` | `Calculus.whole` | `Writfold.Core.Conform.universe_implements` |
 | `vale.settle` | `Calculus.settle` | `Writfold.Core.Conform.vale_settle_implements` |
 | `walk.complete` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_implements` |
 | `walk.complete_within` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_within_implements` |
@@ -934,6 +945,7 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | Rust type | Calculus word | Abstraction |
 |---|---|---|
 | `account.Member` | `Calculus.Member` | `memberOf` (onto: `memberOf_onto`) |
+| `catalog.Verdict` | `Calculus.Tri` | `catalogTri` (onto: `catalogTri_onto`) |
 | `gate.Ending` | `Calculus.Tri` | `endingTri` (onto: `endingTri_onto`) |
 | `gate.Outcome` | `Calculus.Tri` | `outcomeTri` (onto: `outcomeTri_onto`) |
 | `gate.Standing` | `Calculus.Standing` | `standingOf` (onto: `standingOf_onto`) |
@@ -954,6 +966,12 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `bind.answers` | whether a reference's binding answers a need (answers_spec); a matching table, about no law of the core |
 | `bind.item_under` | a row's item under a binding answer (item_under_spec); returns the local checklist.Item |
 | `bytes.same` | byte equality, the plumbing under every key and path comparison (same_spec) |
+| `catalog.action` | one slot's write action (create, replace, remove, keep, conflict): a table of writes, not a word of the calculus |
+| `catalog.any_change` | the change fold inside catalog::plan, linked through it (any_change_spec) |
+| `catalog.any_conflict` | the conflict fold inside catalog::plan, linked through it (any_conflict_spec) |
+| `catalog.changes` | the per-slot change test inside catalog::plan, linked through it (changes_spec) |
+| `catalog.conflicts` | the per-slot conflict test inside catalog::plan, linked through it (conflicts_spec) |
+| `catalog.patches` | whether a verdict may write: any verdict but invalid; the verdict itself is linked (partial_never_patches) |
 | `checklist.any_stale` | whether any required row is stale (any_stale_spec); inside rollup_under |
 | `checklist.covered_under` | a row's coverage under the checklist's policy (covered_under_spec); the per-member test of rollup_under (#211) |
 | `checklist.first_owed` | the first owed entry, a witness for the report (first_owed_spec); inside rollup_under |
@@ -992,6 +1010,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `gate.evidence` | assembles a receipt's facts from bytes (evidence_spec); linked through gate.judge |
 | `gate.stands` | whether one statement is about the present (stands_spec); inside gate.statements, whose flags gate.standing reads |
 | `gate.statements` | folds statements into three flags (statements_spec); the flags are gate.standing's inputs, linked there |
+| `graph.affected` | whether one file's edges may have changed: a disjunction of three change facts (affected_iff), inside graph::plan's input |
+| `graph.any` | the fold inside graph::plan, linked through it (any_spec) |
 | `ground.moved` | compares a recorded grounding with today's (moved_iff): change detection, about no law of the core |
 | `guard.call.logged` | whether a decision is written to the guard log; a record of the decision, not a decision (logged_iff) |
 | `handoff.first_failing` | names the lowest failing item, the refusal's index; strict decides (first_failing_spec) |
@@ -1000,6 +1020,7 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `idle.newer` | compares two timestamps (newer_spec) |
 | `idle.newest` | the newest timestamp of a list (newest_spec) |
 | `idle.since` | saturating difference of two timestamps (since_spec) |
+| `inventory.readable` | the per-root test inside inventory::complete and unreadable, linked through them (readable_spec) |
 | `investigation.Missing.none` | whether an investigation conclusion lacks nothing; the investigation-state table (none_spec) |
 | `investigation.conclude` | what an investigation conclusion still lacks; the investigation-state table (conclude_spec) |
 | `invoke.first_unmet` | names the lowest unmet need, the refusal's index; prepare decides (first_unmet_spec) |
@@ -1008,6 +1029,7 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `order.less` | byte-lexicographic order (less_spec); a total order, about no law of the core |
 | `order.newest` | the newest by (seq, name): Calculus.deciding orders by a Nat seq alone and cannot express the name tiebreak (newest_spec) |
 | `order.precedes` | the (seq, name) order (precedes_spec); a total order, about no law of the core |
+| `packet.cut` | how many rows fit a byte budget: prefix-sum arithmetic (cut_spec), no law of the calculus |
 | `pin.holds_from` | the loop inside pin.holds, linked through it (holds_from_loop_spec) |
 | `pin.timed` | a pin's age from a lifetime and a clock (timed_spec); arithmetic on time, about no law of the core |
 | `plan.close_check` | names the first owed line when the last step closes; the refusal's index (close_check_spec) |
@@ -1029,6 +1051,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `plan.splice` | inserts nodes into the plan; the plan's order (splice_spec) |
 | `plan.splice_check` | where a splice inserts, or that it already did; the plan's order (splice_check_spec) |
 | `plan.stale` | whether a done step's gates no longer hold; the plan's order (stale_spec, stale_never_current) |
+| `pointer.is_set` | whether one pointer level is set, inside pointer::level, linked through it (is_set_spec) |
+| `pointer.writes` | which pointer files a run writes (writes_spec): file protocol, not a word of the calculus |
 | `policy.all_passed` | whether every step passed (all_passed_spec); inside summary, linked there |
 | `policy.any_attested` | whether any gate was met by attestation (any_attested_spec); inside policy.close |
 | `policy.any_moved` | whether any pin moved (any_moved_spec); inside pin_all |
@@ -1050,6 +1074,10 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `policy.repin.in_force` | the newest pin in force; an index (in_force_spec) |
 | `prose.agrees` | cross-checks a recorded outcome with its blocking count (agrees_spec) |
 | `prose.blocking` | counts blocking alerts; plumbing inside prose::verdict (blocking_spec) |
+| `publish.derived` | index publication of a derived file: protocol (derived_replace_iff), not a word of the calculus |
+| `publish.repair` | index publication's repair choice (replace, keep, retry) against concurrent writers: protocol, modelled in TLA+, not a word of the calculus |
+| `referent.claims_change` | which said verdicts claim change, inside referent::settle, linked through it (Calculus.settle's refutable test) |
+| `runs.shown` | which runs a listing shows under a filter: presentation (shown_spec), no law of the calculus |
 | `scope.char_step` | one step of glob matching on characters (char_step_spec) |
 | `scope.covers` | whether a path is in a glob scope (covers_iff) |
 | `scope.globstar` | whether a segment is ** (globstar_spec) |
@@ -1066,6 +1094,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `target.rank` | a remote's naming level, inside choose_in; linked through it (rank_spec) |
 | `target.tip_commit` | a tip's commit, inside choose_in (tip_commit_spec) |
 | `target.tip_is` | a tip compared with a commit, inside choose_in (tip_is_spec) |
+| `units.pairs` | enumerates the member pairs of a generated checklist under a cap (pairs_spec): enumeration, no law of the calculus |
+| `units.unit_moved` | names the first input of a unit that moved (unit_first_moved): a byte comparison's report, no law of the calculus |
 | `vale.rules` | how many rules a Vale run enabled; the resolved input of vale::settle (rules_spec) |
 | `vale.usable` | whether a Vale run can be read; the resolved input of vale::settle (usable_spec) |
 | `vale.weigh` | an alert's weight under the blocking level (weigh_spec) |
