@@ -52,6 +52,11 @@ pub fn append(log: &Path, entries: &[Value]) -> Result<(), String> {
     if entries.is_empty() {
         return Ok(());
     }
+    // A fresh KB has no `.git/writfold/` until something local is written.
+    if let Some(dir) = log.parent() {
+        std::fs::create_dir_all(dir)
+            .map_err(|e| format!("cannot write the guard log {}: {e}", log.display()))?;
+    }
     if std::fs::metadata(log).is_ok_and(|m| m.is_file() && m.len() >= LIMIT) {
         let rotated = log.with_file_name(ROTATED);
         std::fs::rename(log, rotated).map_err(|e| format!("cannot rotate the guard log: {e}"))?;
@@ -85,4 +90,20 @@ pub fn read(log: &Path) -> (Vec<Value>, usize) {
         }
     }
     (entries, unparsed)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_first_entry_makes_its_directory() -> Result<(), String> {
+        let base = std::env::temp_dir().join(format!("writfold-guard-log-{}", std::process::id()));
+        let log = base.join("writfold").join(FILE);
+        append(&log, &[serde_json::json!({"rule": "r"})])?;
+        let text = std::fs::read_to_string(&log).map_err(|e| e.to_string())?;
+        std::fs::remove_dir_all(&base).map_err(|e| e.to_string())?;
+        assert_eq!(text, "{\"rule\":\"r\"}\n");
+        Ok(())
+    }
 }
