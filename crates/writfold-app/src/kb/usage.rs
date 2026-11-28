@@ -64,9 +64,8 @@ verbs:
                                    (local pointers only; a closed run is refused)
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run
-  guard check --kind K --command|--path|--name X [--tool T] [--json] | --from-event FILE|- [--harness ID]
-                                   the guard site's decision for one event, as the hook makes it, for
-                                   any harness; exit 0 allow, 2 ask, 3 deny (writfold kb guard check --help)
+  guard check KIND SUBJECT | EVENT  the guard site's decision for one event (its own help: guard check -h)
+                                   as the hook makes it, for any harness; exit 0 allow, 2 ask, 3 deny
   guard log [--rule ID] [--since AGE]
                                    what this machine's hook decided per rule, from the local log;
                                    exit 2 if an audit rule would have refused or never matched
