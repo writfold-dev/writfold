@@ -176,3 +176,381 @@ why = "a tip's commit, inside choose_in (tip_commit_spec)"
 [[out]]
 function = "target.tip_is"
 why = "a tip compared with a commit, inside choose_in (tip_is_spec)"
+
+# --- #210 evidence ---
+
+[[word]]
+type = "gate.State"
+core = "Calculus.Tri"
+abstraction = "stateTri"
+onto = "stateTri_onto"
+
+[[word]]
+type = "grounding.Grounding"
+core = "Calculus.Standing"
+abstraction = "groundingOf"
+onto = "groundingOf_onto"
+
+[[word]]
+type = "policy.How"
+core = "Calculus.Class"
+abstraction = "howClass"
+onto = "howClass_onto"
+
+[[local]]
+type = "checklist.Item"
+why = "a checklist row's six states; its coverage is decided per policy by covered_under and reaches the core through checklist.standing (attested)"
+
+[[local]]
+type = "checklist.Outcome"
+why = "a parsed row's outcome, the input of checklist.item"
+
+[[local]]
+type = "delivery.Place"
+why = "a candidate's place; Calculus.deciding counts every place but withdrawn (placeLive) and the kernel names the decider when open"
+
+[[local]]
+type = "policy.Close"
+why = "a step's close; policy.summary reads it as a member of the plan's universe (closeMember)"
+
+[[local]]
+type = "policy.Pin"
+why = "whether a policy moved: a fact the summary reads, not a word of the core"
+
+[[local]]
+type = "policy.Summary"
+why = "the seven-word report of a plan; its complete word is linked to Calculus.universal (policy_summary_implements)"
+
+[[local]]
+type = "pin.Pin"
+why = "a citation pin's four states; the core reads them as requirements that hold or not (pinHeldTri, Tri.all)"
+
+[[local]]
+type = "bind.Bound"
+why = "what a reference is bound to; a matching table input"
+
+[[local]]
+type = "bind.Need"
+why = "what a checklist item needs bound; a matching table input"
+
+[[local]]
+type = "observe.Status"
+why = "a look's transport status; the core reads ok (statusOk) and empty (statusEmpty)"
+
+[[link]]
+function = "gate.state"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.gate_state_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.uncounted_never_decides", "Calculus.older_never_outvotes", "Calculus.deciding_none_iff"]
+
+[[link]]
+function = "gate.judge"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.gate_judge_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.uncounted_never_decides", "Calculus.older_never_outvotes"]
+
+[[link]]
+function = "gate.newest_bound"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.gate_newest_bound_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.deciding_none_iff"]
+
+[[link]]
+function = "gate.Standing.met"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.gate_met_implements"
+laws = ["Calculus.reported_never_met", "Calculus.unknown_never_met", "Calculus.met_narrows"]
+
+[[link]]
+function = "gate.standing"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.gate_standing_implements"
+laws = ["Calculus.class_never_promoted", "Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "checklist.state"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.checklist_state_implements"
+laws = ["Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "checklist.standing"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.checklist_standing_implements"
+laws = ["Calculus.class_never_promoted", "Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "delivery.deciding"
+implements = "Calculus.deciding"
+theorem = "Writfold.Core.Conform.delivery_deciding_implements"
+laws = ["Calculus.deciding_is_newest", "Calculus.uncounted_never_decides", "Calculus.older_never_outvotes"]
+
+[[link]]
+function = "delivery.standing"
+implements = "Calculus.met"
+theorem = "Writfold.Core.Conform.delivery_standing_implements"
+laws = ["Calculus.met_inf", "Calculus.met_narrows", "Calculus.reported_never_met", "Calculus.unknown_never_met"]
+
+[[link]]
+function = "delivery.posted"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.delivery_posted_implements"
+laws = ["Calculus.class_never_promoted", "Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "delivery.rechecked"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.delivery_rechecked_implements"
+laws = ["Calculus.satisfied_only_by_current_pass"]
+
+[[link]]
+function = "ground.of_gate"
+implements = "Calculus.Standing.cls"
+theorem = "Writfold.Core.Conform.ground_of_gate_implements"
+laws = ["Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_receipt"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_receipt_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_token"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_token_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_observation"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_observation_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_statement"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_statement_implements"
+laws = ["Calculus.class_never_promoted"]
+
+[[link]]
+function = "ground.of_delivery"
+implements = "Calculus.stand"
+theorem = "Writfold.Core.Conform.ground_of_delivery_implements"
+laws = ["Calculus.satisfied_only_by_current_pass", "Calculus.class_never_promoted"]
+
+[[link]]
+function = "pin.holds"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.pin_holds_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.unknown_mem_never_admits", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "pin.current_under"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.pin_current_under_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "pin.nothing_found"
+implements = "Calculus.search"
+theorem = "Writfold.Core.Conform.pin_nothing_found_implements"
+laws = ["Calculus.absence_needs_whole", "Calculus.search_yes_iff"]
+
+[[link]]
+function = "policy.summary"
+implements = "Calculus.universal"
+theorem = "Writfold.Core.Conform.policy_summary_implements"
+laws = ["Calculus.universal_yes_iff", "Calculus.remainder_never_whole", "Calculus.empty_never_yes"]
+
+[[out]]
+function = "gate.about"
+why = "byte equality of a record's definition and content with the present ones (about_spec); an input of the deciding record's counts predicate"
+
+[[out]]
+function = "gate.bound"
+why = "a conjunction of three facts (bound_spec); an input of the counts predicate"
+
+[[out]]
+function = "gate.current"
+why = "the counts predicate of the deciding receipt (current_spec); linked through gate.state"
+
+[[out]]
+function = "gate.evidence"
+why = "assembles a receipt's facts from bytes (evidence_spec); linked through gate.judge"
+
+[[out]]
+function = "gate.stands"
+why = "whether one statement is about the present (stands_spec); inside gate.statements, whose flags gate.standing reads"
+
+[[out]]
+function = "gate.attests"
+why = "whether one statement is a bound attestation (attests_spec); inside gate.statements"
+
+[[out]]
+function = "gate.statements"
+why = "folds statements into three flags (statements_spec); the flags are gate.standing's inputs, linked there"
+
+[[out]]
+function = "checklist.item"
+why = "a row's six-word state from a parsed row (item_spec); its coverage is decided per policy by covered_under"
+
+[[out]]
+function = "checklist.covered_under"
+why = "a row's coverage under the checklist's policy (covered_under_spec); the per-member test of rollup_under (#211)"
+
+[[out]]
+function = "checklist.owes"
+why = "a required entry not covered (owes_spec): the remainder test inside rollup_under"
+
+[[out]]
+function = "checklist.first_owed"
+why = "the first owed entry, a witness for the report (first_owed_spec); inside rollup_under"
+
+[[out]]
+function = "checklist.stale"
+why = "whether an entry's row is stale (stale_spec); inside rollup_under"
+
+[[out]]
+function = "checklist.any_stale"
+why = "whether any required row is stale (any_stale_spec); inside rollup_under"
+
+[[out]]
+function = "delivery.is_open"
+why = "a constructor test on a candidate's place (is_open_spec)"
+
+[[out]]
+function = "delivery.is_bound"
+why = "a constructor test on a candidate's place (is_bound_spec)"
+
+[[out]]
+function = "delivery.is_waived"
+why = "a constructor test on a standing, inside delivery.standing (is_waived_spec)"
+
+[[out]]
+function = "delivery.is_attested"
+why = "a constructor test on a standing, inside delivery.standing (is_attested_spec)"
+
+[[out]]
+function = "delivery.fact"
+why = "packages delivery.standing and delivery.ready as a plan gate fact (fact_met_iff_ready); linked through delivery.standing"
+
+[[out]]
+function = "ground.moved"
+why = "compares a recorded grounding with today's (moved_iff): change detection, about no law of the core"
+
+[[out]]
+function = "observe.grounds"
+why = "an ok look with fresh citations (grounds_iff); inside ground.of_observation, linked there"
+
+[[out]]
+function = "observe.embeds"
+why = "whether a look's status carries citations to embed (embeds_iff); a rendering choice"
+
+[[out]]
+function = "pin.holds_from"
+why = "the loop inside pin.holds, linked through it (holds_from_loop_spec)"
+
+[[out]]
+function = "pin.timed"
+why = "a pin's age from a lifetime and a clock (timed_spec); arithmetic on time, about no law of the core"
+
+[[out]]
+function = "bind.answers"
+why = "whether a reference's binding answers a need (answers_spec); a matching table, about no law of the core"
+
+[[out]]
+function = "bind.answered_from"
+why = "the loop inside bind.answered (answered_from_loop_spec)"
+
+[[out]]
+function = "bind.answered"
+why = "whether some grounded reference answers a need (answered_iff); a witness search with no account of a universe"
+
+[[out]]
+function = "bind.item_under"
+why = "a row's item under a binding answer (item_under_spec); returns the local checklist.Item"
+
+[[out]]
+function = "order.less"
+why = "byte-lexicographic order (less_spec); a total order, about no law of the core"
+
+[[out]]
+function = "order.precedes"
+why = "the (seq, name) order (precedes_spec); a total order, about no law of the core"
+
+[[out]]
+function = "order.newest"
+why = "the newest by (seq, name): Calculus.deciding orders by a Nat seq alone and cannot express the name tiebreak (newest_spec)"
+
+[[out]]
+function = "verdict.recorded.better"
+why = "one step of best_recorded under Before (better_spec)"
+
+[[out]]
+function = "verdict.recorded.best_recorded"
+why = "the best recorded statement under Before (recorded time, then severity); Calculus.deciding's Nat seq cannot express that order (best_recorded_spec)"
+
+[[out]]
+function = "verdict.recorded.newest"
+why = "picks the local or the best recorded statement by age and Before (newest_spec); the same order, inexpressible as a Nat seq"
+
+[[out]]
+function = "policy.pin_one"
+why = "a policy pin from recorded and present bytes (pin_one_spec); a fact, about no law of the core"
+
+[[out]]
+function = "policy.is_moved"
+why = "a constructor test on a policy pin (is_moved_spec)"
+
+[[out]]
+function = "policy.is_unpinned"
+why = "a constructor test on a policy pin (is_unpinned_spec)"
+
+[[out]]
+function = "policy.any_moved"
+why = "whether any pin moved (any_moved_spec); inside pin_all"
+
+[[out]]
+function = "policy.any_unpinned"
+why = "whether any pin is unpinned (any_unpinned_spec); inside pin_all"
+
+[[out]]
+function = "policy.pin_all"
+why = "combines pins: moved if any moved, else unpinned if any is (pin_all_spec); a fact policy.summary reads"
+
+[[out]]
+function = "policy.how_waived"
+why = "a constructor test on how a gate was met (how_waived_spec); inside policy.close"
+
+[[out]]
+function = "policy.how_attested"
+why = "a constructor test on how a gate was met (how_attested_spec); inside policy.close"
+
+[[out]]
+function = "policy.any_waived"
+why = "whether any gate was met by waiver (any_waived_spec); inside policy.close"
+
+[[out]]
+function = "policy.any_attested"
+why = "whether any gate was met by attestation (any_attested_spec); inside policy.close"
+
+[[out]]
+function = "policy.close"
+why = "a step's close: done (with its weakest class), skipped or open (close_spec); the core has no weakest-class operation, and summary reads the close as a member (closeMember)"
+
+[[out]]
+function = "policy.is_open"
+why = "a constructor test on a close (is_open_spec); inside summary"
+
+[[out]]
+function = "policy.is_passed"
+why = "a constructor test on a close (is_passed_spec); inside summary"
+
+[[out]]
+function = "policy.any_open"
+why = "whether any step is open (any_open_spec); inside summary, linked there"
+
+[[out]]
+function = "policy.all_passed"
+why = "whether every step passed (all_passed_spec); inside summary, linked there"
