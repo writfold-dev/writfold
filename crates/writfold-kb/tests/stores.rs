@@ -145,7 +145,10 @@ fn a_hint_to_another_repository_is_a_mismatch() -> TestResult {
     declare(&w, &url, &w.code)?;
     let text = stale(&w)?;
     assert!(text.contains("store-origin-mismatch"), "{text}");
-    let (text, code) = w.run(&w.request(Verb::Repos { missing: true }))?;
+    let (text, code) = w.run(&w.request(Verb::Repos {
+        missing: true,
+        need_blobs: false,
+    }))?;
     assert_eq!(code, 2, "{text}");
     assert!(
         text.contains("repo scratch [mismatch]") && text.contains("!origin-differs"),
@@ -157,7 +160,10 @@ fn a_hint_to_another_repository_is_a_mismatch() -> TestResult {
 #[test]
 fn repos_lists_a_declared_store_and_how_it_was_found() -> TestResult {
     let (w, _, _) = stored()?;
-    let (text, _) = w.run(&w.request(Verb::Repos { missing: false }))?;
+    let (text, _) = w.run(&w.request(Verb::Repos {
+        missing: false,
+        need_blobs: false,
+    }))?;
     let at = text
         .find("repo scratch [local]")
         .ok_or_else(|| format!("no row:\n{text}"))?;

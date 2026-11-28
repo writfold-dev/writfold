@@ -49,7 +49,7 @@ pub const VERBS: &[&str] = &[
 const SHARED: [&str; 5] = ["kb", "budget-tokens", "cursor", "json", "color"];
 
 /// The flags that are typed fields of [`Common`] rather than write values.
-const FIELDS: [&str; 12] = [
+const FIELDS: [&str; 13] = [
     "all",
     "depth",
     "offline",
@@ -61,11 +61,19 @@ const FIELDS: [&str; 12] = [
     "direction",
     "include",
     "missing",
+    "need-blobs",
     "limit",
 ];
 
 /// Switches among [`FIELDS`] (the rest take a value).
-const FIELD_SWITCHES: [&str; 5] = ["all", "offline", "cached", "record", "missing"];
+const FIELD_SWITCHES: [&str; 6] = [
+    "all",
+    "offline",
+    "cached",
+    "record",
+    "missing",
+    "need-blobs",
+];
 
 #[derive(Clone, Copy, PartialEq)]
 enum Shape {
@@ -229,6 +237,7 @@ fn switch(c: &mut Common, name: &str) {
         "cached" => c.cached = true,
         "record" => c.record = true,
         "missing" => c.missing = true,
+        "need-blobs" => c.need_blobs = true,
         "signatures" => c.signatures = true,
         other => c.switches.push(other.to_owned()),
     }

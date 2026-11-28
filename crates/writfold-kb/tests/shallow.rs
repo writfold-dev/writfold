@@ -159,7 +159,10 @@ fn a_shallow_clone_never_reads_missing_history_as_change() -> TestResult {
     }
 
     // `kb repos` names the shallow clone; its status stays local.
-    let (repos, _) = w.run(&w.request(Verb::Repos { missing: false }))?;
+    let (repos, _) = w.run(&w.request(Verb::Repos {
+        missing: false,
+        need_blobs: false,
+    }))?;
     assert!(repos.contains("history: shallow"), "{repos}");
     assert!(repos.contains("shallow=1"), "{repos}");
     assert!(repos.contains("[local]"), "{repos}");

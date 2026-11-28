@@ -59,7 +59,10 @@ fn row<'a>(text: &'a str, id: &str) -> TestResult<&'a str> {
 #[test]
 fn every_cited_repository_has_a_row() -> TestResult {
     let w = cited()?;
-    let (text, code) = w.run(&w.request(Verb::Repos { missing: false }))?;
+    let (text, code) = w.run(&w.request(Verb::Repos {
+        missing: false,
+        need_blobs: false,
+    }))?;
     assert_eq!(code, 2, "{text}");
     let demo = row(&text, "demo-service")?;
     assert!(
@@ -92,7 +95,10 @@ fn every_cited_repository_has_a_row() -> TestResult {
 #[test]
 fn missing_filters_and_json_has_a_stable_shape() -> TestResult {
     let w = cited()?;
-    let mut request = w.request(Verb::Repos { missing: true });
+    let mut request = w.request(Verb::Repos {
+        missing: true,
+        need_blobs: false,
+    });
     request.json = true;
     let (text, code) = w.run(&request)?;
     assert_eq!(code, 2);
@@ -117,7 +123,10 @@ fn missing_filters_and_json_has_a_stable_shape() -> TestResult {
 #[test]
 fn no_missing_repository_exits_zero() -> TestResult {
     let w = world(&[])?;
-    let (text, code) = w.run(&w.request(Verb::Repos { missing: true }))?;
+    let (text, code) = w.run(&w.request(Verb::Repos {
+        missing: true,
+        need_blobs: false,
+    }))?;
     assert_eq!(code, 0, "{text}");
     assert!(!text.contains("repo "), "{text}");
     assert!(text.contains(" repos=1 missing=0 partial=0 "), "{text}");
@@ -128,7 +137,10 @@ fn no_missing_repository_exits_zero() -> TestResult {
 fn fetch_time_is_reported() -> TestResult {
     let w = world(&[])?;
     std::fs::write(w.code.join(".git/FETCH_HEAD"), "")?;
-    let (text, _) = w.run(&w.request(Verb::Repos { missing: false }))?;
+    let (text, _) = w.run(&w.request(Verb::Repos {
+        missing: false,
+        need_blobs: false,
+    }))?;
     let demo = row(&text, "demo-service")?;
     assert!(!demo.contains("fetched: none"), "{demo}");
     assert!(demo.contains("\n  fetched: 20"), "{demo}");

@@ -21,8 +21,11 @@ use writfold_runtime::git::{
 };
 use writfold_runtime::process::ProcessError;
 
-const NOT_LOCAL: &str =
-    "blob-not-local: this partial clone lacks the file's bytes; fetch them or use a full clone";
+const NOT_LOCAL: &str = "blob-not-local: this partial clone lacks the file's bytes; `writfold kb repos --need-blobs` lists them to fetch";
+
+/// A cited path absent at the target whose blob is nowhere in its tree: a
+/// full clone follows it through history as a rename with edits.
+const NOT_FOLLOWED: &str = "path-not-followed: absent at the target and not an exact rename; a partial clone does not follow it, use a full clone";
 
 fn word(k: Kernel, why: &str) -> Verdict {
     match k {
@@ -57,6 +60,14 @@ fn local(git: &GitExecutable<'_>, git_dir: &Path, ids: &[GitObjectId]) -> Result
     Ok(out)
 }
 
+/// A partial clone's verdicts and the blobs it lacked to decide them.
+pub struct Decided {
+    pub verdicts: Vec<(usize, Verdict)>,
+    /// Per `blob-not-local` verdict, the blob at the target that would
+    /// decide it (#215).
+    pub need: Vec<(usize, GitObjectId)>,
+}
+
 /// The verdicts of a partial clone's code citations at `target`.
 pub fn check(
     git: &GitExecutable<'_>,
@@ -64,25 +75,59 @@ pub fn check(
     target: &GitObjectId,
     cites: &[Cite],
     members: &[usize],
-) -> Result<Vec<(usize, Verdict)>> {
+) -> Result<Decided> {
     let tree = match pinned_tree(git, git_dir, target, budgets()?, &CANCELLED) {
         Ok(tree) => tree,
         Err(_) => {
             let why = "tree-not-local: this partial clone lacks the target's tree";
-            return Ok(members
-                .iter()
+            let verdicts = (members.iter())
                 .map(|&i| (i, Verdict::Unverifiable(why.into())))
-                .collect());
+                .collect();
+            return Ok(Decided {
+                verdicts,
+                need: Vec::new(),
+            });
         }
     };
-    let mut out = Vec::new();
-    let mut other: Vec<(usize, GitObjectId)> = Vec::new();
+    let mut verdicts = Vec::new();
+    let other = by_id(&tree, cites, members, &mut verdicts);
+    let ids: Vec<GitObjectId> = other.iter().map(|(_, id)| id.clone()).collect();
+    let here = local(git, git_dir, &ids)?;
+    let readable: Vec<GitObjectId> = (ids.iter().zip(&here))
+        .filter(|(_, h)| **h)
+        .map(|(id, _)| id.clone())
+        .collect();
+    let mut bytes = pinned_blobs(git, git_dir, &readable, budgets()?, &CANCELLED)?.into_iter();
+    let mut need = Vec::new();
+    for ((i, id), here) in other.iter().zip(here) {
+        let cite = &cites[*i];
+        let known = cite.blob.is_some();
+        if !here {
+            let k = other_blob(known, Some(Located::Unfetched));
+            verdicts.push((*i, word(k, NOT_LOCAL)));
+            need.push((*i, id.clone()));
+            continue;
+        }
+        let text = bytes.next().unwrap_or_default();
+        verdicts.push((*i, from_bytes(cite, &String::from_utf8_lossy(&text))));
+    }
+    Ok(Decided { verdicts, need })
+}
+
+/// The citations decided by blob id alone (into `out`), and the rest with
+/// the blob id at their path, which need the blob's bytes.
+fn by_id(
+    tree: &[writfold_runtime::git::TreeBlob],
+    cites: &[Cite],
+    members: &[usize],
+    out: &mut Vec<(usize, Verdict)>,
+) -> Vec<(usize, GitObjectId)> {
+    let mut other = Vec::new();
     for &i in members {
         let cite = &cites[i];
         let path = cite.cpath.as_deref().unwrap_or_default();
         let now = tree.iter().find(|e| e.path == path).map(|e| e.blob.clone());
-        let cited = cite.blob.as_deref();
-        match (now, cited) {
+        match (now, cite.blob.as_deref()) {
             (Some(id), Some(b)) if id.as_str() == b => out.push((i, Verdict::Fresh)),
             (Some(id), _) => other.push((i, id)),
             (None, Some(b)) => match tree.iter().find(|e| e.blob.as_str() == b) {
@@ -94,52 +139,35 @@ pub fn check(
                             first: cite.first.unwrap_or(1),
                             last: cite.last.unwrap_or(1),
                         },
-                        k => word(k, NOT_LOCAL),
+                        k => word(k, NOT_FOLLOWED),
                     },
                 )),
-                None => out.push((i, word(missing(Absence::Unfetched), NOT_LOCAL))),
+                None => out.push((i, word(missing(Absence::Unfetched), NOT_FOLLOWED))),
             },
-            (None, None) => out.push((i, word(missing(Absence::Unfetched), NOT_LOCAL))),
+            (None, None) => out.push((i, word(missing(Absence::Unfetched), NOT_FOLLOWED))),
         }
     }
-    let ids: Vec<GitObjectId> = other.iter().map(|(_, id)| id.clone()).collect();
-    let here = local(git, git_dir, &ids)?;
-    let readable: Vec<GitObjectId> = (ids.iter().zip(&here))
-        .filter(|(_, h)| **h)
-        .map(|(id, _)| id.clone())
-        .collect();
-    let mut bytes = pinned_blobs(git, git_dir, &readable, budgets()?, &CANCELLED)?.into_iter();
-    for ((i, _), here) in other.iter().zip(here) {
-        let cite = &cites[*i];
-        let known = cite.blob.is_some();
-        if !here {
-            out.push((
-                *i,
-                word(other_blob(known, Some(Located::Unfetched)), NOT_LOCAL),
-            ));
-            continue;
-        }
-        let text = bytes.next().unwrap_or_default();
-        let text = String::from_utf8_lossy(&text);
-        let located = match (&cite.span, cite.first, cite.last) {
-            (Some(span), Some(first), Some(last)) => Some(locate(&text, first, last, span)),
-            _ => None,
-        };
-        let verdict = match (other_blob(known, located), located) {
-            (Kernel::Fresh, _) => Verdict::Fresh,
-            (Kernel::Moved, Some(Located::At(a, b))) => Verdict::Moved {
-                path: None,
-                first: a,
-                last: b,
-            },
-            (k, _) => word(
-                k,
-                "nothing-to-compare: no blob= to compare with in this partial clone",
-            ),
-        };
-        out.push((*i, verdict));
+    other
+}
+
+/// A citation whose blob differs, decided from the bytes at its path.
+fn from_bytes(cite: &Cite, text: &str) -> Verdict {
+    let located = match (&cite.span, cite.first, cite.last) {
+        (Some(span), Some(first), Some(last)) => Some(locate(text, first, last, span)),
+        _ => None,
+    };
+    match (other_blob(cite.blob.is_some(), located), located) {
+        (Kernel::Fresh, _) => Verdict::Fresh,
+        (Kernel::Moved, Some(Located::At(a, b))) => Verdict::Moved {
+            path: None,
+            first: a,
+            last: b,
+        },
+        (k, _) => word(
+            k,
+            "nothing-to-compare: no blob= to compare with in this partial clone",
+        ),
     }
-    Ok(out)
 }
 
 /// A partial clone's code citations: the target as `stale` chooses it,
@@ -172,6 +200,7 @@ pub fn resolved(
     };
     let head = format!("{}:{}", commit.as_str(), target.rule);
     let found: Vec<(usize, Checked)> = check(git, git_dir, &commit, cites, members)?
+        .verdicts
         .into_iter()
         .map(|(i, verdict)| {
             (
@@ -185,4 +214,19 @@ pub fn resolved(
         })
         .collect();
     super::behind::behind(git, git_dir, &target, cites, found)
+}
+
+/// A partial clone's code citations decided at the target `stale` chooses,
+/// for `kb repos` (#215); `None` when no target is chosen.
+pub fn decided(
+    git: &GitExecutable<'_>,
+    (git_dir, ask): (&Path, &super::target::Asked<'_>),
+    cites: &[Cite],
+) -> Result<Option<Decided>> {
+    let target = super::target::resolve(git, git_dir, ask)?;
+    let Some(commit) = target.commit else {
+        return Ok(None);
+    };
+    let members: Vec<usize> = (0..cites.len()).collect();
+    check(git, git_dir, &commit, cites, &members).map(Some)
 }

@@ -102,7 +102,10 @@ fn stale(w: &World) -> TestResult<(String, u8)> {
 }
 
 fn repos(w: &World) -> TestResult<(String, u8)> {
-    w.run(&w.request(Verb::Repos { missing: false }))
+    w.run(&w.request(Verb::Repos {
+        missing: false,
+        need_blobs: false,
+    }))
 }
 
 /// The `kb stale` row of `path`, or `[fresh]` (no row is printed for a

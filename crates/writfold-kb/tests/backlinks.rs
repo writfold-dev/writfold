@@ -134,7 +134,10 @@ fn json_rows_and_the_stores_trailer() -> TestResult {
 #[test]
 fn repos_counts_claims_and_names_the_ones_listed_nowhere() -> TestResult {
     let (w, _, _) = stored()?;
-    let (text, _) = w.run(&w.request(Verb::Repos { missing: false }))?;
+    let (text, _) = w.run(&w.request(Verb::Repos {
+        missing: false,
+        need_blobs: false,
+    }))?;
     assert!(text.contains("material=2 ambiguous=1 unknown=1"), "{text}");
     assert!(
         text.contains("ambiguous scratch:work/c (subject: ledger)"),
