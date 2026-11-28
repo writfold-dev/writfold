@@ -60,6 +60,10 @@ fn every_code_has_a_row_and_every_row_a_code() -> std::io::Result<()> {
     for krate in ["writfold-kb", "writfold-app"] {
         emitted(&root().join("crates").join(krate).join("src"), &mut source)?;
     }
+    // Event kinds (#183) are shaped like codes and are not codes.
+    for kind in ["file.read", "file.write"] {
+        source.remove(kind);
+    }
     let unlisted: Vec<&String> = source.difference(&listed).collect();
     assert!(unlisted.is_empty(), "emitted but not listed: {unlisted:?}");
     assert!(source.len() >= 20, "the scan found {source:?}");

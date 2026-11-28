@@ -189,6 +189,18 @@ fn accept(text: &str) -> TestResult {
                 .map_err(|r| writfold_kb::defs::why(&r))?;
             Ok(())
         }
+        "writfold-guard-site/1" => {
+            writfold_kb::guard::posture::check(text, writfold_kb::guard::posture::FILE)
+                .map_err(|r| writfold_kb::defs::why(&r))?;
+            Ok(())
+        }
+        "writfold-harness/1" => {
+            let id = string(&map, "id")?;
+            let path = format!("{}/{id}.toml", writfold_kb::guard::binding::DIR);
+            writfold_kb::guard::binding::check(text, &id, &path)
+                .map_err(|r| writfold_kb::defs::why(&r))?;
+            Ok(())
+        }
         "writfold-plan/1" => {
             let name = string(&map, "name")?;
             writfold_kb::plan::template::parse(text.as_bytes(), Some(&name))?;

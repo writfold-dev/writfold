@@ -327,5 +327,6 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `policy.never-ages` | a warning: `no-data` or `not-found` looks of a source kind with no declaration in `.writfold/sources/`, which never age (built in v0.6.0-dev.11) |
 | `policy.self-exit` | warning: a loop step (`loop=`) ends only on gates its walker can meet with a statement (attested or checklist class, or accepting a waiver) (from v0.6.0-dev.15) |
 | `policy.narrow-scope` | warning: a generated checklist's scope gate (`items_from`) has a `scope` narrower than `**`, so a related record added outside it leaves the scope current (from v0.6.0-dev.24) |
+| `policy.required-audit` | warning: a rule the guard site file (`.writfold/guards.toml`) requires is in audit mode, so it never decides a call (from v0.6.0-dev.30) |
 | `alias.collides` | a warning from `kb lint --records`: every word of an alias in a Markdown record's front matter is in another record's ID, title or alias, so phrases using it may find that record (built in v0.6.0-dev.12) |
 
