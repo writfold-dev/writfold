@@ -4,7 +4,8 @@
 use super::Outcome;
 use std::io::Read;
 use std::path::PathBuf;
-use writfold_kb::guard::check::{Args, Checked, run, usage};
+
+use writfold_kb::guard::check::{Args, Checked, Posture, run, usage, usage_under};
 use writfold_kb::hook::HookEnv;
 
 /// The most a harness event may hold.
@@ -15,10 +16,11 @@ pub const HELP: &str = "usage: writfold kb guard check --kind shell --command LI
        writfold kb guard check --kind skill|spawn --name NAME [--tool NAME]
        writfold kb guard check --kind tool --tool NAME
        writfold kb guard check --from-event FILE|- [--harness ID]
-  common: [--kb DIR] [--cwd DIR] [--session ID] [--actor ID] [--actor-type T] [--json]
+  common: [--kb DIR] [--cwd DIR] [--posture open|ask|deny] [--session ID] [--actor ID] [--actor-type T] [--json]
 The guard site's decision for one event, exactly as kb hook pre-tool-use
 decides it: the delivery guard, then the rules. Writes the guard log entry
-(via: check); runs nothing. Exit 0 allow, 2 ask, 3 deny, 1 usage.
+(via: check); runs nothing. Exit 0 allow, 2 ask, 3 deny, 1 usage (3 under
+a posture other than open).
 A harness's own event is read through its binding: claude-code (built in)
 or .writfold/harness/<id>.toml.
 ";
@@ -36,6 +38,7 @@ fn slot<'a>(args: &'a mut Args, flag: &str) -> Option<&'a mut Option<String>> {
         "--actor-type" => &mut args.actor_type,
         "--from-event" => &mut args.from_event,
         "--harness" => &mut args.harness,
+        "--posture" => &mut args.posture,
         _ => return None,
     })
 }
@@ -112,14 +115,21 @@ pub fn main(words: &[String], cwd: PathBuf) -> Outcome {
         },
         None => (None, words.to_vec()),
     };
+    let closed = words
+        .windows(2)
+        .any(|w| w[0] == "--posture" && w[1] != "open");
+    let refuse = |why: &str| match closed {
+        true => outcome(usage_under(Posture::Deny, why)),
+        false => outcome(usage(why)),
+    };
     let mut args = match parse(&words) {
         Ok(args) => args,
-        Err(why) => return outcome(usage(&why)),
+        Err(why) => return refuse(&why),
     };
     if let Some(source) = args.from_event.take() {
         match read_event(&source) {
             Ok(text) => args.from_event = Some(text),
-            Err(why) => return outcome(usage(&why)),
+            Err(why) => return refuse(&why),
         }
     }
     let env = HookEnv {

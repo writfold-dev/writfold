@@ -12,7 +12,8 @@ use crate::workspace::{Workspace, discover};
 use serde_json::{Map, Value, json};
 use std::path::PathBuf;
 use writfold_core::guard::Decision;
-use writfold_core::site::{Basis, Posture};
+use writfold_core::site::Basis;
+pub use writfold_core::site::Posture;
 
 /// The verb's arguments, as the command line gave them.
 #[derive(Clone, Debug, Default)]
@@ -29,6 +30,8 @@ pub struct Args {
     /// A harness's own event (the text of `--from-event FILE|-`).
     pub from_event: Option<String>,
     pub harness: Option<String>,
+    /// The registration's posture (`--posture`).
+    pub posture: Option<String>,
     pub json: bool,
 }
 
@@ -42,11 +45,34 @@ pub struct Checked {
 
 const NAME: &str = "writfold kb guard check";
 
-pub fn usage(why: &str) -> Checked {
+/// A usage error: exit 1, or 3 under a closed posture, so "anything but
+/// 0 means do not proceed" holds there (#184).
+pub fn usage_under(posture: Posture, why: &str) -> Checked {
     Checked {
         stdout: String::new(),
         stderr: format!("{NAME}: {why}\n(see: writfold kb guard check --help)\n"),
-        exit: 1,
+        exit: match posture {
+            Posture::Open => 1,
+            _ => 3,
+        },
+    }
+}
+
+pub fn usage(why: &str) -> Checked {
+    usage_under(Posture::Open, why)
+}
+
+/// The registration's posture from `--posture`; an unknown word is
+/// refused as `deny` would refuse it.
+pub fn posture_of(written: Option<&str>) -> Result<Posture, Checked> {
+    match written {
+        None => Ok(Posture::Open),
+        Some(text) => Posture::parse(text).ok_or_else(|| {
+            usage_under(
+                Posture::Deny,
+                &format!("unknown posture {text:?}: one of open, ask, deny"),
+            )
+        }),
     }
 }
 
@@ -200,7 +226,8 @@ fn json_of(sited: &Sited, posture: Posture, event: &SiteEvent) -> String {
     format!("{value}\n")
 }
 
-fn report(sited: &Sited, posture: Posture, event: &SiteEvent, json: bool) -> Checked {
+fn report(sited: &Sited, event: &SiteEvent, json: bool) -> Checked {
+    let posture = sited.posture;
     Checked {
         stdout: match json {
             true => json_of(sited, posture, event),
@@ -216,7 +243,10 @@ fn report(sited: &Sited, posture: Posture, event: &SiteEvent, json: bool) -> Che
 /// Run the verb: the KB is found from `--cwd` (else the process's
 /// directory), or from the event's own `cwd` when it names another.
 pub fn run(args: &Args, env: &HookEnv) -> Checked {
-    let posture = Posture::Open;
+    let posture = match posture_of(args.posture.as_deref()) {
+        Ok(posture) => posture,
+        Err(refused) => return refused,
+    };
     let here = args
         .cwd
         .as_deref()
@@ -228,7 +258,7 @@ pub fn run(args: &Args, env: &HookEnv) -> Checked {
     };
     let event = match event {
         Ok(event) => event,
-        Err(why) => return usage(&why),
+        Err(why) => return usage_under(posture, &why),
     };
     let cwd = event
         .cwd
@@ -241,8 +271,8 @@ pub fn run(args: &Args, env: &HookEnv) -> Checked {
     let mut ws = match ws {
         Ok(ws) => ws,
         Err(why) => {
-            let sited = Sited::passed(Basis::NoRules, format!("{NAME}: {why}\n"));
-            return report(&sited, posture, &event, args.json);
+            let sited = Sited::undecided(posture, why.clone(), format!("{NAME}: {why}\n"));
+            return report(&sited, &event, args.json);
         }
     };
     if let Some(id) = crate::seat::session_id(event.session.as_deref()) {
@@ -250,6 +280,6 @@ pub fn run(args: &Args, env: &HookEnv) -> Checked {
     }
     let now = env.now.unwrap_or_else(crate::time::now);
     let input: Map<String, Value> = event.canonical();
-    let sited = site::decide(&ws, &input, (&cwd, env.home.as_deref()), now);
-    report(&sited, posture, &event, args.json)
+    let sited = site::decide(&ws, &input, (&cwd, env.home.as_deref()), now, posture);
+    report(&sited, &event, args.json)
 }

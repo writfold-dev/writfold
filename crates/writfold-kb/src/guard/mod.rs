@@ -24,6 +24,7 @@ pub mod event;
 pub mod log;
 pub mod matched;
 pub mod paths;
+pub mod posture;
 pub(crate) mod pre;
 mod report;
 pub mod require;
@@ -89,21 +90,27 @@ fn problems_note(problems: &[crate::defs::Problem]) -> String {
     problems.iter().map(crate::hook::broken::skipped).collect()
 }
 
-/// Decide one PreToolUse event ([`site::decide`]) and render it as Claude
-/// Code expects: nothing on a pass, its JSON on a denial or a question.
+/// Decide one PreToolUse event ([`site::decide`]) under the
+/// registration's posture and render it as Claude Code expects.
 pub fn pre_tool_use(
     ws: &Workspace,
     input: &Map<String, Value>,
     places: (&Path, Option<&Path>),
     now: i64,
-) -> Result<HookOutput, String> {
-    let sited = site::decide(ws, input, places, now);
+    posture: writfold_core::site::Posture,
+) -> HookOutput {
+    render(site::decide(ws, input, places, now, posture))
+}
+
+/// A site's decision as Claude Code's PreToolUse output: nothing on a
+/// pass, its JSON on a denial or a question.
+pub fn render(sited: site::Sited) -> HookOutput {
     if sited.delivery {
         let reason = sited.reasons.first().map(String::as_str).unwrap_or("");
-        return Ok(delivery::deny_output(reason));
+        return delivery::deny_output(reason);
     }
     let verdict = match sited.decision {
-        Decision::Pass => return Ok(quiet_with(sited.stderr)),
+        Decision::Pass => return quiet_with(sited.stderr),
         Decision::Deny => "deny",
         Decision::Ask => "ask",
     };
@@ -114,10 +121,10 @@ pub fn pre_tool_use(
             "permissionDecisionReason": sited.reasons.join("\n"),
         }
     });
-    Ok(HookOutput {
+    HookOutput {
         stdout: format!("{value}\n"),
         stderr: sited.stderr,
-    })
+    }
 }
 
 /// The Stop nudge: when a `stop` rule exists and its requirements are not

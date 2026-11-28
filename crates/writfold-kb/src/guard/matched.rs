@@ -79,6 +79,11 @@ impl Loaded {
             .filter(|r| r.event == Event::PreToolUse)
     }
 
+    /// Whether a rule with this ID loaded (of any event).
+    pub fn has(&self, id: &str) -> bool {
+        self.any(|r| r.id == id)
+    }
+
     fn any(&self, f: impl Fn(&Rule) -> bool) -> bool {
         self.root
             .iter()

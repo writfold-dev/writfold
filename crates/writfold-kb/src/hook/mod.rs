@@ -42,10 +42,12 @@ mod inbox;
 mod named;
 mod position;
 mod remote;
+pub mod site;
 mod start;
 
 pub use export::export_session;
 pub use start::{BRIEF_BUDGET, CONTEXT_LIMIT, DROP_ORDER, PLAN_BUDGET, Part, RESUME_BUDGET, fit};
+use writfold_core::site::Posture;
 
 pub const EVENTS: [&str; 7] = [
     "session-start",
@@ -84,17 +86,28 @@ fn quiet(why: impl Into<String>) -> HookOutput {
     }
 }
 
-/// Run one hook over its stdin text.
+/// Run one hook over its stdin text (posture `open`).
 pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
+    run_with(event, input, env, Posture::Open)
+}
+
+/// Run one hook under the registration's posture (`--posture`, #184):
+/// under `ask` or `deny`, a pre-tool-use event that cannot be read or has
+/// no KB gets the posture's decision ([`site::undecided`]).
+pub fn run_with(event: &str, input: &str, env: &HookEnv, posture: Posture) -> HookOutput {
     if !EVENTS.contains(&event) {
         return quiet(format!("unknown event {event:?}"));
     }
+    let failed = |why: String| match event {
+        "pre-tool-use" => site::undecided(posture, why),
+        _ => quiet(why),
+    };
     let Ok(Value::Object(input)) = serde_json::from_str::<Value>(input) else {
-        return quiet("stdin is not a JSON object");
+        return failed("stdin is not a JSON object".into());
     };
     let named = input.get("hook_event_name").and_then(Value::as_str);
     if named.is_some_and(|n| camel(event) != n) {
-        return quiet(format!("{event} was given a {named:?} event"));
+        return failed(format!("{event} was given a {named:?} event"));
     }
     let cwd = input
         .get("cwd")
@@ -102,7 +115,7 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
         .map_or_else(|| env.cwd.clone(), PathBuf::from);
     let mut ws = match discover(env.kb.as_deref(), &cwd) {
         Ok(ws) => ws,
-        Err(error) => return quiet(error.to_string()),
+        Err(error) => return failed(error.to_string()),
     };
     // The event's session is the seat's ([`crate::seat`]); without a usable
     // one the seat keeps `$WRITFOLD_SESSION`.
@@ -123,7 +136,13 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
             }
             start::session_start(&ws, &cwd, now, source)
         }
-        "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, (&cwd, env.home.as_deref()), now),
+        "pre-tool-use" => Ok(site::pre_tool_use(
+            &ws,
+            &input,
+            (&cwd, env.home.as_deref()),
+            now,
+            posture,
+        )),
         "post-tool-use" => crate::guard::delivery::post_tool_use(&ws, &input, &cwd, now),
         "stop" => record(event, &ws, &input, &cwd, now)
             .and_then(|_| crate::guard::stop(&ws, &input, &cwd, now)),

@@ -16,6 +16,12 @@
       "title": "KB root",
       "description": "The project KB (the directory holding inventory/assets/). Leave empty to use $WRITFOLD_KB or the nearest KB above the session's directory.",
       "required": false
+    },
+    "posture": {
+      "type": "string",
+      "title": "Guard posture",
+      "description": "What a tool call gets when the guard cannot decide it (no KB, a rule file that does not parse, a required rule missing, the 8 s deadline, writfold not on PATH): open (default: it passes, as before), ask or deny. A guard, not enforcement.",
+      "required": false
     }
   }
 }

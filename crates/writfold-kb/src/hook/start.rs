@@ -245,11 +245,7 @@ pub const NOT_BUILT: &str =
 /// How long session start waits for the brief: 20 s, below the plugin's
 /// 30 s hook timeout; `WRITFOLD_HOOK_DEADLINE_MS` overrides it.
 fn deadline() -> std::time::Duration {
-    let ms = std::env::var("WRITFOLD_HOOK_DEADLINE_MS")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(20_000);
-    std::time::Duration::from_millis(ms)
+    super::site::deadline(20_000)
 }
 
 /// `Citations: 4 changed, 2 gone as of the last writfold kb stale; …`:
