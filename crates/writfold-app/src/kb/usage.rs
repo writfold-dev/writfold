@@ -29,8 +29,9 @@ verbs:
   stale [<project>|<path>] [--offline|--cached|--record]
                                    which citations have moved; --cached never starts a checker;
                                    --record writes the checkers' answers to .writfold/checks/
-  repos [--missing]                each cited repository: local, partial or missing, how its clone
-                                   was found, its target commit, when it last fetched (exit 2 if missing)
+  repos [--missing|--need-blobs]   each cited repository: local, partial or missing, how its clone
+                                   was found, its target commit, when it last fetched (exit 2 if missing);
+                                   --need-blobs lists the blobs partial clones lack, dir<TAB>blob a line
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)

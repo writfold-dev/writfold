@@ -22,6 +22,8 @@ pub struct Common {
     pub direction: Option<String>,
     pub include: Option<String>,
     pub missing: bool,
+    /// `repos --need-blobs` (#215).
+    pub need_blobs: bool,
     pub limit: Option<usize>,
     /// `--color auto|always|never`: how diagnostics are drawn.
     pub color: Option<String>,
@@ -44,7 +46,7 @@ pub(crate) fn allowed(verb: &str) -> &'static [&'static str] {
         "brief" | "deliver" => &["all"],
         "context" => &["depth"],
         "stale" => &["offline", "cached", "record"],
-        "repos" => &["missing"],
+        "repos" => &["missing", "need-blobs"],
         "find" => &["kind", "project", "signatures", "limit"],
         "match" => &["kind", "project"],
         "cite" => &["kind"],
@@ -68,6 +70,7 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         ("direction", common.direction.is_some()),
         ("include", common.include.is_some()),
         ("missing", common.missing),
+        ("need-blobs", common.need_blobs),
         ("limit", common.limit.is_some()),
     ] {
         if set && !allowed.contains(&flag) {

@@ -5,7 +5,10 @@
 //! `repo-not-local`), with the token count, a `url=` one of its tokens
 //! gives, the clone found and the rule that found it, the commit `stale`
 //! checks against and when the clone last fetched. A missing repository
-//! spawns no Git.
+//! spawns no Git. A partial clone's row counts the citations its trees
+//! decide and those that need a blob's bytes; `--need-blobs` lists those
+//! blobs, `<clone git dir>\t<blob id>` a line, for the operator's `git
+//! fetch` (#215): Writfold spawns no network Git.
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
 use crate::session::Session;
@@ -76,14 +79,54 @@ fn more(label: &'static str, text: String, path: Option<String>) -> More {
     }
 }
 
+/// The indexed code citations of the repository `name`.
+fn code_cites(session: &Session<'_>, name: &str) -> Result<Vec<crate::stale::Cite>> {
+    let sql = format!(
+        "SELECT {} FROM citations WHERE illustrative = 0 AND malformed IS NULL \
+         AND kind = 'code' AND repo = ?1 ORDER BY path, ord",
+        crate::verbs::stale::CITE_COLUMNS
+    );
+    let found = (session.conn.prepare(&sql)?)
+        .query_map([name], crate::verbs::stale::read_cite)?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(found)
+}
+
+/// A partial clone's `blobs` line, and the blobs it lacks into `need`.
+fn blobs(
+    session: &Session<'_>,
+    (dir, ask): (&std::path::Path, &Ask<'_>),
+    need: &mut Vec<String>,
+) -> Result<Option<More>> {
+    let Some(git) = session.git.as_ref() else {
+        return Ok(None);
+    };
+    let cites = code_cites(session, ask.repo)?;
+    let Some(found) = crate::stale::partial::decided(git, (dir, ask), &cites)? else {
+        return Ok(None);
+    };
+    let decided = (found.verdicts.iter())
+        .filter(|(_, v)| !matches!(v, crate::stale::Verdict::Unverifiable(_)))
+        .count();
+    let ids: std::collections::BTreeSet<&str> =
+        found.need.iter().map(|(_, id)| id.as_str()).collect();
+    need.extend(ids.iter().map(|id| format!("{}\t{id}", dir.display())));
+    let text = format!(
+        "{decided} cited paths decided, {} need contents ({} blobs)",
+        found.need.len(),
+        ids.len()
+    );
+    Ok(Some(more("blobs", text, None)))
+}
+
 /// The status and continuation lines of a repository found at `dir`,
 /// with its target chosen as `stale` chooses it (#179).
 fn found(
     session: &Session<'_>,
     dir: PathBuf,
     via: &'static str,
-    ask: &Ask<'_>,
-) -> (&'static str, Vec<More>) {
+    (ask, need): (&Ask<'_>, &mut Vec<String>),
+) -> Result<(&'static str, Vec<More>)> {
     let resolved = session
         .git
         .as_ref()
@@ -126,7 +169,10 @@ fn found(
     if repos::shallow(&dir) {
         lines.push(more(HISTORY, "shallow".to_owned(), None));
     }
-    (status, lines)
+    if status == "partial" {
+        lines.extend(blobs(session, (&dir, ask), need)?);
+    }
+    Ok((status, lines))
 }
 
 const HISTORY: &str = "history";
@@ -137,7 +183,8 @@ fn local(
     session: &Session<'_>,
     (name, url): (&str, Option<&str>),
     all: &[crate::declared::Declared],
-) -> (&'static str, Vec<More>) {
+    need: &mut Vec<String>,
+) -> Result<(&'static str, Vec<More>)> {
     let declared = crate::declared::find(all, name);
     let shown = declared.map(|d| more("declared", d.url.clone(), Some(d.path.clone())));
     let (status, mut lines) = match repos::resolve_via(Some(session.ws), name, url) {
@@ -150,15 +197,27 @@ fn local(
                 named: matches!(via, repos::Via::Map | repos::Via::Path),
                 declared,
             };
-            found(session, dir, via.name(), &ask)
+            found(session, dir, via.name(), (&ask, need))?
         }
         None => ("missing", Vec::new()),
     };
     lines.splice(0..0, shown);
-    (status, lines)
+    Ok((status, lines))
+}
+
+/// `repos --need-blobs`: `<clone git dir>\t<blob id>` per blob a partial
+/// clone's verdict still needs (#215).
+pub fn need_blobs(session: &Session<'_>) -> Result<String> {
+    let mut need = Vec::new();
+    listed(session, false, &mut need)?;
+    Ok(need.iter().map(|line| format!("{line}\n")).collect())
 }
 
 pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
+    listed(session, missing_only, &mut Vec::new())
+}
+
+fn listed(session: &Session<'_>, missing_only: bool, need: &mut Vec<String>) -> Result<Answer> {
     let mut answer = Answer::default();
     let (mut total, mut missing, mut partial, mut shallow) = (0, 0, 0, 0);
     let mut ambiguous = 0;
@@ -180,9 +239,9 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
         let (status, lines) = match stores.get(&name) {
             Some(declared) => {
                 let read = reads.iter().find(|r| r.name == name);
-                store_row(session, declared, read, &mut flags)?
+                store_row(session, declared, read, (&mut flags, need))?
             }
-            None => local(session, (&name, cited.url.as_deref()), &declared),
+            None => local(session, (&name, cited.url.as_deref()), &declared, need)?,
         };
         missing += usize::from(matches!(status, "missing" | "mismatch"));
         partial += usize::from(status == "partial");
@@ -217,7 +276,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     }
     if partial > 0 {
         answer.notes.push(
-            "a partial clone's code citations are unverifiable (its blobs would need a fetch): use a full clone".into(),
+            "a partial clone decides code citations by blob id from its trees; one whose bytes it lacks is unverifiable (blob-not-local) until fetched: `writfold kb repos --need-blobs` lists those blobs, `<git dir>\t<blob id>` a line, and `git --git-dir <git dir> cat-file blob <blob id>` fetches one from the clone's promisor remote".into(),
         );
     }
     if ambiguous > 0 {
@@ -246,7 +305,7 @@ fn store_row(
     session: &Session<'_>,
     declared: &Store,
     read: Option<&store::material::Read>,
-    flags: &mut Vec<String>,
+    (flags, need): (&mut Vec<String>, &mut Vec<String>),
 ) -> Result<(&'static str, Vec<More>)> {
     flags.push("store".into());
     flags.push(match declared.freshness {
@@ -270,7 +329,7 @@ fn store_row(
                 named: true,
                 declared: None,
             };
-            let (status, found) = found(session, dir, resolved.how, &ask);
+            let (status, found) = found(session, dir, resolved.how, (&ask, need))?;
             lines.extend(found);
             status
         }

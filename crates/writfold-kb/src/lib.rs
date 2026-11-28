@@ -138,9 +138,11 @@ pub enum Verb {
         project: Option<String>,
         plan: bool,
     },
-    /// `repos [--missing]`: the cited repositories and their local clones.
+    /// `repos [--missing|--need-blobs]`: the cited repositories and their
+    /// local clones, or the blobs partial clones lack (#215).
     Repos {
         missing: bool,
+        need_blobs: bool,
     },
     Resume {
         run: Option<String>,
@@ -267,6 +269,18 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     };
     let rebuild = matches!(request.verb, Verb::IndexRebuild);
     let session = Session::open(&ws, tool.as_ref(), rebuild, now)?;
+    if let Verb::Repos {
+        need_blobs: true, ..
+    } = request.verb
+    {
+        return Ok(Output {
+            text: verbs::repos::need_blobs(&session)?,
+            exit: 0,
+            report: None,
+            shown: None,
+            drawn: None,
+        });
+    }
     let (answer, name, args) = answer(&session, request)?;
     let frame = Frame {
         verb: name.to_owned(),
@@ -442,7 +456,7 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
                 args,
             )
         }
-        Verb::Repos { missing } => (
+        Verb::Repos { missing, .. } => (
             verbs::repos::repos(session, *missing)?,
             "repos",
             vec![format!("missing={missing}")],
