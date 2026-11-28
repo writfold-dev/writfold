@@ -367,6 +367,68 @@ separate delivery guard is not evaluated, and an existing delivery configuration
 is noted. The [watch Guards view](watch.md) shows this same answer even when a
 different run is selected.
 
+### Any harness: `guard check`
+
+The rules above are judged by the hook only for the events Claude Code sends
+it. `writfold kb guard check` (since v0.6.0-dev.30) asks for the same decision
+from any harness, wrapper or script:
+
+```sh
+writfold kb guard check --kind shell --command 'git commit -m x' [--tool NAME] [--cwd DIR] [--session ID] [--json]
+writfold kb guard check --kind file.write --path src/a.rs --tool edit
+writfold kb guard check --kind tool --tool mcp__slack__post
+writfold kb guard check --from-event event.json --harness claude-code     # or - for stdin
+```
+
+It runs the delivery guard and then the rules exactly as `kb hook
+pre-tool-use` does: the same matching, the same requirements, the same
+reasons. It writes the guard log entry the hook would, with `via: check`,
+and runs nothing. The exit code is the decision: 0 allow, 2 ask (a person
+decides; a harness that cannot ask treats it as a denial), 3 deny, 1 usage.
+
+```text
+$ writfold kb guard check --kind shell --command 'git commit -m x'
+guard commit [deny] git commit owes: no current KB run; start one: writfold kb checkpoint --new-run … @.writfold/guards/commit.toml
+# note: a guard, not enforcement: it decides only the calls it is asked about
+# decision=deny basis=judged posture=open rules=1 deny=1 ask=0 not-pass=1
+```
+
+An event has a **kind**: `shell`, `file.write`, `file.read`, `skill`, `spawn`
+or `tool`. A `commands` rule applies to every `shell` event, whatever the
+harness calls its shell tool; a `tools` rule compares the tool's own name;
+`paths` reads the event's path. `--json` prints `"writfold_guard": 1` with
+`decision`, `basis` (`no-rules`, `no-match`, `judged`), `posture`, `reasons`,
+`owes`, one object per judged rule (`id`, `path`, `mode`, `command`,
+`decided`, `effect`, `waived`, `owes`) and the event as read
+(`writfold-event/1`).
+
+**Bindings.** `--from-event` reads a harness's own event through its
+binding. Claude Code's is built in (`--harness claude-code`, the default).
+Another harness gets a file, `.writfold/harness/<id>.toml`, checked by `kb
+lint` like every definition:
+
+```toml
+schema = "writfold-harness/1"
+id = "other"
+session = "sessionId"          # where the event names its session
+tool = "toolName"              # default tool_name
+input = "args"                 # default tool_input
+shell = ["bash: command", "terminal: commandLine"]   # tool name: input field
+file_write = ["edit: path"]
+file_read = ["view: path"]
+skill = ["skill: name"]
+spawn = ["task: agentType"]
+reports = ["shell", "file.write"]   # the kinds this harness shows a hook
+```
+
+A tool no list names is of kind `tool`. `actor`, `actor_type` and `cwd` name
+further fields. `reports` is the binding's own statement of what the harness
+shows; a kind it leaves out is one Writfold never sees there.
+
+Nothing changes for an existing Claude Code setup: the hook's output is byte
+for byte what it was. Without a harness that calls it, `guard check` guards
+nothing; see the [limits](assurance.md#limits).
+
 ### Paths
 
 `paths` narrows a `tools` rule to the files it edits:

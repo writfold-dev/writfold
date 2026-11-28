@@ -15,6 +15,8 @@ pub struct Decided {
     pub decision: Decision,
     pub reasons: Vec<String>,
     pub stderr: String,
+    /// One row per judged rule, for `guard check --json`.
+    pub rules: Vec<Value>,
 }
 
 fn name(d: Decision) -> &'static str {
@@ -92,6 +94,20 @@ pub fn notes(rule: &Rule, owed: &[Owed], text: &str) -> String {
     out
 }
 
+/// A judged rule as `guard check --json` shows it.
+fn row(rule: &Rule, owed: &[Owed], command: &str) -> Value {
+    let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
+    let decided = decide(true, rule.action, &facts);
+    let owes: Vec<&str> = owed
+        .iter()
+        .filter(|o| o.fact != Fact::Met)
+        .map(|o| o.text.as_str())
+        .collect();
+    json!({"id": rule.id, "path": rule.path, "mode": rule.mode.name(), "command": command,
+        "decided": name(decided), "effect": name(effect(rule.mode, decided)),
+        "waived": owed.iter().any(|o| !o.waived.is_empty()), "owes": owes})
+}
+
 /// Decide every group, log what the log keeps, and say what passed only
 /// because of the mode or a waiver.
 pub fn judge(
@@ -114,6 +130,7 @@ pub fn judge(
         decision: Decision::Pass,
         reasons: Vec::new(),
         stderr: String::new(),
+        rules: Vec::new(),
     };
     let mut entries = Vec::new();
     let mut ruled = Vec::new();
@@ -135,10 +152,11 @@ pub fn judge(
             if call::ruled(&judged) != Decision::Pass && !out.reasons.contains(&text) {
                 out.reasons.push(text);
             }
+            out.rules.push(row(rule, &owed, command));
             ruled.push(judged);
             if logged(rule, &owed) {
                 let at = Logged {
-                    via: "hook",
+                    via: super::event::via(input),
                     session,
                     tool,
                     command,

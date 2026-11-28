@@ -213,6 +213,7 @@ When one of these files is wrong, `writfold kb lint` reports every fault with it
 | `.writfold/deliveries/vale-<name>.toml` | a Vale profile: the pinned version and the canary line | [delivery-modes](delivery-modes.md#documents-and-vale) |
 | `.writfold/vale/<name>/` | your `.vale.ini` and styles for that profile, unchanged; every file is bound | [delivery-modes](delivery-modes.md#documents-and-vale) |
 | `.writfold/guards/<id>.toml` | one guard rule (built in v0.5.0-dev.1); in the KB root for every project, or in a repository for that repository only | [hooks](hooks.md#guard-rules) |
+| `.writfold/harness/<id>.toml` | a harness binding (`writfold-harness/1`, built in v0.6.0-dev.30): how another harness's event becomes `writfold-event/1` for `guard check --from-event --harness <id>` | [hooks](hooks.md#any-harness-guard-check) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
 | `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields, or its external checker; KB root only | [above](#a-citation-token) |
 | `.writfold/checks/<kind>/<time>-<hex>.json` | a check receipt: what a checked kind's checker said about each token in one `kb stale --record` run (built in v0.5.0-dev.9); written once, superseded files removed | [checkers](checkers.md#sharing-verdicts-check-receipts) |

@@ -103,7 +103,7 @@ impl<'a> Call<'a> {
             .and_then(|t| t.get("command"))
             .and_then(Value::as_str)
             .unwrap_or("");
-        let invocations = match tool == "Bash" {
+        let invocations = match super::event::is_shell(input) {
             true => {
                 let home = home.map(|h| h.to_string_lossy().into_owned());
                 shell::invocations(line, &cwd.to_string_lossy(), home.as_deref())

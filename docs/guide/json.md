@@ -212,9 +212,10 @@ The key sets above are pinned by a test (`crates/writfold-kb/tests/json.rs`), wh
 
 Every `writfold kb` verb, including the writes and the run verbs: `record`, `status --set`, `checkpoint`, `propose` and `proposals`, `observe`, `repos`, `checker list`, `cite make`, `gate run|status|cover|attest|waive|lines`, `guard status`, `plan` and `deliver`. A write answers with the rows of what it wrote and its notes.
 
-Two outputs are not this envelope:
+These outputs are not this envelope:
 
 - The hook commands (`writfold kb hook <event>`) print the JSON Claude Code expects.
+- `writfold kb guard check --json` prints one object with `"writfold_guard": 1` ([hooks](hooks.md#any-harness-guard-check)); its exit code is the decision.
 
 ## Loops in `plan status` (from v0.6.0-dev.15)
 

@@ -2,13 +2,13 @@
 rfc: "2026-11-27-guard-check-and-posture"
 title: "The guard site without a harness: `guard check`, a neutral event, harness bindings and a declared posture"
 status: accepted
-implementation: not-started
+implementation: in-progress
 authors:
   - fable
 created: 2026-11-27
-updated: 2026-11-27
+updated: 2026-11-28
 issue: https://github.com/writfold-dev/writfold/issues/183
-milestone: null
+milestone: "v0.6.0-dev.30"
 supersedes: []
 superseded_by: []
 blocked_on: []
@@ -314,3 +314,17 @@ default. A binding file is read only by `guard check --harness` and
 - 2026-11-27: drafted after reproducing the fail-open cases and the
   hard-coded shell tool on `9afa5942`. Accepted under the owner's
   standing acceptance; not yet reviewed by the owner.
+- 2026-11-28 (slice 1 as built, #183): the site's judges keep reading
+  Claude Code's PreToolUse shape, which is the canonical form of an event.
+  A `writfold-event/1` from `guard check` or a binding becomes that shape
+  plus two keys Claude Code never sends (`writfold_kind`, `writfold_via`).
+  A map without `writfold_kind` is Claude Code's own and its shell tool is
+  `Bash`, so the built-in binding is the identity on the hook's path and the
+  hook's output is unchanged by construction (all existing guard and hook
+  tests pass unmodified). `guard/site.rs` is the one function the hook and
+  `guard check` call. A binding file also names where the event keeps its
+  tool name, tool input and working directory (`tool`, `input`, `cwd`;
+  defaults `tool_name`, `tool_input`, `cwd`), which the drafted example
+  left implicit. The guard log keeps `via: hook` for the hook and writes
+  `via: check` for `guard check` and bindings. `guard check --event stop`
+  is slice 2.

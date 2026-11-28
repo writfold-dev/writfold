@@ -15,9 +15,12 @@
 //! - A `stop` rule adds context ([`stop`]) once per session, or with
 //!   `repeat = "turn"` once per user turn, and never while
 //!   `stop_hook_active` is set; the session flag is its local draft.
+pub mod binding;
+pub mod check;
 pub mod delivery;
 mod delivery_body;
 mod empty;
+pub mod event;
 pub mod log;
 pub mod matched;
 pub mod paths;
@@ -27,6 +30,7 @@ pub mod require;
 pub mod rule_check;
 mod rule_lists;
 pub mod rules;
+pub mod site;
 pub mod status;
 pub mod waived;
 
@@ -85,34 +89,21 @@ fn problems_note(problems: &[crate::defs::Problem]) -> String {
     problems.iter().map(crate::hook::broken::skipped).collect()
 }
 
-/// Decide one PreToolUse event: the delivery guard, then the rules,
-/// each judged where the command it matched acts ([`matched`]).
+/// Decide one PreToolUse event ([`site::decide`]) and render it as Claude
+/// Code expects: nothing on a pass, its JSON on a denial or a question.
 pub fn pre_tool_use(
     ws: &Workspace,
     input: &Map<String, Value>,
-    (cwd, home): (&Path, Option<&Path>),
+    places: (&Path, Option<&Path>),
     now: i64,
 ) -> Result<HookOutput, String> {
-    let mut stderr = match delivery::pre_tool_use(ws, input, cwd, now) {
-        Ok(out) if !out.stdout.is_empty() => return Ok(out),
-        Ok(out) => out.stderr,
-        Err(why) => format!("writfold kb hook: {why}\n"),
-    };
-    let call = matched::Call::read(input, cwd, home);
-    let Some(loaded) = matched::Loaded::find(&ws.root, &call.places()) else {
-        return Ok(quiet_with(stderr));
-    };
-    stderr.push_str(&problems_note(&loaded.problems));
-    let groups = matched::groups(&loaded, &call);
-    if groups.is_empty() {
-        return Ok(quiet_with(stderr));
+    let sited = site::decide(ws, input, places, now);
+    if sited.delivery {
+        let reason = sited.reasons.first().map(String::as_str).unwrap_or("");
+        return Ok(delivery::deny_output(reason));
     }
-    let decided = pre::judge(ws, input, &groups, now);
-    stderr.push_str(&decided.stderr);
-    let reasons = decided.reasons;
-    let decision = decided.decision;
-    let verdict = match decision {
-        Decision::Pass => return Ok(quiet_with(stderr)),
+    let verdict = match sited.decision {
+        Decision::Pass => return Ok(quiet_with(sited.stderr)),
         Decision::Deny => "deny",
         Decision::Ask => "ask",
     };
@@ -120,12 +111,12 @@ pub fn pre_tool_use(
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": verdict,
-            "permissionDecisionReason": reasons.join("\n"),
+            "permissionDecisionReason": sited.reasons.join("\n"),
         }
     });
     Ok(HookOutput {
         stdout: format!("{value}\n"),
-        stderr,
+        stderr: sited.stderr,
     })
 }
 
