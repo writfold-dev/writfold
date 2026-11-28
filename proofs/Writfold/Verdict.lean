@@ -1,5 +1,6 @@
 import Extracted.WritfoldCore.Types
 import Extracted.WritfoldCore.Verdict
+import Calculus.Knowledge
 
 /-!
 # Citation verdicts
@@ -16,6 +17,11 @@ what a check observed to exactly one verdict.
   `gone_witness`, `changed_witness`, `history_only_refines`,
   `rename_never_fresh` (#90): missing history is never evidence of a
   change; a negative verdict for a code citation has a witness.
+- `observed_monotone` (#212): `observed` is monotone from `Knows` (what a
+  fuller clone or a longer history sees) to `Calculus.Words.refines`;
+  `history_only_refines`, `fetch_only_refines`, `unfetched_never_decides`,
+  `absence_never_evidence` and `unsearched_never_fresh` (k = false) follow
+  through `observedOf_mono` and `observed_undecided`.
 - `with_mark_spec`, `mark_keeps_change`, `mark_never_fresh`, `decide_spec`:
   an authored mark wins over every verdict except changed, gone and
   expired, so a mark never hides a change and never reads fresh.
@@ -113,6 +119,84 @@ theorem observed_spec (f : verdict.Observed) :
   · rcases c with _ | _ | _ | s | _ <;> try simp [observedOf]
     cases s <;> simp [observedOf]
 
+/-! ## Knowing more (#212): `observed` is monotone
+
+Facts are ordered by what a fuller clone or a longer history knows beyond
+them; verdicts by `Calculus.Words.refines` over `words`, whose unknown word
+is `unverifiable`. `observed_monotone`: knowing more changes a verdict only
+where it was unverifiable. `history_only_refines` (#90),
+`fetch_only_refines` and `unfetched_never_decides` (#182),
+`absence_never_evidence` and `unsearched_never_fresh` are its corollaries. -/
+
+/-- Moved, renamed, changed and gone claim change (law A). -/
+def claimsChange : verdict.Verdict → Bool
+  | .Moved | .Renamed | .Changed | .Gone => true
+  | _ => false
+
+/-- Verdicts as a vocabulary: `unverifiable` could not be told. -/
+def words : Calculus.Words verdict.Verdict := ⟨.Unverifiable, claimsChange, rfl⟩
+
+/-- A follow that did not complete: the cited commit is not in this clone,
+there is no `rev=`, the per-run limit was reached, or the clone lacks the
+bytes. -/
+def Unfollowed (a : verdict.Absence) : Prop :=
+  a = .RevAbsent ∨ a = .NoRev ∨ a = .Capped ∨ a = .Unfetched
+
+/-- `Knows f g`: `g` is what a fuller observation of the same citation can
+see where `f` was seen. History supplies the cited blob; a span search or
+fetched bytes supply where the span sits; a completed follow supplies how
+the path left. -/
+inductive Knows : verdict.Observed → verdict.Observed → Prop
+  | refl (f) : Knows f f
+  | trans {f g h} : Knows f g → Knows g h → Knows f h
+  | history (l) : Knows (.Code (.OtherBlob false l)) (.Code (.OtherBlob true l))
+  | search (l) : Knows (.Code (.OtherBlob false none)) (.Code (.OtherBlob false l))
+  | unsearched (l) : Knows (.Code (.OtherBlob false (some .Unsearched))) (.Code (.OtherBlob false l))
+  | fetch (k l) : Knows (.Code (.OtherBlob k (some .Unfetched))) (.Code (.OtherBlob k l))
+  | follow (a b) : Unfollowed a → Knows (.Code (.Missing a)) (.Code (.Missing b))
+  | followFetch (l) : Knows (.Code (.Missing (.Followed (some .Unfetched))))
+      (.Code (.Missing (.Followed l)))
+
+/-- The table is monotone: the pure core of `observed_monotone`. -/
+theorem observedOf_mono {f g : verdict.Observed} (h : Knows f g) :
+    words.refines (observedOf f) (observedOf g) := by
+  induction h with
+  | refl => exact words.refines_refl _
+  | trans _ _ ih1 ih2 => exact words.refines_trans ih1 ih2
+  | history l =>
+    unfold Calculus.Words.refines
+    rcases l with _ | l
+    · simp [observedOf, otherBlobOf, words]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ | _ <;> simp [observedOf, otherBlobOf, words]
+  | search l => right; simp [observedOf, otherBlobOf, words]
+  | unsearched l => right; simp [observedOf, otherBlobOf, words]
+  | fetch k l => right; simp [observedOf, otherBlobOf, words]
+  | follow a b ha =>
+    right; rcases ha with rfl | rfl | rfl | rfl <;> simp [observedOf, missingOf, words]
+  | followFetch l => right; simp [observedOf, missingOf, words]
+
+/-- `observed` is monotone from what is known about a citation to the
+knowledge order on verdicts: a fuller observation never contradicts a
+verdict that was told. -/
+theorem observed_monotone {f g : verdict.Observed} (h : Knows f g) :
+    verdict.observed f ⦃ v => verdict.observed g ⦃ w => Calculus.Words.refines words v w ⦄ ⦄ := by
+  apply WP.spec_mono (observed_spec f); intro v hv
+  apply WP.spec_mono (observed_spec g); intro w hw
+  subst hv hw; exact observedOf_mono h
+
+/-- What `observed_monotone` says of one computation: the verdict refines
+to the table at any fuller fact. -/
+theorem observed_below {f g : verdict.Observed} (h : Knows f g) :
+    verdict.observed f ⦃ v => words.refines v (observedOf g) ⦄ := by
+  apply WP.spec_mono (observed_spec f); intro v hv; subst hv; exact observedOf_mono h
+
+/-- A fact below two fuller facts that disagree decided nothing. -/
+theorem observed_undecided {f g₁ g₂ : verdict.Observed} (h₁ : Knows f g₁) (h₂ : Knows f g₂)
+    (hne : observedOf g₁ ≠ observedOf g₂) :
+    verdict.observed f ⦃ v => v = .Unverifiable ⦄ := by
+  apply WP.spec_mono (observed_spec f); intro v hv; subst hv
+  exact words.refines_disagree (observedOf_mono h₁) (observedOf_mono h₂) hne
+
 /-- The facts that read fresh. -/
 def FreshFact (f : verdict.Observed) : Prop :=
   f = .Code .SameBlob ∨ (∃ k, f = .Code (.OtherBlob k (some .Same))) ∨ f = .Gate true ∨
@@ -155,7 +239,11 @@ compared, unverifiable when it was not; never fresh. -/
 theorem unsearched_never_fresh (k : Bool) :
     verdict.observed (.Code (.OtherBlob k (some .Unsearched)))
       ⦃ v => v = if k then .Changed else .Unverifiable ⦄ := by
-  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf, otherBlobOf]
+  cases k
+  · apply WP.spec_mono (observed_undecided (Knows.unsearched (some .Same))
+      (Knows.unsearched (some .Absent)) (by simp [observedOf, otherBlobOf]))
+    intro v hv; simpa using hv
+  · apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf, otherBlobOf]
 
 /-- A gate citation away from the target commit reads changed. -/
 theorem changed_gate_never_fresh :
@@ -176,8 +264,9 @@ never gone, never changed. -/
 theorem absence_never_evidence (a : verdict.Absence)
     (h : a = .RevAbsent ∨ a = .NoRev ∨ a = .Capped) :
     verdict.observed (.Code (.Missing a)) ⦃ v => v = .Unverifiable ⦄ := by
-  apply WP.spec_mono (observed_spec _); intro v hv
-  rcases h with h | h | h <;> simp [hv, h, observedOf, missingOf]
+  have hu : Unfollowed a := by rcases h with h | h | h <;> simp [Unfollowed, h]
+  exact observed_undecided (Knows.follow a .Renamed hu) (Knows.follow a .NoRename hu)
+    (by simp [observedOf, missingOf])
 
 /-- With no cited blob known, a citation reads changed only when a span
 search ran and did not find the span, and never reads gone. -/
@@ -235,10 +324,7 @@ bytes at the target is the same with or without history. -/
 theorem history_only_refines (l : Option verdict.Located) :
     verdict.observed (.Code (.OtherBlob false l))
       ⦃ v => v = observedOf (.Code (.OtherBlob true l)) ∨ v = .Unverifiable ⦄ := by
-  apply WP.spec_mono (observed_spec _); intro v hv; subst hv
-  rcases l with _ | l
-  · simp [observedOf, otherBlobOf]
-  · rcases l with _ | ⟨_, _⟩ | _ | _ | _ <;> simp [observedOf, otherBlobOf]
+  exact observed_below (Knows.history l)
 
 /-- A path absent at the target never reads fresh, renamed or not. -/
 theorem rename_never_fresh (a : verdict.Absence) :
@@ -262,9 +348,17 @@ theorem unfetched_never_decides (k : Bool) :
     verdict.observed (.Code (.OtherBlob k (some .Unfetched))) ⦃ v => decides v = false ⦄ ∧
     verdict.observed (.Code (.Missing .Unfetched)) ⦃ v => decides v = false ⦄ ∧
     verdict.observed (.Code (.Missing (.Followed (some .Unfetched)))) ⦃ v => decides v = false ⦄ := by
-  refine ⟨?_, ?_, ?_⟩ <;>
-    (apply WP.spec_mono (observed_spec _); intro v hv; subst hv;
-     cases k <;> simp [observedOf, otherBlobOf, missingOf, decides])
+  have hu : Unfollowed .Unfetched := by simp [Unfollowed]
+  refine ⟨?_, ?_, ?_⟩
+  · apply WP.spec_mono (observed_undecided (Knows.fetch k (some .Same))
+      (Knows.fetch k (some .Absent)) (by cases k <;> simp [observedOf, otherBlobOf]))
+    intro v hv; simp [hv, decides]
+  · apply WP.spec_mono (observed_undecided (Knows.follow _ .Renamed hu)
+      (Knows.follow _ .NoRename hu) (by simp [observedOf, missingOf]))
+    intro v hv; simp [hv, decides]
+  · apply WP.spec_mono (observed_undecided (Knows.followFetch (some .Same))
+      (Knows.followFetch none) (by simp [observedOf, missingOf]))
+    intro v hv; simp [hv, decides]
 
 /-- What a partial clone decides from blob ids alone takes no fact about
 contents: the same blob is fresh, an exact rename is renamed. -/
@@ -281,9 +375,8 @@ theorem fetch_only_refines (k : Bool) (l : Option verdict.Located) (a : verdict.
       ⦃ v => v = observedOf (.Code (.OtherBlob k l)) ∨ v = .Unverifiable ⦄ ∧
     verdict.observed (.Code (.Missing .Unfetched))
       ⦃ v => v = observedOf (.Code (.Missing a)) ∨ v = .Unverifiable ⦄ := by
-  refine ⟨?_, ?_⟩ <;>
-    (apply WP.spec_mono (observed_spec _); intro v hv; subst hv;
-     simp [observedOf, otherBlobOf, missingOf])
+  exact ⟨observed_below (Knows.fetch k l),
+    observed_below (Knows.follow .Unfetched a (by simp [Unfollowed]))⟩
 
 /-! ## Marks -/
 

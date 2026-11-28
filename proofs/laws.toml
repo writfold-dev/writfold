@@ -1416,3 +1416,251 @@ why = "the first reason a scope gives no universe: a refusal's name; units::univ
 [[local]]
 type = "units.Moved"
 why = "which input of a unit moved: a report, not a word"
+
+# --- #212 verdicts ---
+
+[[word]]
+type = "verdict.Verdict"
+core = "Calculus.Tri"
+abstraction = "verdictTri"
+onto = "verdictTri_onto"
+
+[[word]]
+type = "verdict.Said"
+core = "Calculus.Tri"
+abstraction = "saidTri"
+onto = "saidTri_onto"
+
+[[local]]
+type = "verdict.Absence"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Located"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Target"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Observed"
+why = "a fact a provider supplies (law A), ordered by Core.Verdict.Knows, the domain of observed_monotone"
+
+[[local]]
+type = "verdict.Checker"
+why = "a checker's reply or why there is none; it reaches a verdict through observed's Checked row and recorded::recordable"
+
+[[local]]
+type = "verdict.Handshake"
+why = "the checker protocol's outcome"
+
+[[local]]
+type = "verdict.locate.Place"
+why = "the span search's result, a fact observed reads"
+
+[[local]]
+type = "verdict.locate.Window"
+why = "the span search's window, a fact observed reads"
+
+[[local]]
+type = "verdict.recorded.Pick"
+why = "which statement decides, the local one or a receipt; the choice is best_recorded's"
+
+[[local]]
+type = "store.Basis"
+why = "which rule judges a store citation, head or pin"
+
+[[local]]
+type = "store.Commit"
+why = "a fact about a store's clone; ordered by CommitBelow for store_pinned_implements"
+
+[[local]]
+type = "store.AtPin"
+why = "a fact about the bytes at a pin; ordered by CommitBelow for store_pinned_implements"
+
+[[local]]
+type = "store.Candidate"
+why = "how a clone was found: a candidate of store_resolve_implements (storeCands)"
+
+[[local]]
+type = "store.Via"
+why = "the way a clone was found: the referent store_resolve_implements resolves to"
+
+[[local]]
+type = "store.Resolved"
+why = "store::resolve's outcome; viaOf abstracts it onto Calculus.Resolution"
+
+[[local]]
+type = "store.Claim"
+why = "store::claim's outcome; claimOf maps Calculus.Resolution onto it (claim_implements)"
+
+[[local]]
+type = "store.Artifact"
+why = "an admission outcome: admitted exactly when Calculus.Tri.all of its facts is yes (store_artifact_implements)"
+
+[[local]]
+type = "store.Snapshot"
+why = "an admission outcome: recorded exactly when Calculus.Tri.all of its facts is yes (store_snapshot_implements)"
+
+[[local]]
+type = "store.Refusal"
+why = "the first failing fact of an artifact's admission, for the report"
+
+[[local]]
+type = "store.Withheld"
+why = "the first failing fact of a snapshot's admission, for the report"
+
+[[local]]
+type = "target.Choice"
+why = "target::choose_in's outcome; Conform.Target's resolutionOf relates it to Calculus.Resolution (choose_in_resolves)"
+
+[[local]]
+type = "target.Names"
+why = "how a remote names the cited repository: a candidate's level (rank)"
+
+[[local]]
+type = "target.Tip"
+why = "a remote's default-branch tip: what a candidate offers"
+
+[[local]]
+type = "target.Pinned"
+why = "whether an operator's pin resolves: the pin candidate"
+
+[[local]]
+type = "target.Why"
+why = "why a choice is ambiguous, for the report"
+
+[[link]]
+function = "verdict.observed"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Verdict.observed_monotone"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines", "Calculus.Words.refines_disagree", "Calculus.Words.refines_unknown_iff"]
+
+[[link]]
+function = "verdict.other_blob"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_other_blob_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines", "Calculus.Words.refines_disagree"]
+
+[[link]]
+function = "verdict.missing"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_missing_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines", "Calculus.Words.refines_disagree"]
+
+[[link]]
+function = "verdict.with_mark"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_with_mark_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines"]
+
+[[link]]
+function = "verdict.decide"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.verdict_decide_implements"
+laws = ["Calculus.Words.refines_trans", "Calculus.Words.told_refines"]
+
+[[link]]
+function = "store.pinned"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.store_pinned_implements"
+laws = ["Calculus.Words.unknown_refines", "Calculus.Words.told_refines"]
+
+[[link]]
+function = "store.use_recorded"
+implements = "Calculus.Words.refines"
+theorem = "Writfold.Core.Conform.store_use_recorded_implements"
+laws = ["Calculus.Words.unknown_refines", "Calculus.Words.refines_unknown_iff"]
+
+[[link]]
+function = "store.pin_recordable"
+implements = "Calculus.Words.told"
+theorem = "Writfold.Core.Conform.store_pin_recordable_implements"
+laws = ["Calculus.Words.told_refines", "Calculus.Words.unknown_never_told"]
+
+[[link]]
+function = "verdict.recorded.usable"
+implements = "Calculus.Words.told"
+theorem = "Writfold.Core.Conform.recorded_usable_implements"
+laws = ["Calculus.Words.told_refines", "Calculus.Words.unknown_never_told"]
+
+[[link]]
+function = "verdict.recorded.recordable"
+implements = "Calculus.Words.told"
+theorem = "Writfold.Core.Conform.recorded_recordable_implements"
+laws = ["Calculus.Words.told_refines", "Calculus.Words.unknown_never_told"]
+
+[[link]]
+function = "store.resolve"
+implements = "Calculus.resolve"
+theorem = "Writfold.Core.Conform.store_resolve_implements"
+laws = ["Calculus.resolve_nil", "Calculus.resolve_one_mem", "Calculus.resolve_one_agree", "Calculus.resolve_order_free"]
+
+[[link]]
+function = "store.artifact"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.store_artifact_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no", "Calculus.Tri.more_never_admits"]
+
+[[link]]
+function = "store.snapshot"
+implements = "Calculus.Tri.all"
+theorem = "Writfold.Core.Conform.store_snapshot_implements"
+laws = ["Calculus.Tri.all_eq_yes", "Calculus.Tri.all_eq_no", "Calculus.Tri.more_never_admits"]
+
+[[out]]
+function = "verdict.aged"
+why = "a cached checker reply's age against its max_age: lifetime arithmetic (aged_spec); no law of the calculus is about it"
+
+[[out]]
+function = "verdict.exchange"
+why = "the checker protocol: which reply counts (exchange_spec); its result reaches a verdict through observed's Checked row"
+
+[[out]]
+function = "verdict.expired"
+why = "now - seen > ttl over the integers: lifetime arithmetic (expired_spec)"
+
+[[out]]
+function = "verdict.handshake"
+why = "the checker handshake (handshake_spec): protocol, not judgment"
+
+[[out]]
+function = "verdict.lifetime"
+why = "which ttl applies to a timed citation (lifetime_spec): configuration, not judgment"
+
+[[out]]
+function = "verdict.reply"
+why = "reading one checker reply (reply_spec): protocol, not judgment"
+
+[[out]]
+function = "verdict.locate.place"
+why = "the span search: where the cited span sits (place_same_iff, place_at_iff, place_absent_iff); its result is a fact observed reads"
+
+[[out]]
+function = "verdict.locate.window"
+why = "the span search: one window's flags (window_spec); a fact observed reads"
+
+[[out]]
+function = "verdict.recorded.CLOCK_SKEW"
+why = "a constant: the clock skew tolerated for a receipt's date"
+
+[[out]]
+function = "verdict.recorded.before"
+why = "the order of two statements inside best_recorded (before_spec); the deciding choice is linked through best_recorded"
+
+[[out]]
+function = "verdict.recorded.recorded_age"
+why = "a receipt's age, clamped, over the integers (recorded_age_spec): arithmetic"
+
+[[out]]
+function = "verdict.recorded.worst"
+why = "a said word's rank inside before (worst_spec)"
+
+[[out]]
+function = "store.basis"
+why = "which rule (head or pin) judges a store citation, from declaration flags (basis_pin_iff); the verdict it selects is linked through pinned"
+
+[[out]]
+function = "store.recorded"
+why = "whether a store's declaration lets a receipt stand in (code_recorded_iff); where one may is linked through use_recorded"

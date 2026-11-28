@@ -16,7 +16,7 @@ regenerates this page in the same commit.
 
 ## Coverage
 
-`LAW_COVERAGE judged=94 declared_out=142 remainder=27 of 263`
+`LAW_COVERAGE judged=107 declared_out=156 remainder=0 of 263`
 
 *judged*: translated functions linked to a law; *declared_out*: functions the
 calculus is not about, with a reason; *remainder*: the backlog in
@@ -169,7 +169,7 @@ All hold exactly when each one holds.
 all_eq_yes (ts : List Tri) : all ts = yes ↔ ∀ t ∈ ts, t = yes
 ```
 
-- Implemented by: `compose.covers`, `delivery.postable`, `guard.all_met`, `guard.gates_fact`, `guard.nudge_with`, `guard.nudge`, `guard.require.gate_fact`, `guard.require.gates_read`, `guard.require.run_current`, `guard.require.settled_fact`, `guard.require.step_fact`, `pin.current_under`, `pin.holds`, `plan.first_owed`, `plan.round.all_met`, `plan.round.exit`
+- Implemented by: `compose.covers`, `delivery.postable`, `guard.all_met`, `guard.gates_fact`, `guard.nudge_with`, `guard.nudge`, `guard.require.gate_fact`, `guard.require.gates_read`, `guard.require.run_current`, `guard.require.settled_fact`, `guard.require.step_fact`, `pin.current_under`, `pin.holds`, `plan.first_owed`, `plan.round.all_met`, `plan.round.exit`, `store.artifact`, `store.snapshot`
 - Caught by: `all-empty-unknown`
 
 ### `Calculus.Tri.all_eq_no`
@@ -180,7 +180,7 @@ A refusal needs a witness.
 all_eq_no (ts : List Tri) : all ts = no ↔ no ∈ ts
 ```
 
-- Implemented by: `guard.gates_fact`, `guard.require.run_current`, `plan.first_owed`, `plan.round.all_met`
+- Implemented by: `guard.gates_fact`, `guard.require.run_current`, `plan.first_owed`, `plan.round.all_met`, `store.artifact`, `store.snapshot`
 - Derived: and_eq_no
 
 ### `Calculus.Tri.all_append`
@@ -223,7 +223,7 @@ Adding an obligation never makes an unmet set met (3.4).
 more_never_admits (xs ys : List Tri) : (all (xs ++ ys)).admits = true → (all xs).admits = true
 ```
 
-- Implemented by: `guard.all_met`, `pin.current_under`, `pin.holds`
+- Implemented by: `guard.all_met`, `pin.current_under`, `pin.holds`, `store.artifact`, `store.snapshot`
 - Derived: all_append, admits_iff
 
 ### `Calculus.Decision.join_comm`
@@ -720,7 +720,7 @@ Law R: with no candidate there is no referent.
 resolve_nil : resolve ([] : List (Candidate ρ)) = .none
 ```
 
-- Implemented by: `store.claim`
+- Implemented by: `store.claim`, `store.resolve`
 - Derived: the definition of resolve
 
 ### `Calculus.resolve_one_mem`
@@ -731,7 +731,7 @@ What `resolve` chose was offered, at the deciding level.
 resolve_one_mem {cs : List (Candidate ρ)} {r : ρ} (h : resolve cs = .one r) : ∃ c ∈ cs, Candidate.top cs c = true ∧ c.referent = some r
 ```
 
-- Implemented by: `pointer.level`, `pointer.open`, `subject.pick`, `target.choose_in`, `target.choose`
+- Implemented by: `pointer.level`, `pointer.open`, `store.resolve`, `subject.pick`, `target.choose_in`, `target.choose`
 - Caught by: `resolve-first-wins`, `resolve-falls-back`
 
 ### `Calculus.resolve_one_agree`
@@ -742,7 +742,7 @@ Every candidate at the deciding level agreed: two that disagree, or one that off
 resolve_one_agree {cs : List (Candidate ρ)} {r : ρ} (h : resolve cs = .one r) {c : Candidate ρ} (hc : c ∈ cs) (ht : Candidate.top cs c = true) : c.referent = some r
 ```
 
-- Implemented by: `pointer.level`, `pointer.open`, `store.claim`, `subject.pick`, `target.choose_in`, `target.choose`
+- Implemented by: `pointer.level`, `pointer.open`, `store.claim`, `store.resolve`, `subject.pick`, `target.choose_in`, `target.choose`
 - Caught by: `resolve-first-wins`, `resolve-falls-back`, `resolve-ignores-missing-offer`
 
 ### `Calculus.resolve_order_free`
@@ -753,7 +753,7 @@ The choice does not depend on the order the candidates were found in: two listin
 resolve_order_free {cs ds : List (Candidate ρ)} {r s : ρ} (hmem : ∀ c, c ∈ cs ↔ c ∈ ds) (hc : resolve cs = .one r) (hd : resolve ds = .one s) : r = s
 ```
 
-- Implemented by: `pointer.level`, `subject.pick`, `target.choose_in`, `target.choose`
+- Implemented by: `pointer.level`, `store.resolve`, `subject.pick`, `target.choose_in`, `target.choose`
 - Derived: resolve_one_mem, resolve_one_agree
 
 ### `Calculus.settle_only_withholds`
@@ -930,13 +930,26 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `referent.judge` | `Calculus.judge` | `Writfold.Core.Conform.judge_implements` |
 | `referent.settle` | `Calculus.settle` | `Writfold.Core.Conform.settle_implements` |
 | `runs.complete` | `Calculus.whole` | `Writfold.Core.Conform.runs_complete_implements` |
+| `store.artifact` | `Calculus.Tri.all` | `Writfold.Core.Conform.store_artifact_implements` |
 | `store.claim` | `Calculus.resolve` | `Writfold.Core.Conform.claim_implements` |
+| `store.pin_recordable` | `Calculus.Words.told` | `Writfold.Core.Conform.store_pin_recordable_implements` |
+| `store.pinned` | `Calculus.Words.refines` | `Writfold.Core.Conform.store_pinned_implements` |
+| `store.resolve` | `Calculus.resolve` | `Writfold.Core.Conform.store_resolve_implements` |
+| `store.snapshot` | `Calculus.Tri.all` | `Writfold.Core.Conform.store_snapshot_implements` |
+| `store.use_recorded` | `Calculus.Words.refines` | `Writfold.Core.Conform.store_use_recorded_implements` |
 | `subject.pick` | `Calculus.resolve` | `Writfold.Core.Conform.pick_implements` |
 | `target.choose` | `Calculus.resolve` | `Writfold.Core.Conform.choose_implements` |
 | `target.choose_in` | `Calculus.resolve` | `Writfold.Core.Conform.choose_in_implements` |
 | `units.generated` | `Calculus.universal` | `Writfold.Core.Conform.generated_implements` |
 | `units.universe` | `Calculus.whole` | `Writfold.Core.Conform.universe_implements` |
 | `vale.settle` | `Calculus.settle` | `Writfold.Core.Conform.vale_settle_implements` |
+| `verdict.decide` | `Calculus.Words.refines` | `Writfold.Core.Conform.verdict_decide_implements` |
+| `verdict.missing` | `Calculus.Words.refines` | `Writfold.Core.Conform.verdict_missing_implements` |
+| `verdict.observed` | `Calculus.Words.refines` | `Writfold.Core.Verdict.observed_monotone` |
+| `verdict.other_blob` | `Calculus.Words.refines` | `Writfold.Core.Conform.verdict_other_blob_implements` |
+| `verdict.recorded.recordable` | `Calculus.Words.told` | `Writfold.Core.Conform.recorded_recordable_implements` |
+| `verdict.recorded.usable` | `Calculus.Words.told` | `Writfold.Core.Conform.recorded_usable_implements` |
+| `verdict.with_mark` | `Calculus.Words.refines` | `Writfold.Core.Conform.verdict_with_mark_implements` |
 | `walk.complete` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_implements` |
 | `walk.complete_within` | `Calculus.whole` | `Writfold.Core.Conform.walk_complete_within_implements` |
 
@@ -955,6 +968,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `guard.Decision` | `Calculus.Decision` | `decisionOf` (onto: `decisionOf_onto`) |
 | `guard.Fact` | `Calculus.Tri` | `factTri` (onto: `factTri_onto`) |
 | `policy.How` | `Calculus.Class` | `howClass` (onto: `howClass_onto`) |
+| `verdict.Said` | `Calculus.Tri` | `saidTri` (onto: `saidTri_onto`) |
+| `verdict.Verdict` | `Calculus.Tri` | `verdictTri` (onto: `verdictTri_onto`) |
 
 ## Declared out
 
@@ -1087,6 +1102,8 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `scope.segment` | glob matching of one segment (segment_iff) |
 | `scope.segments` | glob matching of a path (segments_iff) |
 | `scope.start` | the glob matcher's start cursor (start_spec) |
+| `store.basis` | which rule (head or pin) judges a store citation, from declaration flags (basis_pin_iff); the verdict it selects is linked through pinned |
+| `store.recorded` | whether a store's declaration lets a receipt stand in (code_recorded_iff); where one may is linked through use_recorded |
 | `target.agree_at` | inside choose_in; linked through it (agree_at_spec) |
 | `target.best` | the strongest level, inside choose_in; linked through it (best_spec) |
 | `target.first_at` | inside choose_in; linked through it (first_at_spec) |
@@ -1099,6 +1116,18 @@ unresolved_unknown {ρ : Type} (res : Resolution ρ) (judgeAt : ρ → Tri) (h :
 | `vale.rules` | how many rules a Vale run enabled; the resolved input of vale::settle (rules_spec) |
 | `vale.usable` | whether a Vale run can be read; the resolved input of vale::settle (usable_spec) |
 | `vale.weigh` | an alert's weight under the blocking level (weigh_spec) |
+| `verdict.aged` | a cached checker reply's age against its max_age: lifetime arithmetic (aged_spec); no law of the calculus is about it |
+| `verdict.exchange` | the checker protocol: which reply counts (exchange_spec); its result reaches a verdict through observed's Checked row |
+| `verdict.expired` | now - seen > ttl over the integers: lifetime arithmetic (expired_spec) |
+| `verdict.handshake` | the checker handshake (handshake_spec): protocol, not judgment |
+| `verdict.lifetime` | which ttl applies to a timed citation (lifetime_spec): configuration, not judgment |
+| `verdict.locate.place` | the span search: where the cited span sits (place_same_iff, place_at_iff, place_absent_iff); its result is a fact observed reads |
+| `verdict.locate.window` | the span search: one window's flags (window_spec); a fact observed reads |
+| `verdict.recorded.CLOCK_SKEW` | a constant: the clock skew tolerated for a receipt's date |
+| `verdict.recorded.before` | the order of two statements inside best_recorded (before_spec); the deciding choice is linked through best_recorded |
 | `verdict.recorded.best_recorded` | the best recorded statement under Before (recorded time, then severity); Calculus.deciding's Nat seq cannot express that order (best_recorded_spec) |
 | `verdict.recorded.better` | one step of best_recorded under Before (better_spec) |
 | `verdict.recorded.newest` | picks the local or the best recorded statement by age and Before (newest_spec); the same order, inexpressible as a Nat seq |
+| `verdict.recorded.recorded_age` | a receipt's age, clamped, over the integers (recorded_age_spec): arithmetic |
+| `verdict.recorded.worst` | a said word's rank inside before (worst_spec) |
+| `verdict.reply` | reading one checker reply (reply_spec): protocol, not judgment |

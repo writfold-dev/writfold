@@ -2296,6 +2296,7 @@ theorems = [
   "Writfold.Core.Store.artifact_short_rev",
   "Writfold.Core.Store.artifact_unanchored",
   "Writfold.Core.Store.artifact_undeclared",
+  "Writfold.Core.Conform.store_artifact_implements",
 ]
 total = "Writfold.Core.Store.artifact_admit_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2350,6 +2351,7 @@ function = "pin_recordable"
 lean = "writfold_core.store.pin_recordable"
 theorems = [
   "Writfold.Core.Store.code_recorded_unverifiable_never",
+  "Writfold.Core.Conform.store_pin_recordable_implements",
 ]
 total = "Writfold.Core.Store.code_recorded_unverifiable_never"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2367,6 +2369,7 @@ theorems = [
   "Writfold.Core.Store.pinned_fresh_iff",
   "Writfold.Core.Store.pinned_other_bytes",
   "Writfold.Core.Store.pinned_unanchored_gone",
+  "Writfold.Core.Conform.store_pinned_implements",
 ]
 total = "Writfold.Core.Store.pinned_fresh_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2404,6 +2407,7 @@ theorems = [
   "Writfold.Core.Store.resolve_mismatch_iff",
   "Writfold.Core.Store.resolve_missing_iff",
   "Writfold.Core.Store.resolve_search_before_hint",
+  "Writfold.Core.Conform.store_resolve_implements",
 ]
 total = "Writfold.Core.Store.resolve_committed_needs_origin"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2424,6 +2428,7 @@ theorems = [
   "Writfold.Core.Store.snapshot_record_is_fresh",
   "Writfold.Core.Store.snapshot_stage_iff",
   "Writfold.Core.Store.snapshot_uncommitted_withheld",
+  "Writfold.Core.Conform.store_snapshot_implements",
 ]
 total = "Writfold.Core.Store.snapshot_order"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2445,6 +2450,7 @@ lean = "writfold_core.store.use_recorded"
 theorems = [
   "Writfold.Core.Store.code_local_wins",
   "Writfold.Core.Store.use_recorded_iff",
+  "Writfold.Core.Conform.store_use_recorded_implements",
 ]
 total = "Writfold.Core.Store.use_recorded_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2565,6 +2571,11 @@ theorems = [
   "Writfold.Core.Verdict.rename_never_fresh",
   "Writfold.Core.Verdict.unknown_blob_changed_only_by_span",
   "Writfold.Core.Verdict.unsearched_never_fresh",
+  "Writfold.Core.Verdict.observed_monotone",
+  "Writfold.Core.Verdict.observedOf_mono",
+  "Writfold.Core.Verdict.observed_below",
+  "Writfold.Core.Verdict.observed_undecided",
+  "Writfold.Core.Conform.verdictTri_refines",
 ]
 total = "Writfold.Core.Verdict.observed_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2581,6 +2592,7 @@ theorems = [
   "Writfold.Core.Verdict.other_blob_spec",
   "Writfold.Core.Verdict.unfetched_never_decides",
   "Writfold.Core.Verdict.fetch_only_refines",
+  "Writfold.Core.Conform.verdict_other_blob_implements",
 ]
 total = "Writfold.Core.Verdict.other_blob_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2600,6 +2612,7 @@ lean = "writfold_core.verdict.missing"
 theorems = [
   "Writfold.Core.Verdict.missing_spec",
   "Writfold.Core.Verdict.identity_needs_no_bytes",
+  "Writfold.Core.Conform.verdict_missing_implements",
 ]
 total = "Writfold.Core.Verdict.missing_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2619,6 +2632,7 @@ theorems = [
   "Writfold.Core.Verdict.mark_keeps_change",
   "Writfold.Core.Verdict.mark_never_fresh",
   "Writfold.Core.Verdict.with_mark_spec",
+  "Writfold.Core.Conform.verdict_with_mark_implements",
 ]
 total = "Writfold.Core.Verdict.with_mark_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -2725,6 +2739,7 @@ function = "recordable"
 lean = "writfold_core.verdict.recorded.recordable"
 theorems = [
   "Writfold.Core.Recorded.recordable_iff",
+  "Writfold.Core.Conform.recorded_recordable_implements",
 ]
 total = "Writfold.Core.Recorded.recordable_iff"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -3333,6 +3348,8 @@ theorems = [
   "Writfold.Core.Referent.judge_refines",
   "Writfold.Core.Referent.settleOf_refines",
   "Writfold.Core.Conform.judge_implements",
+  "Writfold.Core.Referent.judge_monotone",
+  "Writfold.Core.Referent.settleOf_settle",
 ]
 total = "Writfold.Core.Referent.judge_spec"
 mutants = [
@@ -3649,4 +3666,32 @@ total = "Writfold.Core.Graph.plan_total"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "plan-skip-ignores-changes",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/verdict.rs"
+function = "decide"
+lean = "writfold_core.verdict.decide"
+theorems = [
+  "Writfold.Core.Verdict.decide_spec",
+  "Writfold.Core.Conform.verdict_decide_implements",
+]
+total = "Writfold.Core.Verdict.decide_spec"
+mutants = [
+  "decide-drops-mark",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/verdict/recorded.rs"
+function = "usable"
+lean = "writfold_core.verdict.recorded.usable"
+theorems = [
+  "Writfold.Core.Recorded.usable_spec",
+  "Writfold.Core.Conform.recorded_usable_implements",
+]
+total = "Writfold.Core.Recorded.usable_spec"
+mutants = [
+  "usable-unverifiable",
 ]

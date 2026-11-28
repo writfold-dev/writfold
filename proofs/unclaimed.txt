@@ -90,7 +90,6 @@ Writfold.Core.Guard.ruled_spec
 Writfold.Core.Scope.segment_iff
 Writfold.Core.Scope.segments_iff
 Writfold.Core.Decision.conclude_none_iff
-Writfold.Core.Verdict.decide_spec
 Writfold.Core.Walk.full_admits_nothing
 Writfold.Core.Find.emb_first
 Writfold.Core.Show.limit_prefix
