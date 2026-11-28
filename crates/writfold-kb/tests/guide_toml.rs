@@ -133,6 +133,32 @@ fn manifest(
         .map_err(|r| format!("{:?}", r.diagnostics.first().map(|d| &d.message)).into())
 }
 
+/// A guard rule, the guard site file or a harness binding (#183, #184).
+fn guard_file(
+    schema: &str,
+    text: &str,
+    map: &std::collections::BTreeMap<String, Value>,
+) -> TestResult {
+    use writfold_kb::guard::{binding, posture, rules};
+    let why = |r: writfold_core::diag::Report| writfold_kb::defs::why(&r);
+    match schema {
+        "writfold-guard-site/1" => posture::check(text, posture::FILE)
+            .map(|_| ())
+            .map_err(why)?,
+        "writfold-harness/1" => {
+            let id = string(map, "id")?;
+            let path = format!("{}/{id}.toml", binding::DIR);
+            binding::check(text, &id, &path).map(|_| ()).map_err(why)?
+        }
+        _ => {
+            let id = string(map, "id")?;
+            let path = format!("{}/{id}.toml", rules::DIR);
+            rules::parse(text, &id, &path).map(|_| ()).map_err(why)?
+        }
+    }
+    Ok(())
+}
+
 /// Accept the block with the real parser for its `schema`, or say why not.
 fn accept(text: &str) -> TestResult {
     let map = toml::parse(text)?;
@@ -182,24 +208,8 @@ fn accept(text: &str) -> TestResult {
                 .map(|guard| guard.is_some())
                 .map_err(|e| e.to_string())
         }),
-        "writfold-guard-rule/1" => {
-            let id = string(&map, "id")?;
-            let path = format!("{}/{id}.toml", writfold_kb::guard::rules::DIR);
-            writfold_kb::guard::rules::parse(text, &id, &path)
-                .map_err(|r| writfold_kb::defs::why(&r))?;
-            Ok(())
-        }
-        "writfold-guard-site/1" => {
-            writfold_kb::guard::posture::check(text, writfold_kb::guard::posture::FILE)
-                .map_err(|r| writfold_kb::defs::why(&r))?;
-            Ok(())
-        }
-        "writfold-harness/1" => {
-            let id = string(&map, "id")?;
-            let path = format!("{}/{id}.toml", writfold_kb::guard::binding::DIR);
-            writfold_kb::guard::binding::check(text, &id, &path)
-                .map_err(|r| writfold_kb::defs::why(&r))?;
-            Ok(())
+        schema @ ("writfold-guard-rule/1" | "writfold-guard-site/1" | "writfold-harness/1") => {
+            guard_file(schema, text, &map)
         }
         "writfold-plan/1" => {
             let name = string(&map, "name")?;
