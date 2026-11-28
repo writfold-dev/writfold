@@ -6,6 +6,14 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.30
+
+- **`kb guard check`** ([#183](https://github.com/writfold-dev/writfold/issues/183)): the guard site's decision for any harness, from flags or a harness's own event through a binding (`.writfold/harness/<id>.toml`). Its exit code is the decision (0, 2 ask, 3 deny, 1 usage). The guard log gains `via: check`; the hook's output is unchanged. **Behaviour change:** a `commands` rule now also applies to a shell call reported under a binding's other shell tool names; with only Claude Code nothing changes.
+- **Posture** ([#184](https://github.com/writfold-dev/writfold/issues/184)): `.writfold/guards.toml` (`posture`, `required`), `--posture` on `kb hook pre-tool-use` and `guard check`, and the plugin's posture option. Without any of them nothing changes. Under `ask` or `deny` an event the site cannot decide gets that decision with its cause; a judged decision is the same under every posture. `kb policy`'s identity changes only when `guards.toml` exists.
+- **A stop rule that blocks** ([#184](https://github.com/writfold-dev/writfold/issues/184)): `action = "block"`, `limit = N` on a `stop` rule. A stop rule without `action` nudges as before; `action` on a stop rule used to be refused and now accepts only `block`.
+- **A `blob=` citation in a file too long for the span search** still reads `changed (unsearched: file too long)`, by decision ([#216](https://github.com/writfold-dev/writfold/issues/216)); no answer changes.
+- **The quality gate runs `cargo tauten check`** ([#173](https://github.com/writfold-dev/writfold/issues/173)) and refuses a `proofs/claims.json` recorded before the last change to the kernel or the proofs. No change to the binary's answers.
+
 ## v0.6.0-dev.29
 
 - **Partial clones, what to fetch** ([#215](https://github.com/writfold-dev/writfold/issues/215)): a partial clone's `kb repos` row gains `blobs: N decided, M need contents (K to fetch)`, and `kb repos --need-blobs` prints `<clone git dir>\t<blob id>` per blob a verdict still needs. The `blob-not-local` reason names that command. A cited path absent at the target and not an exact rename reads `unverifiable (path-not-followed: …)` where it read `blob-not-local`; no verdict word changes.
