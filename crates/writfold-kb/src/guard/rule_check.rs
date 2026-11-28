@@ -180,7 +180,7 @@ fn blocking(c: &mut Check<'_>, stop: bool) -> Option<Option<usize>> {
         (false, Field::Absent) => Some(None),
         (false, Field::Got(n)) => {
             let d = c.error(
-                "key.needs",
+                "value.conflict",
                 Some(n.span),
                 "`limit` needs action = \"block\"".into(),
             );

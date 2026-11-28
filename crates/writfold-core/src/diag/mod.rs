@@ -21,7 +21,7 @@ pub use suggest::{distance, suggest};
 /// Every code a diagnostic may carry. Codes are never renamed or reused;
 /// a test holds this list, the specification's table, the guide's table
 /// and the codes the source emits to the same set.
-pub const CODES: [&str; 33] = [
+pub const CODES: [&str; 34] = [
     "syntax.unclosed-array",
     "syntax.unclosed-string",
     "syntax.expected",
@@ -55,6 +55,7 @@ pub const CODES: [&str; 33] = [
     "policy.never-ages",
     "policy.self-exit",
     "policy.narrow-scope",
+    "policy.required-audit",
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]

@@ -171,7 +171,7 @@ fn pairs(c: &mut Check<'_>, key: &str, kind: Kind, out: &mut Vec<(String, Kind, 
             }
             _ => {
                 let why = format!("{:?} is not `tool name: input field`", item.str());
-                c.error("value.shape", Some(item.span), why)
+                c.error("value.form", Some(item.span), why)
                     .help(format!("write it as {key} = [\"bash: command\"]"));
                 ok = false;
             }
