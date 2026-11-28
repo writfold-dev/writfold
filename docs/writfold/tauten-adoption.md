@@ -1,4 +1,84 @@
-# tauten adoption (pilot, stage 2)
+# tauten adoption
+
+## Current state (v0.6.0-dev.30)
+
+tauten is a strictness profile for agent-written Rust: each crate declares a
+tier, and `cargo tauten check` applies that tier's rules (clippy lints plus
+tauten's structural checks). The end state and its steps are in the
+[adoption RFC](../rfcs/2026-11-27-tauten-adoption.md), tracked in
+[#171](https://github.com/writfold-dev/writfold/issues/171).
+
+- **Pinned version:** `cargo-tauten` 0.2.0 from crates.io, installed in the
+  tools image (`docker/Dockerfile.tools`) and named in `toolchains.lock.json`
+  ([#100](https://github.com/writfold-dev/writfold/issues/100)). The lint and
+  the claims use it. `scripts/tauten-check` and `scripts/release claims`
+  compare `cargo tauten --version` with the lock and exit 2 on a mismatch;
+  `scripts/tauten-check --any-version` is for trying another version and no
+  gate passes it ([#174](https://github.com/writfold-dev/writfold/issues/174)).
+- **What the quality gate requires** ([#173](https://github.com/writfold-dev/writfold/issues/173)):
+  its `tauten-check` step (`scripts/tauten_step.py`) runs `cargo tauten check`
+  offline and passes when no error-level finding lies outside
+  `tauten-baseline.json` and no baseline slot is stale (TAU-R001). Before
+  that it compares the commit `proofs/claims.json` was recorded at with the
+  tree; a change under `crates/writfold-core` or `proofs/` since then fails
+  by name: "proofs/claims.json was recorded at <commit>; … Run scripts/release
+  claims and commit the record." Three calibrations run on copies: a planted
+  unchecked `+` in `writfold-sources` (named TAU-N001), a comment edit in the
+  kernel (the stale-record message), the tree as committed (passes). The
+  receipt names the step and the tool version. No gate step writes the
+  baseline or the record.
+- **A kernel or proofs change, in order:** prove it (the developer loop is
+  `docker compose -f compose.proofs.yaml run --build --rm proofs`, or
+  `cargo tauten proofs try`; neither records); commit; run
+  `scripts/release claims`, the one entrance that runs the proofs gate and
+  records `proofs/claims.json`; commit the record; then `scripts/gate
+  quality` and `scripts/gate unit`. The claims step first refuses a recorded
+  claim that would lose a theorem or mutant without an `[[amend]]`, and an
+  `[[amend]]` that excuses nothing against the committed record
+  ([#99](https://github.com/writfold-dev/writfold/issues/99)): retire it in
+  the claims commit after the one it excused.
+- **The baseline:** 217 accepted findings, by crate `writfold-core` 95
+  (outside the extraction roots, and `plan::splice`), `writfold-sources` 92
+  (parsers), `writfold-runtime` 19, `writfold-kb` 11. It only shrinks
+  (`cargo tauten baseline`, never `--allow-increase`).
+- **Still a pilot:** warnings (no rule promoted), the tier of `writfold-kb`,
+  tauten's shared proof runner ([#176](https://github.com/writfold-dev/writfold/issues/176)),
+  the baseline burn-down ([#103](https://github.com/writfold-dev/writfold/issues/103),
+  [#177](https://github.com/writfold-dev/writfold/issues/177)).
+- **Agent profile:** [`AGENTS.tauten.md`](../../AGENTS.tauten.md) is the
+  profile 0.2.0 writes (`cargo tauten init --write` in an empty workspace),
+  unchanged. Two points where `AGENTS.md` wins, which the profile does not
+  know: kernel arithmetic and indexing in extracted code are left to the
+  proofs, and the profile's "Proved kernel code" notes name tauten's
+  template toolchain (`lean-4.35.0-aeneas-c5eb4a2-charon-8cae8fd`) where
+  Writfold pins its own in `proofs/Dockerfile` (same Lean 4.35.0).
+
+## Moving the pin
+
+One issue per move ([#101](https://github.com/writfold-dev/writfold/issues/101)
+is the next, to 0.2.1):
+
+1. Rebuild the tools image with the new version (`docker/Dockerfile.tools`)
+   and update `toolchains.lock.json`.
+2. On one commit, run the old and the new binary with `--format json`
+   (`scripts/tauten-check --any-version` for the new one) and record the
+   difference in findings by rule and file. A new rule's findings are fixed
+   in that change or the move waits; the baseline may shrink, never grow.
+3. Regenerate `AGENTS.tauten.md` from the new version: `cargo tauten init
+   --write` in a scratch workspace (it leaves an existing file alone;
+   tauten-dev/tauten#86), copy it in and review the diff. Lines where
+   `AGENTS.md` wins stay stated in `AGENTS.md` and above.
+4. Read tauten's changelog for record or input changes; budget one full
+   `scripts/release claims` run when it says inputs changed.
+5. Quality and unit gates; the commit names both versions.
+
+## History
+
+The sections below are the dated record of the pilot; no earlier result is
+relabelled. Where they name a revision or say "not a gate", that was true
+when written.
+
+### The pilot's head (20 November 2026)
 
 Status: **merged into main on 20 November 2026; a pilot, not a gate.**
 The lint pilot (`scripts/tauten-check`, `tauten-baseline.json`) and the
@@ -21,7 +101,7 @@ the path to tightening it.
 - Agent profile: [`AGENTS.tauten.md`](../../AGENTS.tauten.md), written by
   `cargo tauten init`. Where it disagrees with `AGENTS.md`, `AGENTS.md` wins.
 
-## Which tauten does what
+### Which tauten does what
 
 Recorded 21 November 2026 ([#47](https://github.com/writfold-dev/writfold/issues/47)).
 
@@ -43,7 +123,7 @@ modules shared by several targets) and on the owner's decision about
 decision changes the shipped binary (an overflow outside the proved kernel
 would abort instead of wrapping); correcting this page does not make it.
 
-## Tiers
+### Tiers
 
 | Crate | Tier | Why |
 |---|---|---|
@@ -71,7 +151,7 @@ The IO that would stay at the edge: workspace discovery, Git calls,
 `write/atomic.rs` (the `KbWrite` protocol), the SQLite file lifecycle and
 hooks. Moving any of them is design work, not part of this pilot.
 
-## Counts
+### Counts
 
 Error-level findings by rule (warnings were 2,130 before and after; 1,047 of
 them are TAU-D001 documentation):
@@ -101,7 +181,7 @@ The counts are from tauten 443282d. tauten 3b7512e also reports file-level
 `#![allow]`, which added 12 X001 findings in `writfold-core` before fix 5
 below and none after it, so the 679 stands.
 
-## What was fixed
+### What was fixed
 
 1. **Reasons for deliberate discards (E003, 19 sites).** Each `let _ =` over a
    must-use value in `writfold`, `writfold-runtime` and `writfold-kb` (outside
@@ -146,7 +226,7 @@ Not touched: anything in Tuft, Weft (`gate/assessed`, `tests/assessed`) or
 Splicery (`kb edit`, `splicery_refusal`), which are frozen; and any function
 in `writfold-core`.
 
-## What is baselined and why
+### What is baselined and why
 
 `tauten-baseline.json` accepts the 679 findings above, keyed by rule, crate
 and file without line numbers. A new error anywhere fails the check; a fixed
@@ -169,7 +249,7 @@ new errors with the baseline in place.
 
 The cleanup of 21 November 2026 (#54) removed the files behind the Tuft, Splicery, Weft and Verus rows above (and the runtime's staged writes). Their baseline entries were deleted, never re-recorded: the baseline went from 527 accepted findings to 217, and the check's warnings from 2,171 to 1,275, with no new finding outside the kernel. The rows stay as the record of that day.
 
-## Proof claims (stage 2b, 19 November 2026)
+### Proof claims (stage 2b, 19 November 2026)
 
 `cargo tauten check` reports an arithmetic (TAU-N001) or indexing (TAU-P003)
 finding in a kernel crate as "subsumed by proof" when the enclosing function
@@ -243,7 +323,7 @@ tauten checks this only after the gate has run
 ([tauten#77](https://github.com/tauten-dev/tauten/issues/77)), so
 `scripts/release claims` checks it first.
 
-## Total helpers (stage 2c, 19 November 2026)
+### Total helpers (stage 2c, 19 November 2026)
 
 The owner chose to make the four helpers whose theorems needed a
 precondition total, rather than ask tauten for caller credit (finding 6).
@@ -291,7 +371,7 @@ the new total theorems, and the 10 P003 (`newer` 1, `better` 3,
 accepted by the baseline; the same result with tauten main `bbb20eb`
 (0.0.3).
 
-## Findings about tauten
+### Findings about tauten
 
 Reported for tauten; nothing in tauten was changed.
 
@@ -307,7 +387,7 @@ Reported for tauten; nothing in tauten was changed.
 9. **Mutant semantics differ.** tauten's template counts a theorem as broken when its proof fails or it depends on `sorry`; writfold's `mutants.py` counts direct failures only and requires the exact named set. The adapter reports writfold's narrower set, which is conservative (for example `newest-last-of-equal` breaks `newer_spec`; under tauten's rule it would also break `newest_loop_spec`, which uses it), but it is why eight mutants had to be added.
 10. **The `total` shape is not too strict for writfold.** 229 theorems already had it (most `*_spec` triples are hypothesis-free); only loop helpers and index-taking helpers did not.
 
-## State on 27 November 2026 and the plan from here
+### State on 27 November 2026 and the plan from here
 
 Measured on `main` at `9afa5942` with `cargo-tauten` 0.2.0 (crates.io):
 `scripts/tauten-check` exits 1 with 188 errors, 217 accepted by the
@@ -321,22 +401,7 @@ below are history; the end state and the ordered steps are in the
 [adoption RFC](../rfcs/2026-11-27-tauten-adoption.md), tracked in
 [#171](https://github.com/writfold-dev/writfold/issues/171).
 
-## Path to stage 3 (tightening the ratchet)
+### Path to stage 3 (superseded)
 
-1. Pin `cargo-tauten` (a release at or after `3b7512e`) in the tools image and
-   add a non-required compose service, so the check runs offline like the
-   other tools. Until then `scripts/tauten-check` needs a local build.
-2. Re-record the baseline after each cleanup so it only shrinks
-   (`cargo tauten baseline`; never `--allow-increase` to land a task).
-3. Shrink by group, cheapest first: E001 (decide per site: keep the source,
-   or `#[expect(clippy::map_err_ignore, reason)]` where nothing is lost);
-   `writfold-sources` parsers with property tests; `writfold-core` plumbing
-   outside the extraction roots after a reachability check.
-4. Kernel N001/P003 in the extraction roots: done except `plan::splice`
-   (7, a real panic past a capacity bound; see the table). Fix kernel M001
-   together with the next proved change to those kernels.
-5. Frozen components and the Verus-legacy domain code stay baselined until
-   they are retired or unfrozen.
-6. When a crate's baseline is empty, make tauten required for that crate
-   (a quality-gate step after an owner decision), then promote its warnings
-   (D001 first) one rule at a time.
+Replaced on 28 November 2026 by the [adoption RFC](../rfcs/2026-11-27-tauten-adoption.md)'s
+rollout table and [#171](https://github.com/writfold-dev/writfold/issues/171).
