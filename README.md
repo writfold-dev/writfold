@@ -7,7 +7,7 @@ Git. What is done, what is still owed and whether a check still holds are
 computed from those files, the same on every machine, so a fresh session on
 any machine reads a short brief and carries on.
 
-> **Pre-release (`v0.6.0-dev.28`).** Built in public, for one person and their
+> **Pre-release (`v0.6.0-dev.30`).** Built in public, for one person and their
 > agents; formats and commands may still change. Linux x86_64 or WSL2.
 
 No server, no account, no model: Writfold writes files and reports what they
@@ -20,7 +20,7 @@ source has moved.
 curl -fsSL https://writfold.dev/install.sh | sh
 ```
 
-Or download [the static binary](https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.28/writfold-x86_64-linux-musl)
+Or download [the static binary](https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.30/writfold-x86_64-linux-musl)
 and its checksum by hand; [Installing](docs/guide/install.md) has the steps,
 the Claude Code plugin and building from source.
 
