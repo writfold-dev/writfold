@@ -1058,9 +1058,9 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `verdict-deny-asks` | `guard.rs` | guard: a deny rule denies | `Guard.verdict_spec` |
 | `combine-ask-over-deny` | `guard.rs` | guard: a denial wins over a question | `Guard.combine_spec` |
 | `effect-enforces-audit` | `guard.rs` | guard: an audit rule never decides the call | `Guard.effect_spec` |
-| `undecided-passes-closed` | `site.rs` | site (#184): an undecided event under deny is denied | `Site.decide_spec` |
-| `posture-overrides-judged` | `site.rs` | site: a posture never overrides a judged decision | `Site.decide_spec` |
-| `stricter-takes-first` | `site.rs` | site: the stricter posture reads both sides | `Site.stricter_spec` |
+| `site-undecided-passes-closed` | `site.rs` | site (#184): an undecided event under deny is denied | `Site.decide_spec` |
+| `site-posture-overrides-judged` | `site.rs` | site: a posture never overrides a judged decision | `Site.decide_spec` |
+| `site-stricter-takes-first` | `site.rs` | site: the stricter posture reads both sides | `Site.stricter_spec` |
 | `block-ignores-limit` | `site.rs` | site: a blocking stop rule stops at its limit | `Site.block_again_spec` |
 | `gates-fact-met-on-nothing` | `guard.rs` | guard: gates.met is not met by an empty set | `Guard.gates_fact_met_iff` |
 | `gates-fact-ignores-invalid` | `guard.rs` | guard: an invalid receipt or definition keeps gates.met unmet | `Guard.gates_fact_met_iff` |

@@ -3729,8 +3729,8 @@ theorems = [
 total = "Writfold.Core.Site.decide_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
-  "undecided-passes-closed",
-  "posture-overrides-judged",
+  "site-undecided-passes-closed",
+  "site-posture-overrides-judged",
 ]
 
 [[claim]]
@@ -3748,7 +3748,7 @@ theorems = [
 total = "Writfold.Core.Site.stricter_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
-  "stricter-takes-first",
+  "site-stricter-takes-first",
 ]
 
 [[claim]]

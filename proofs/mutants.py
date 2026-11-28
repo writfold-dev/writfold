@@ -1843,17 +1843,17 @@ MUTANTS = (
            "            Pin::Held | Pin::Unreadable => {}\n            Pin::Moved | Pin::Aged => return false,",
            ("Writfold.Core.Pin.holds_from_loop_spec",)),
     # site (#184): an undecided event under deny is denied
-    Mutant("undecided-passes-closed", "site.rs",
+    Mutant("site-undecided-passes-closed", "site.rs",
            "            Posture::Deny => Decision::Deny,",
            "            Posture::Deny => Decision::Pass,",
            ("Writfold.Core.Site.decide_spec",)),
     # site: a posture never overrides a judged decision
-    Mutant("posture-overrides-judged", "site.rs",
+    Mutant("site-posture-overrides-judged", "site.rs",
            "        Basis::Judged(decided) => decided,",
            "        Basis::Judged(_) => Decision::Pass,",
            ("Writfold.Core.Site.decide_spec",)),
     # site: the stricter posture reads both sides
-    Mutant("stricter-takes-first", "site.rs",
+    Mutant("site-stricter-takes-first", "site.rs",
            "    if matches!(a, Posture::Deny) || matches!(b, Posture::Deny) {",
            "    if matches!(a, Posture::Deny) {",
            ("Writfold.Core.Site.stricter_spec",)),
@@ -2303,12 +2303,18 @@ def unclaimed() -> list[str]:
 
 
 def bad_sites() -> list[str]:
-    """Each mutant whose site does not occur exactly once in its kernel file.
+    """Each mutant whose site does not occur exactly once in its kernel file,
+    and each name two mutants share (a selection by name would be ambiguous).
 
     A static pre-flight (#92): calibration refuses such a mutant only after
     copying and building, so a drifted site used to cost a whole run.
     """
     bad = []
+    seen: set[str] = set()
+    for m in (*MUTANTS, *CORE_MUTANTS):
+        if m.name in seen:
+            bad.append(f"{m.name}: the name is used by two mutants")
+        seen.add(m.name)
     for mutant in MUTANTS:
         source = KERNEL / "src" / mutant.file
         count = source.read_text().count(mutant.before) if source.is_file() else 0
