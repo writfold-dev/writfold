@@ -145,7 +145,14 @@ def Unfollowed (a : verdict.Absence) : Prop :=
 /-- `Knows f g`: `g` is what a fuller observation of the same citation can
 see where `f` was seen. History supplies the cited blob; a span search or
 fetched bytes supply where the span sits; a completed follow supplies how
-the path left. -/
+the path left.
+
+One row is deliberately not here (owner default, #216): a known cited blob
+(`blob=`) that differs at the target, in a file too long for the span
+search (`Unsearched`), reads `changed`. `blob=` is a claim about the whole file, so a different blob is
+a change, whatever a span search would find; `changed` is that claim's own
+answer, not a lack of knowledge. The law holds given the citation's claim:
+over every row where the citation leaves room to know more. -/
 inductive Knows : verdict.Observed → verdict.Observed → Prop
   | refl (f) : Knows f f
   | trans {f g h} : Knows f g → Knows g h → Knows f h
